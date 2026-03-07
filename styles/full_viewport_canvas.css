@@ -1,0 +1,52 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: black;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  font-family: Arial, sans-serif;
+  position: relative;
+}
+
+/* Canvas styling */
+#sim {
+  display: block;
+  cursor: crosshair;
+  border: 1px solid rgb(60, 60, 60);
+  background-color: black;
+}
+
+.btn-back {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  width: 2.0rem;
+  height: 2.0rem;
+  border-radius: 50%;
+  background: rgb(33, 33, 33, .3);
+  border: 1px solid #666;
+  color: #555;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  z-index: 999;
+  padding: 0;
+  /* To fix Chrome Iphone issue where the canvas was pushed down below the button 
+  instead of positioned in upper left full-viewport: buttons have user-agent stylesheet 
+  margins that need to be explicitly overridden */
+  margin: 0; /* Explicit margin override for buttons */
+  -webkit-appearance: none; /* Remove iOS button styling */
+  appearance: none;
+}
+.btn-back:hover { background: #999; color: #222; }
+

@@ -1,0 +1,79 @@
+{
+  "environment": {
+    "wallType": "Reflecting",
+    "wallFriction": 0.5,
+    "gravityConstant": 10.0,
+    "electricConstant": 0.0,
+    "gravityFieldX": 0.0,
+    "gravityFieldY": 0.0,
+    "electricFieldX": 0.0,
+    "electricFieldY": 0.0,
+    "magneticFieldZ": 0.0,
+    "airResistance": 0.10,
+    "height": 900,
+    "width": 1200
+  },
+  "particles": [
+    {
+      "particleNumber": 0,
+      "label": "one",
+      "color": "blue",
+      "initialPositionX": 256.0,
+      "initialPositionY": 200.0,
+      "initialVelocityX": 0.0,
+      "initialVelocityY": 0.0,
+      "radius": 26.0,
+      "mass": 35.0,
+      "charge": 0.0,
+      "fixedXPosition": false,
+      "fixedYPosition": false,
+      "trace": false
+    },
+    {
+      "particleNumber": 1,
+      "label": "two",
+      "color": "green",
+      "initialPositionX": 400.0,
+      "initialPositionY": 100.0,
+      "initialVelocityX": 0.0,
+      "initialVelocityY": 0.0,
+      "radius": 3.0,
+      "mass": 30.0,
+      "charge": 0.0,
+      "fixedXPosition": false,
+      "fixedYPosition": false,
+      "trace": true
+    },
+    {
+      "particleNumber": 2,
+      "label": "three",
+      "color": "green",
+      "initialPositionX": 500.0,
+      "initialPositionY": 180.0,
+      "initialVelocityX": 0.0,
+      "initialVelocityY": 0.0,
+      "radius": 4.0,
+      "mass": 80.0,
+      "charge": 0.0,
+      "fixedXPosition": false,
+      "fixedYPosition": false,
+      "trace": true
+    },
+    {
+      "particleNumber": 3,
+      "label": "four",
+      "color": "black",
+      "initialPositionX": 507.0,
+      "initialPositionY": 313.0,
+      "initialVelocityX": 0.0,
+      "initialVelocityY": 0.0,
+      "radius": 20.0,
+      "mass": 50.0,
+      "charge": 0.0,
+      "fixedXPosition": false,
+      "fixedYPosition": false,
+      "trace": true
+    }
+  ],
+  "springs": []
+}

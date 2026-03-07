@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Physics2D Basic Gravity Simulation</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      display:block; 
+      border: 1px solid black
+    }
+  </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+  import PhysicsEngine from '../js/physics2D/PhysicsEngine.js';
+  import Renderer from '../js/app/RenderSimple.js';
+  import SimLoader from '../js/app/SimLoader.js';
+  import MouseHandler from '../js/app/MouseHandler.js';
+  import AnimationLoop from '../js/app/AnimationLoop.js';
+
+  function createCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'sim';
+    canvas.width = width;
+    canvas.height = height;
+    document.body.appendChild(canvas);
+    return canvas;
+  }
+
+  async function loadAndRunSimulation() {
+    try {
+      const canvas = createCanvas(800, 600);
+
+      const engine = new PhysicsEngine();
+      engine.setDimensions(canvas.width, canvas.height);
+      engine.detectCollisions = true;
+
+      const loader = new SimLoader(engine);
+      await loader.loadSimulation('../scripts/four_dots.json');
+
+      const renderer = new Renderer(engine.particles, engine.springs, canvas);
+      const mouseHandler = new MouseHandler(canvas, engine, renderer);
+      const animationLoop = new AnimationLoop(engine, renderer);
+      animationLoop.start();
+
+      console.log('Simulation started successfully!');
+    } catch (error) {
+      console.error('Failed to initialize simulation:', error);
+    }
+  }
+  
+  loadAndRunSimulation();
+</script>
+</html>
