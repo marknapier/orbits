@@ -36,6 +36,10 @@ export default class AnimationLoop {
     this.isRunning = false;
   }
   
+  running() {
+    return this.isRunning;
+  }
+
   animate = (currentTime) => {
     if (!this.isRunning) return;
     

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        ctx.fillStyle = '#FAF7F2';
+        ctx.fillRect(0, 0, 800, 600);
+        
+        function drawEllipseAroundPoints(x1, y1, x2, y2, minorRatio = 0.6, padding = 20) {
+            const centerX = (x1 + x2) / 2;
+            const centerY = (y1 + y2) / 2;
+            
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            const a = distance / 2 + padding;
+            const b = a * minorRatio;
+            const rotation = Math.atan2(dy, dx);
+            
+            // Draw ellipse
+            ctx.fillStyle = 'rgba(107, 155, 209, 0.2)';
+            ctx.strokeStyle = '#6B9BD1';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY, a, b, rotation, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Draw center point
+            ctx.fillStyle = '#8B7EC8';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw the two points
+            ctx.fillStyle = '#F4D03F';
+            ctx.beginPath();
+            ctx.arc(x1, y1, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x2, y2, 6, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw line connecting points
+            ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        
+        // Draw multiple examples
+        drawEllipseAroundPoints(150, 150, 350, 150, 0.5, 30);  // Horizontal
+        drawEllipseAroundPoints(150, 300, 150, 450, 0.5, 30);  // Vertical
+        drawEllipseAroundPoints(400, 200, 550, 350, 0.8, 40);  // Diagonal
+        drawEllipseAroundPoints(450, 450, 650, 500, 0.2, 25);  // Slight angle
+        drawEllipseAroundPoints(-10, 600, 900, 600, 0.2, 5);  // Big
+        
+        // Add labels
+        ctx.fillStyle = '#4A4A4A';
+        ctx.font = '14px Arial';
+        ctx.fillText('Horizontal', 200, 120);
+        ctx.fillText('Vertical', 90, 380);
+        ctx.fillText('Diagonal', 450, 180);
+        ctx.fillText('Slight angle', 500, 430);
+    </script>
+</body>
+</html>

@@ -26,7 +26,7 @@ class ColorPalette {
         return `rgb(${c.r} ${c.g} ${c.b})`;
     }
 
-    convertFlatRGBAtoColorObjects(data) {
+    static convertFlatRGBAtoColorObjects(data) {
         const colors = [];
         // The length of the data array must be a multiple of 4 (for RGBA)
         for (let i = 0; i < data.length; i += 4) {
@@ -39,10 +39,10 @@ class ColorPalette {
         return colors;
     }
 
-    // Draw the image into the given canvas context, then sample one row of pixels from it.
-    // Canvas must be big enough to fit the width of the image.
-    async getColorSampleFrom(ctx, imgURL, y = 0) {
-        // load the image and wait for it to be ready
+    // Draw the image into a temporary canvas, then sample one row of pixels from it.
+    // Return a ColorPalette instance containing the pixel color values.
+    static async createFromImage(imgURL, row = 0) {
+        // wait for the image to load
         const img = new Image();
         const loadPromise = new Promise((resolve, reject) => {
             img.onload = resolve;
@@ -51,18 +51,26 @@ class ColorPalette {
         img.src = imgURL;
         await loadPromise;
 
-        ctx.drawImage(img, 0, 0);
-        // Extract row 'y' (e.g., 50th row)
-        const rowData = ctx.getImageData(1, y, img.width, y).data;
+        // draw image into offscreen canvas
+        const tmpCanvas = document.createElement('canvas');
+        const tmpContext = tmpCanvas.getContext('2d');
+        tmpCanvas.width = img.width;
+        tmpCanvas.height = img.height;
+        tmpContext.drawImage(img, 0, 0);
+
+        // Extract 1 row of pixels
+        const rowData = tmpContext.getImageData(1, row, img.width, 1).data;
         // rowData is a flat Uint8ClampedArray: [r,g,b,a, r,g,b,a...]
         // Store in a standard JS array
         const pixelArray = Array.from(rowData);
         // convert to rgb objects
-        const colorArray = this.convertFlatRGBAtoColorObjects(pixelArray);
+        const colorArray = ColorPalette.convertFlatRGBAtoColorObjects(pixelArray);
 
         // store result for later reference and return
         this.loadedColors = colorArray;
-        return colorArray;
+        window.loadedColors = colorArray;
+        //return colorArray;
+        return new ColorPalette(colorArray);
     }
 }
 

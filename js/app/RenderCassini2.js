@@ -24,6 +24,8 @@ export default class RenderCassiniArcs {
     this.ctx = ctx ?? canvas.getContext("2d");
     this.particles = particles;
     this.yellowGreenPalette = null; // colors will be loaded in init()
+    this.grayPalette = null; // colors will be loaded in init()
+    this.yellowBlurPalette = null; // colors will be loaded in init()
   }
 
   setParticles(particles) {
@@ -31,7 +33,9 @@ export default class RenderCassiniArcs {
   }
 
   async init() {
-    this.yellowGreenPalette = await ColorPalette.createFromImage('./images/eye_closeup_green_extract.jpg');
+    this.yellowGreenPalette = await ColorPalette.createFromImage('./images/beige_rings.jpg');
+    this.grayPalette = await ColorPalette.createFromImage('./images/gray_ridges.png');
+    this.yellowBlurPalette = await ColorPalette.createFromImage('./images/titan_blur.jpg');
     window.yellowGreenPalette = this.yellowGreenPalette;
   }
 
@@ -71,16 +75,16 @@ export default class RenderCassiniArcs {
     // Draw a circle for each particle pair, using the distance between particles as the radius.
     // ------------------------------------------------------------------------------------------------
 
-    // Dark violet circle around p0
+    // Dark gray circle around p0
     // Make a 0-1 value that represents the radius length relative to the canvas height
     const radiusPercent = Math.max(Math.min(radius1 / this.canvas.height, 1), 0.1);
     ctx.save();
     {
-      ctx.strokeStyle = this.violetColors[(radiusPercent * 3) | 0];
-      ctx.lineWidth = 20 * radiusPercent;
+      ctx.strokeStyle = this.grayPalette.getNextColor();
+      ctx.lineWidth = 8 * radiusPercent;
       this.drawArcPath(ctx, p0, p1);
       ctx.stroke();
-      this.drawLineV(p0.getX(), p0.getY());
+      this.drawLineV(p1.getX(), p1.getY()); // was p0
       ctx.stroke();
     }
     ctx.restore();
@@ -88,7 +92,8 @@ export default class RenderCassiniArcs {
 
 
     // draw a yellow circle whose edges pass through p1 and p2
-    const yellowColor = this.yellowGreenPalette.getNextColor();
+    // const yellowColor = 'rgb(80,80,150)'; //this.yellowGreenPalette.getNextColor();
+    const yellowColor = 'rgb(11, 179, 137)'; //this.yellowGreenPalette.getNextColor();
     ctx.save();
     {
       ctx.strokeStyle = yellowColor;
@@ -99,7 +104,7 @@ export default class RenderCassiniArcs {
       ctx.strokeStyle = "rgb(44, 217, 151)";
       this.drawLineH(p3.getX(), p3.getY());
       ctx.stroke();
-      ctx.strokeStyle = "rgb(16, 12, 23)";
+      ctx.strokeStyle = "rgb(160, 12, 23, .05)";
       ctx.lineWidth = 4;
       this.drawLineH(p1.getX(), p1.getY());
       ctx.stroke();
@@ -122,9 +127,14 @@ export default class RenderCassiniArcs {
       // switch to a non-filled circle with a wide border, 
       // subtract 1/2 of border width to keep the same overall radius
       ctx.arc(p2.getX(), p2.getY(), Math.max((radius3 / 2) - 20, 0), 0, Math.PI * 2);
-      ctx.strokeStyle = `rgb(1, 193, 193)`;
-      ctx.lineWidth = 40;
+      // ctx.fillStyle = this.yellowBlurPalette.getNextColor(); //`rgb(1, 193, 193)`;
+      ctx.strokeStyle = this.yellowBlurPalette.getNextColor(); //`rgb(1, 193, 193)`;
+      ctx.lineWidth = 10;
       ctx.stroke();
+      // ctx.fill()
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#FDB813';
+
       // }
       // extra nuance on the edge
       ctx.beginPath();
@@ -139,7 +149,7 @@ export default class RenderCassiniArcs {
     // Red circle around p3
     ctx.save();
     {
-      ctx.strokeStyle = 'rgb(255, 25, 10)';
+      ctx.strokeStyle = 'rgb(250, 88, 13)';
       ctx.lineWidth = 2;
       this.drawArcPath(ctx, p2, p3);
       ctx.stroke();
@@ -156,7 +166,7 @@ export default class RenderCassiniArcs {
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
         ctx.beginPath();
-        ctx.ellipse(p.getX(), p.getY(), 2, 5, 0, 0, Math.PI * 2);
+        ctx.ellipse(p.getX(), p.getY(), 2, 2, 0, 0, Math.PI * 2);
         ctx.fill();
       }
     }

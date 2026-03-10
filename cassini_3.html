@@ -17,21 +17,22 @@
   import Vector2D from './js/physics2D/Vector2D.js';
   import MouseHandler from './js/app/MouseHandler.js';
   import AnimationLoop from './js/app/AnimationLoop.js';
-  import RenderCassiniArcs from './js/app/RenderCassiniArcs.js';
+  import RenderCassini2 from './js/app/RenderCassini2.js';
+  import RenderSimple from './js/app/RenderSimple.js';
   import Model from './js/app/Model.js';
 
   const modelJSON = {
     "environment": {
       "wallType": "Reflecting",
       "wallFriction": 0.5,
-      "gravityConstant": 10.0,
+      "gravityConstant": 14.0,
       "electricConstant": 0.0,
       "gravityFieldX": 0.0,
       "gravityFieldY": 0.0,
       "electricFieldX": 0.0,
       "electricFieldY": 0.0,
       "magneticFieldZ": 0.0,
-      "airResistance": 0.10,
+      "airResistance": 0.01,
     },
     "particles": [
       {
@@ -57,7 +58,7 @@
         "initialPositionY": 100.0,
         "initialVelocityX": 0.0,
         "initialVelocityY": 0.0,
-        "radius": 3.0,
+        "radius": 5.0,
         "mass": 30.0,
         "charge": 0.0,
         "fixedXPosition": false,
@@ -67,12 +68,12 @@
       {
         "particleNumber": 2,
         "label": "three",
-        "color": "green",
+        "color": "red",
         "initialPositionX": 500.0,
         "initialPositionY": 180.0,
         "initialVelocityX": 0.0,
         "initialVelocityY": 0.0,
-        "radius": 4.0,
+        "radius": 6.0,
         "mass": 80.0,
         "charge": 0.0,
         "fixedXPosition": false,
@@ -93,18 +94,125 @@
         "fixedXPosition": false,
         "fixedYPosition": false,
         "trace": true
-      }
+      },
+      {
+        "particleNumber": 4,
+        "label": "five",
+        "color": "gray",
+        "initialPositionX": 100.0,
+        "initialPositionY": 20.0,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 30.0,
+        "mass": 70.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 5,
+        "label": "six",
+        "color": "pink",
+        "initialPositionX": 200.0,
+        "initialPositionY": 150.0,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 4.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
     ],
-    "springs": []
+    "springs": [
+      {
+        "springNumber": 0,
+        "particle1": 0,
+        "particle2": 3,
+        "damping": 0.1,
+        "springConstant": .50,
+        "relaxedLength": 0.0,
+        "amplitude": 0.0,
+        "frequency": 0.0,
+        "phase": 0.0
+      },
+      {
+        "springNumber": 1,
+        "particle1": 1,
+        "particle2": 5,
+        "damping": 0.1,
+        "springConstant": .50,
+        "relaxedLength": 0.0,
+        "amplitude": 0.0,
+        "frequency": 0.0,
+        "phase": 0.0
+      },
+      {
+        "springNumber": 2,
+        "particle1": 5,
+        "particle2": 2,
+        "damping": 0.1,
+        "springConstant": .50,
+        "relaxedLength": 0.0,
+        "amplitude": 0.0,
+        "frequency": 0.0,
+        "phase": 0.0
+      },
+    ]
   };
 
   function createCanvas(width, height) {
+    const aspectRatio = 16/9;
     const canvas = document.createElement('canvas');
     canvas.id = 'sim';
-    canvas.width = width;
+    canvas.width = Math.min(width, height*aspectRatio);
     canvas.height = height;
     document.body.appendChild(canvas);
     return canvas;
+  }
+
+  function setupSaveCanvasToFile(canvas, filename = 'screenshot') {
+    // pause the animation loop
+    document.addEventListener('keydown', async (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            
+            // Convert canvas to blob
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                const fullFilename = `${filename}-${timestamp}.png`;
+                 
+                link.download = fullFilename;
+                link.href = url;
+                link.click();
+                
+                // Clean up
+                URL.revokeObjectURL(url);
+                console.log('Canvas saved to ', fullFilename);
+
+                // need callback to unpause animation loop
+            }, 'image/png', 1.0);
+        }
+    });
+  }
+
+  function setupPauseKey(animationLoop) {
+    // pause the animation loop
+    document.addEventListener('keydown', async (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+        e.preventDefault();
+        if (animationLoop.running()) {
+          animationLoop.stop();
+        } 
+        else {
+          animationLoop.start();
+        }
+      }
+    });
   }
 
   async function loadAndRunSimulation() {
@@ -121,10 +229,12 @@
 
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
 
-      const renderer = new RenderCassiniArcs(canvas, null, engine.particles );
+      // const renderer = new RenderSimple(engine.particles, engine.springs, canvas );
+      const renderer = new RenderCassini2(canvas, null, engine.particles );
       await renderer.init(); // load images for colors, textures, etc.
+
       renderer.bgColor = 'rgb(20, 0, 20)';
-      renderer.opacity = 0.1;
+      renderer.opacity = 0.2;
       renderer.clearBG = false;
       renderer.clear();
 
@@ -135,6 +245,9 @@
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
       const animationLoop = new AnimationLoop(engine, renderer);
       animationLoop.start();
+
+      setupPauseKey(animationLoop);
+      setupSaveCanvasToFile(canvas, 'cassini3');  
 
       console.log('Simulation started successfully!');
     } catch (error) {
