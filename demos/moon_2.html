@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <canvas id="canvas" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        ctx.fillStyle = '#0A1929';
+        ctx.fillRect(0, 0, 800, 400);
+        
+        function getCircleIntersections(x1, y1, r1, x2, y2, r2) {
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            
+            if (d > r1 + r2 || d < Math.abs(r1 - r2)) return [];
+            
+            const a = (r1 * r1 - r2 * r2 + d * d) / (2 * d);
+            const h = Math.sqrt(r1 * r1 - a * a);
+            
+            const px = x1 + (dx * a) / d;
+            const py = y1 + (dy * a) / d;
+            
+            const offsetX = -(dy * h) / d;
+            const offsetY = (dx * h) / d;
+            
+            return [
+                { x: px + offsetX, y: py + offsetY },
+                { x: px - offsetX, y: py - offsetY }
+            ];
+        }
+        
+        function drawCrescentFromIntersections(x1, y1, r1, x2, y2, r2, showGuides = false) {
+            // Get intersection points
+            const points = getCircleIntersections(x1, y1, r1, x2, y2, r2);
+            
+            if (points.length < 2) {
+                console.log('Circles do not intersect at two points');
+                return;
+            }
+            
+            const point1 = points[0];
+            const point2 = points[1];
+            
+            // Show guide circles if requested
+            if (showGuides) {
+                ctx.strokeStyle = 'rgba(107, 155, 209, 0.3)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(x1, y1, r1, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                ctx.strokeStyle = 'rgba(139, 126, 200, 0.3)';
+                ctx.beginPath();
+                ctx.arc(x2, y2, r2, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // Mark intersection points
+                ctx.fillStyle = '#F4D03F';
+                ctx.beginPath();
+                ctx.arc(point1.x, point1.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(point2.x, point2.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Calculate angles for outer arc (circle 1)
+            const angle1_outer = Math.atan2(point1.y - y1, point1.x - x1);
+            const angle2_outer = Math.atan2(point2.y - y1, point2.x - x1);
+            
+            // Calculate angles for inner arc (circle 2)
+            const angle1_inner = Math.atan2(point1.y - y2, point1.x - x2);
+            const angle2_inner = Math.atan2(point2.y - y2, point2.x - x2);
+            
+            // Draw the crescent
+            ctx.fillStyle = '#FDB813';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#FDB813';
+            
+            ctx.beginPath();
+            
+            // Outer arc from point1 to point2
+            ctx.arc(x1, y1, r1, angle1_outer, angle2_outer, false);
+            
+            // Inner arc from point2 back to point1 (counterclockwise)
+            ctx.arc(x2, y2, r2, angle2_inner, angle1_inner, true);
+            
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.shadowBlur = 0;
+        }
+        
+        // Draw different crescents
+        drawCrescentFromIntersections(150, 200, 60, 120, 200, 70);  // Fat crescent
+        drawCrescentFromIntersections(300, 200, 60, 265, 200, 30);  // Medium crescent
+        drawCrescentFromIntersections(450, 200, 60, 400, 200, 50);  // Thin crescent
+        
+        // Draw one with guides visible
+        drawCrescentFromIntersections(650, 180, 60, 610, 200, 50, true);
+    </script>
+</body>
+</html>

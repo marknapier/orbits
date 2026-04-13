@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cassini 2</title>
+  <link rel="stylesheet" href="../styles/full_viewport_canvas.css">
+</head>
+
+<body>
+  <button class="btn-back" onclick="history.back()" aria-label="Go back">&#8249;</button>  
+  <!-- Canvas will be inserted here -->
+</body>
+
+<script type="module">
+  import PhysicsEngine from '../js/physics2D/PhysicsEngine.js';
+  import Vector2D from '../js/physics2D/Vector2D.js';
+  import MouseHandler from '../js/app/MouseHandler.js';
+  import AnimationLoop from '../js/app/AnimationLoop.js';
+  import RenderCrescent from '../js/app/RenderCrescent.js';
+  import Model from '../js/app/Model.js';
+  import Page from '../js/app/Page.js'
+
+  const modelJSON = {
+    "environment": {
+      "wallType": "Reflecting",
+      "wallFriction": 0.5,
+      "gravityConstant": 24.0,
+      "electricConstant": 0.0,
+      "gravityFieldX": 0.0,
+      "gravityFieldY": 0.0,
+      "electricFieldX": 0.0,
+      "electricFieldY": 0.0,
+      "magneticFieldZ": 0.0,
+      "airResistance": 0.01,
+    },
+    "particles": [
+      {
+        "particleNumber": 0,
+        "label": "one",
+        "color": "blue",
+        "initialPositionX": 100.0,
+        "initialPositionY": 200.0,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 26.0,
+        "mass": 35.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 1,
+        "label": "two",
+        "color": "green",
+        "initialPositionX": 700.0,
+        "initialPositionY": 180.0,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 5.0,
+        "mass": 30.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+    ],
+    "springs": [
+    ]
+  };
+
+  async function loadAndRunSimulation() {
+    try {
+      const canvas = Page.createCanvas(window.innerWidth, window.innerHeight);
+
+      const model = new Model();
+      model.parseConfig(modelJSON);
+      model.centerAt(canvas.width / 2.2, canvas.height/2);
+
+      const engine = new PhysicsEngine();
+      engine.setDimensions(canvas.width, canvas.height);
+      engine.detectCollisions = false;
+      engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
+
+      const renderer = new RenderCrescent(engine.particles, engine.springs, canvas );
+      renderer.clear();
+
+      const mouseHandler = new MouseHandler(canvas, engine, renderer);
+      mouseHandler.hideCursorAfterDelay();
+
+      const animationLoop = new AnimationLoop(engine, renderer);
+      animationLoop.start();
+
+      Page.setupKeyEvents(canvas, animationLoop, 'cassini3');  
+
+      console.log('Simulation started successfully!');
+    } catch (error) {
+      console.error('Failed to initialize simulation:', error);
+    }
+  }
+  
+  loadAndRunSimulation();
+
+</script>
+</html>

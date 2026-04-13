@@ -1,6 +1,10 @@
-export default class Renderer {
-  // particles: array, springs: array, target: HTMLCanvasElement or 2D context
-  constructor(particles = [], springs = [], target = null) {
+/**
+ * Base class for physics simulation renderers
+ */
+
+export default class RenderSimple {
+  // particles: array, springs: array, target: HTMLCanvasElement
+  constructor(particles = [], springs = [], target) {
     this.particles = particles;
     this.springs = springs;
     this.mouseX = 0;
@@ -10,17 +14,8 @@ export default class Renderer {
   }
 
   setTarget(target) {
-    if (!target) { 
-      this.canvas = null; 
-      this.ctx = null; 
-    }
-    else if (typeof target.getContext === 'function') {
-      this.canvas = target;
-      this.ctx = target.getContext('2d');
-    } else {
-      this.canvas = null;
-      this.ctx = target;
-    }
+    this.canvas = target;
+    this.ctx = target.getContext('2d');
   }
 
   render() {
@@ -39,7 +34,7 @@ export default class Renderer {
     }
 
     // draw particles
-    if (this.particles && this.particles.length > 0) {    
+    if (this.particles && this.particles.length > 0) {
       for (let i = 0; i < this.particles.length; i++) {
         this.paintParticle(ctx, this.particles[i]);
       }
@@ -51,18 +46,15 @@ export default class Renderer {
     if (!particle || !particle.pos) return;
     const x = particle.getX();
     const y = particle.getY();
-    const r = Math.min(particle.getRadius(), 80);
+    const r = particle.getRadius();
     ctx.fillStyle = particle.getColor();
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
-    // ctx.arc(x, y, 2, 0, Math.PI * 2);
     ctx.fill();
   }
 
   // Draw a blue line connecting the two particles of the spring
   paintSpring(ctx, spring) {
-    // return;
-
     if (!spring) return;
     const p1 = spring.getP1();
     const p2 = spring.getP2();
@@ -75,6 +67,7 @@ export default class Renderer {
   }
 
   setMouseXY(x, y) {
+    // This method can be used to track mouse position for hover effects or other interactions
     this.mouseX = x;
     this.mouseY = y;
   }
@@ -86,15 +79,6 @@ export default class Renderer {
   }
 
   setClosestParticle(particle) {
-    const closestParticle = particle;
-    if (particle) {
-      this.canvas.style.cursor = "pointer"; // Change cursor to hand when hovering near a particle
-    } else {
-      this.canvas.style.cursor = "crosshair"; // Reset cursor when not near any particle
-    }
-  }
-
-  setMouseXY(x, y) {
-    // This method can be used to track mouse position for hover effects or other interactions
+    // This method can be used to to highlight particle near mouse cursor
   }
 }

@@ -1,7 +1,7 @@
 // Usage:
 // const canvas = document.getElementById('sim');
 // const sim = new PhysicsEngine();
-// const renderer = new Renderer(canvas, sim);
+// const renderer = new Renderer(particles, springs, canvas);
 // const animationLoop = new AnimationLoop(sim, renderer);
 //
 // Start the animation
@@ -15,6 +15,7 @@
 
 export default class AnimationLoop {
   constructor(sim, renderer) {
+    this.updateFunction = null;
     this.sim = sim;
     this.renderer = renderer;
     this.isRunning = false;
@@ -22,6 +23,10 @@ export default class AnimationLoop {
     this.fps = 0;
     this.frameCount = 0;
     this.fpsUpdateTime = 0;
+    // If a function is passed instead of physics sim and renderer, call that function to animate
+    if (typeof sim === 'function') {
+      this.updateFunction = sim;
+    }
   }
   
   start() {
@@ -55,11 +60,17 @@ export default class AnimationLoop {
       this.fpsUpdateTime = currentTime;
     }
     
-    // Update physics simulation
-    this.sim.step();
-    
-    // Render the current state
-    this.renderer.render();
+    if (this.updateFunction) {
+      // the function will handle the update
+      this.updateFunction();
+    }
+    else {
+      // Update physics simulation
+      this.sim.step();
+      
+      // Render the current state
+      this.renderer.render();      
+    }
     
     // Request next frame
     requestAnimationFrame(this.animate);

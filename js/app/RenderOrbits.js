@@ -1,8 +1,3 @@
-/**
- * This class renders into a canvas 2D context (ctx).
- */
-
-import Blob from './Blob.js';
 import Particle from '../physics2D/Particle.js';
 
 export default class RenderOrbits {
@@ -14,15 +9,9 @@ export default class RenderOrbits {
   yellowColors = ["rgb(255, 255, 0)", "rgb(240, 240, 10)", "rgb(210, 210, 50)", "rgb(250, 250, 100)"];
   violetColors = ["rgb(25, 15, 30)", "rgb(20, 10, 25)", "rgb(15, 5, 20)", "rgb(10, 0, 15)"];
 
-  /**
-   * @param {object} opts
-   * @param {HTMLCanvasElement} opts.canvas
-   * @param {CanvasRenderingContext2D} [opts.ctx]
-   * @param {Array<any>} [opts.particles]
-   */
-  constructor(canvas, ctx = null, particles = []) {
+  constructor(particles = [], springs = null, canvas) {
     this.canvas = canvas;
-    this.ctx = ctx ?? canvas.getContext("2d");
+    this.ctx = canvas.getContext("2d");
     this.particles = particles;
   }
 

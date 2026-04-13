@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Physics2D Basic Gravity Simulation</title>
+  <title>Physics2D Spring/Mass Wheel Simulation</title>
   <style>
     body {
       margin: 0;
@@ -142,7 +142,6 @@
       engine.setDimensions(canvas.width, canvas.height);
       engine.detectCollisions = true;
       engine.setWallTypeStr('reflecting');
-      engine.gravX = 0; // WTF??? not working
 
       // Create three wheels
       const wheel1 = new Wheel(engine, 200, 150, 100, 12);

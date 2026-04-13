@@ -1,0 +1,202 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cassini 4</title>
+  <link rel="stylesheet" href="./styles/full_viewport_canvas.css">
+  <style>
+    #sim {
+      z-index: 10;
+    }
+
+    #sim2 {
+      z-index: 20;
+    }
+  </style>
+</head>
+
+<body class="canvas-wrapper">
+  <button class="btn-back" onclick="history.back()" aria-label="Go back">&#8249;</button>
+  <!-- Canvas will be inserted here -->
+</body>
+
+<script type="module">
+  import PhysicsEngine from './js/physics2D/PhysicsEngine.js';
+  import Vector2D from './js/physics2D/Vector2D.js';
+  import MouseHandler from './js/app/MouseHandler.js';
+  import AnimationLoop from './js/app/AnimationLoop.js';
+  import RenderLens from './js/app/RenderLens.js';
+  import Model from './js/app/Model.js';
+  import Page from './js/app/Page.js'
+
+  const modelJSON = {
+    "environment": {
+      "wallType": "Reflecting",
+      "wallFriction": 0.5,
+      "gravityConstant": 12.0,
+      "electricConstant": 0.0,
+      "gravityFieldX": 0.0,
+      "gravityFieldY": 0.0,
+      "electricFieldX": 0.0,
+      "electricFieldY": 0.0,
+      "magneticFieldZ": 0.0,
+      "airResistance": 0.15,
+    },
+    "particles": [
+      {
+        "particleNumber": 0,
+        "label": "one",
+        "color": "blue",
+        "initialPositionX": 200.0,
+        "initialPositionY": 250.0,
+        "radius": 5.0,
+        "mass": 85.0,
+        "fixedXPosition": false,
+        "fixedYPosition": true,
+        "trace": false
+      },
+      {
+        "particleNumber": 1,
+        "label": "giant",
+        "color": "green",
+        "initialPositionX": -400,
+        "initialPositionY": 180,
+        "radius": 10.0,
+        "mass": 100.0,
+        "fixedXPosition": true,
+        "fixedYPosition": true,
+        "trace": false
+      },
+      {
+        "particleNumber": 2,
+        "label": "three",
+        "color": "blue",
+        "initialPositionX": 500.0,
+        "initialPositionY": 420.0,
+        "radius": 5.0,
+        "mass": 10.0,
+        "fixedXPosition": false,
+        "fixedYPosition": true,
+        "trace": false
+      },
+      {
+        "particleNumber": 3,
+        "label": "four",
+        "color": "green",
+        "initialPositionX": 900.0,
+        "initialPositionY": 150.0,
+        "radius": 7.0,
+        "mass": 60.0,
+        "fixedXPosition": false,
+        "fixedYPosition": true,
+        "trace": false
+      },
+      {
+        "particleNumber": 4,
+        "label": "five",
+        "color": "green",
+        "initialPositionX": 0.0,
+        "initialPositionY": 200.0,
+        "radius": 2.0,
+        "mass": 150.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 5,
+        "label": "six",
+        "color": "green",
+        "initialPositionX": 10.0,
+        "initialPositionY": 450.0,
+        "radius": 0.5,
+        "mass": 10.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 6,
+        "label": "seven",
+        "color": "green",
+        "initialPositionX": 240.0,
+        "initialPositionY": 550.0,
+        "radius": 0.2,
+        "mass": 30.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+    ],
+    "springs": [
+      // {
+      //   "springNumber": 0,
+      //   "particle1": 4,
+      //   "particle2": 5,
+      //   "damping": .5,
+      //   "springConstant": 5.0,
+      //   "relaxedLength": 0,
+      //   "amplitude": 0.0,
+      //   "frequency": 0.0,
+      //   "phase": 0.0
+      // },
+      // {
+      //   "springNumber": 1,
+      //   "particle1": 5,
+      //   "particle2": 6,
+      //   "damping": .15,
+      //   "springConstant": 2.0,
+      //   "relaxedLength": 0,
+      //   "amplitude": 0.0,
+      //   "frequency": 0.0,
+      //   "phase": 0.0
+      // },
+    ]
+  };
+
+  async function loadAndRunSimulation() {
+    try {
+      // main drawing canvas
+      const canvas = Page.createCanvas(window.innerWidth, window.innerHeight, 'sim');
+
+      const model = new Model();
+      model.parseConfig(modelJSON);
+      model.centerAt(canvas.width / 3, canvas.height / 2);
+
+      const engine = new PhysicsEngine();
+      engine.setDimensions(canvas.width, canvas.height);
+      engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
+      engine.detectCollisions = false;
+
+      const renderer = new RenderLens(engine.particles, engine.springs, canvas);
+      await renderer.init();
+      renderer.clear();
+
+      // mouse listens for events on the top canvas
+      const mouseHandler = new MouseHandler(canvas, engine, renderer);
+      mouseHandler.hideCursorAfterDelay();
+
+      // animation loop calls update function that draws both canvases
+      const animationLoop = new AnimationLoop(() => {
+        engine.step();
+        renderer.render();
+      });
+      animationLoop.start();
+
+      // setup screen capture and pause keys, also stop/start sin curve generators
+      Page.setupKeyEvents(canvas, animationLoop, 'cassini4');
+      Page.onPause(() => renderer.pauseOscillators());
+      Page.onResume(() => renderer.resumeOscillators());
+
+      console.log('Simulation started successfully!', engine.constructor.name);
+    } catch (error) {
+      console.error('Failed to initialize simulation:', error);
+    }
+  }
+
+  loadAndRunSimulation();
+
+</script>
+
+</html>

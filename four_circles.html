@@ -121,8 +121,8 @@
 
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
 
-      const renderer = new RenderOrbits(canvas, null, engine.particles );
-      const RB = renderer
+      const renderer = new RenderOrbits(engine.particles, null, canvas);
+      const RB = renderer;
       RB.bgColor = 'rgb(20, 0, 20)';
       RB.opacity = 0.08;
       RB.clearBG = false;

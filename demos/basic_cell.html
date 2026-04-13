@@ -1,0 +1,270 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Basic Cell</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      display: block;
+      border: 1px solid black
+    }
+  </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+  import PhysicsEngine from '../js/physics2D/PhysicsEngine.js';
+  import Particle from '../js/physics2D/Particle.js';
+  import Spring from '../js/physics2D/Spring.js';
+  import Vector2D from '../js/physics2D/Vector2D.js';
+  import Renderer from '../js/app/RenderSimple.js';
+  import MouseHandler from '../js/app/MouseHandler.js';
+  import AnimationLoop from '../js/app/AnimationLoop.js';
+  import Blob from '../js/app/Blob.js';
+
+  class Wheel {
+    constructor(engine, centerX, centerY, radius = 100, numParticles = 12) {
+      this.engine = engine;
+      this.centerX = centerX;
+      this.centerY = centerY;
+      this.radius = radius;
+      this.numParticles = numParticles;
+      this.centerParticle = null;
+      this.outerParticles = [];
+
+      this.build();
+    }
+
+    build() {
+      // Create central particle
+      // this.centerParticle = new Particle(
+      //   `center_${this.centerX}_${this.centerY}`,
+      //   new Vector2D(this.centerX, this.centerY),
+      //   new Vector2D(0, 0),
+      //   new Vector2D(0, 0),
+      //   5,  // mass
+      //   15  // radius
+      // );
+      // this.centerParticle.setColor('rgb(255, 0, 0)'); // Red for center
+      // this.engine.addParticle(this.centerParticle);
+
+      // Create particles in a circle
+      for (let i = 0; i < this.numParticles; i++) {
+        const angle = (i / this.numParticles) * 2 * Math.PI;
+        const x = this.centerX + this.radius * Math.cos(angle);
+        const y = this.centerY + this.radius * Math.sin(angle);
+
+        const particle = new Particle(
+          `particle_${this.centerX}_${this.centerY}_${i}`,
+          new Vector2D(x, y),
+          new Vector2D(0, 0),
+          new Vector2D(0, 0),
+          3,  // mass
+          10  // radius
+        );
+        particle.setColor('rgb(0, 100, 255)'); // Blue for outer particles
+        particle.horiFriction = true; // Enable horizontal friction
+        this.engine.addParticle(particle);
+        this.outerParticles.push(particle);
+      }
+
+      // Create springs connecting consecutive outer particles (the ring)
+      for (let i = 0; i < this.numParticles; i++) {
+        const nextI = (i + 1) % this.numParticles;
+        const spring = new Spring(
+          this.outerParticles[i],
+          this.outerParticles[nextI],
+          5,      // spring constant
+          0.9,    // damping
+          this.radius * Math.sin(Math.PI / this.numParticles) * 2  // rest length (chord length)
+        );
+        this.engine.addSpring(spring);
+      }
+
+      // Create springs connecting each outer particle to the center (spokes)
+      // for (let i = 0; i < this.numParticles; i++) {
+      //   const spring = new Spring(
+      //     this.outerParticles[i],
+      //     this.centerParticle,
+      //     5,      // spring constant (stronger for spokes)
+      //     0.8,    // damping
+      //     this.radius  // rest length (radius)
+      //   );
+      //   this.engine.addSpring(spring);
+      // }
+
+      // Create 4 bracing springs connecting opposite particles across the wheel
+      // const bracingPairs = [
+      //   [0, 6],
+      //   [3, 9],
+      //   [1, 7],
+      //   [4, 10]
+      // ];
+
+      // for (const [i, j] of bracingPairs) {
+      //   const spring = new Spring(
+      //     this.outerParticles[i],
+      //     this.outerParticles[j],
+      //     20,                    // spring constant
+      //     0.8,                  // damping
+      //     this.radius * 2      // rest length (diameter)
+      //   );
+      //   this.engine.addSpring(spring);
+      // }
+    }
+
+    /**
+     * Compute the centroid of the current particles.
+     * @returns {{x:number,y:number}|null} coordinates of centroid or null if no particles
+     */
+    computeCentroid() {
+      if (!this.outerParticles || this.outerParticles.length === 0) {
+        return null;
+      }
+      let cx = 0;
+      let cy = 0;
+      for (const p of this.outerParticles) {
+        cx += p.pos.x;
+        cy += p.pos.y;
+      }
+      cx /= this.outerParticles.length;
+      cy /= this.outerParticles.length;
+      return { x: cx, y: cy };
+    }
+
+    applyGlobalForces() {
+      const centroid = this.computeCentroid();
+      if (!centroid) return;
+
+      for (const p of this.outerParticles) {
+        // Apply a force away from the centroid
+        const toCentroid = new Vector2D(centroid.x - p.pos.x, centroid.y - p.pos.y);
+        toCentroid.normalize();
+        toCentroid.multiply(-20); // Adjust strength of the force
+        p.force.x += toCentroid.x;
+        p.force.y += toCentroid.y;
+      }
+    }
+  }
+
+  /**
+   * Draw a smooth closed curve through the given points using quadratic Bezier curves.
+   * Assumes that the points are ordered around the perimeter of the shape, and form a closed loop.
+   * @param {CanvasRenderingContext2D} ctx - The canvas rendering context to draw on.
+   * @param {Array<{x:number,y:number}>} points - An array of points to draw the curve through.
+   */
+  function drawQuadraticBezierCircle(ctx, points) {
+    if (points.length < 2) return;
+
+    ctx.strokeStyle = 'rgba(0, 150, 190, 1)';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+
+    for (let i = 0; i < points.length - 1; i++) {
+      // Use midpoint as control point for smooth curve
+      const xc = (points[i].x + points[i + 1].x) / 2;
+      const yc = (points[i].y + points[i + 1].y) / 2;
+      ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+    }
+
+    // Curve through the last point
+    const lastPoint = points[points.length - 1];
+      const xc = (lastPoint.x + points[0].x) / 2;
+      const yc = (lastPoint.y + points[0].y) / 2;
+    ctx.quadraticCurveTo(lastPoint.x, lastPoint.y, points[0].x, points[0].y);
+    ctx.stroke();
+  }
+
+  // Draw a circle at each particle position
+  function drawParticles(ctx, particles) {
+    if (particles && particles.length > 0) {
+      for (const particle of particles) {
+        ctx.fillStyle = 'rgb(0, 255, 50)';
+        ctx.beginPath();
+        ctx.arc(particle.getX(), particle.getY(), 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  function createCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'sim';
+    canvas.width = width;
+    canvas.height = height;
+    document.body.appendChild(canvas);
+    return canvas;
+  }
+
+  async function loadAndRunSimulation() {
+    try {
+      const canvas = createCanvas(800, 600);
+
+      const engine = new PhysicsEngine();
+      engine.setDimensions(canvas.width, canvas.height);
+      engine.detectCollisions = true;
+      engine.setWallTypeStr('absorbing');
+      engine.gravY = 0.1;
+      engine.wallFriction = 100.8;
+
+      // Create three wheels
+      const wheel1 = new Wheel(engine, 200, 150, 100, 12);
+      // const wheel2 = new Wheel(engine, 600, 150, 100, 12);
+      // const wheel3 = new Wheel(engine, 400, 450, 100, 12);
+
+      // Create a blob from wheel1's outer particles
+      const blob = new Blob(20);
+      for (const particle of wheel1.outerParticles) {
+        blob.addKnot({ x: particle.pos.x, y: particle.pos.y });
+      }
+
+      const renderer = new Renderer(engine.particles, engine.springs, canvas);
+
+      // Wrap the renderer's render method to also draw the blob
+      const originalRender = renderer.render.bind(renderer);
+      renderer.render = function () {
+        originalRender();
+        // Update blob knots from wheel1 particles
+        blob.clear();
+        for (const particle of wheel1.outerParticles) {
+          blob.addKnot({ x: particle.pos.x, y: particle.pos.y });
+        }
+        blob.makePolygon();
+        blob.draw(this.ctx, { strokeStyle: 'rgba(255, 100, 0, 0.5)', lineWidth: 30 });
+
+        drawQuadraticBezierCircle(this.ctx, wheel1.outerParticles.map(p => ({ x: p.pos.x, y: p.pos.y })));
+        drawParticles(this.ctx, wheel1.outerParticles);
+      };
+
+      const mouseHandler = new MouseHandler(canvas, engine, renderer);
+      const animationLoop = new AnimationLoop(() => {
+        engine.step(() => {
+          wheel1.applyGlobalForces();
+        });
+        renderer.render();
+      });
+      animationLoop.start();
+
+      console.log('String simulation started successfully!');
+    } catch (error) {
+      console.error('Failed to initialize simulation:', error);
+    }
+  }
+
+  loadAndRunSimulation();
+</script>
+
+</html>

@@ -1,0 +1,300 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Physics2D Basic Gravity Simulation</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: black;
+    }
+
+    canvas {
+      display: block;
+      border: 1px solid black
+    }
+  </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+  import PhysicsEngine from '../js/physics2D/PhysicsEngine.js';
+  import Particle from '../js/physics2D/Particle.js';
+  import Spring from '../js/physics2D/Spring.js';
+  import Vector2D from '../js/physics2D/Vector2D.js';
+  import RenderCurves from '../js/app/RenderCurves.js';
+  import RenderSimple from '../js/app/RenderSimple.js';
+  import MouseHandler from '../js/app/MouseHandler.js';
+  import AnimationLoop from '../js/app/AnimationLoop.js';
+  import Circles from '../js/app/Circles.js';
+
+  function createCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'sim';
+    canvas.width = width;
+    canvas.height = height;
+    document.body.appendChild(canvas);
+    return canvas;
+  }
+
+  /**
+   * Draw circles, show the intersection points and crescent shapes.
+   */
+  class RenderCircles extends RenderSimple {
+    constructor(particles = [], springs = [], target, radiusW = 10, radiusH = 10) {
+      super(particles, null, target);
+      this.radiusW = radiusW;
+      this.radiusH = radiusH;
+      this.clearBG = false;
+      this.bgColor = 'black';
+      this.clear();
+      this.ctx.globalAlpha = 0.05; //1; //0.03;
+    }
+
+    render() {
+      // this.clear();
+
+      // Last two particles are agitators, not part of the grid
+
+      for (let i = 0; i < this.particles.length - 2; i++) {
+        // Draw the current particle as a circle
+        this.paintParticle(this.ctx, this.particles[i]);
+        // Check for intersections with subsequent particles 
+        for (let j = i + 1; j < this.particles.length - 2; j++) {
+          const intersects = Circles.getCircleIntersections(
+            this.particles[i].getX(), this.particles[i].getY(), this.radiusW,
+            this.particles[j].getX(), this.particles[j].getY(), this.radiusH
+          );
+          // if circles intersect, draw the intersection points and the crescent shapes
+          if (intersects.length > 0) {
+            this.paintPoint(this.ctx, intersects[0].x, intersects[0].y);
+            this.paintPoint(this.ctx, intersects[1].x, intersects[1].y);
+            const arcs = Circles.getOverlapShapes(
+              this.particles[i].getX(), this.particles[i].getY(), this.radiusW,
+              this.particles[j].getX(), this.particles[j].getY(), this.radiusH
+            );
+            if (arcs) {
+              // Crescent arc from circle 1
+              // this.ctx.fillStyle = `rgba(20, 255, 240, .1)`; // turquoise
+              this.ctx.save();
+              {
+                this.ctx.globalAlpha = 0.9;
+                this.ctx.fillStyle = `rgba(20, 210, 215, .1)`; // turquoise
+                this.ctx.strokeStyle = `rgba(10, 90, 115, .1)`; // turquoise
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.arc(arcs.crescent1.arc1.x, arcs.crescent1.arc1.y, arcs.crescent1.arc1.r, arcs.crescent1.arc1.angleStart, arcs.crescent1.arc1.angleEnd, arcs.crescent1.arc1.counterClockwise);
+                this.ctx.arc(arcs.crescent1.arc2.x, arcs.crescent1.arc2.y, arcs.crescent1.arc2.r, arcs.crescent1.arc2.angleStart, arcs.crescent1.arc2.angleEnd, arcs.crescent1.arc2.counterClockwise);
+                this.ctx.closePath();
+                // this.ctx.fill();
+                this.ctx.stroke();
+              }
+              this.ctx.restore();
+
+              // Crescent arc from circle 2
+              this.ctx.fillStyle = `rgba(255, 0, 217, .17)`; // magenta
+              this.ctx.beginPath();
+              this.ctx.arc(arcs.crescent2.arc1.x, arcs.crescent2.arc1.y, arcs.crescent2.arc1.r, arcs.crescent2.arc1.angleStart, arcs.crescent2.arc1.angleEnd, arcs.crescent2.arc1.counterClockwise);
+              this.ctx.arc(arcs.crescent2.arc2.x, arcs.crescent2.arc2.y, arcs.crescent2.arc2.r, arcs.crescent2.arc2.angleStart, arcs.crescent2.arc2.angleEnd, arcs.crescent2.arc2.counterClockwise);
+              this.ctx.closePath();
+              this.ctx.fill();
+
+              // Intersection lens
+              this.ctx.fillStyle = `rgba(255, 255, 90, .7)`; // yellow
+              this.ctx.beginPath();
+              this.ctx.arc(arcs.lens.arc1.x, arcs.lens.arc1.y, arcs.lens.arc1.r, arcs.lens.arc1.angleStart, arcs.lens.arc1.angleEnd, arcs.lens.arc1.counterClockwise);
+              this.ctx.arc(arcs.lens.arc2.x, arcs.lens.arc2.y, arcs.lens.arc2.r, arcs.lens.arc2.angleStart, arcs.lens.arc2.angleEnd, arcs.lens.arc2.counterClockwise);
+              this.ctx.closePath();
+              this.ctx.fill();
+            }
+          }
+        }
+      }
+
+      // special
+      this.paintAgitator(this.ctx, this.particles[this.particles.length - 2]);
+      // this.paintAgitator(this.ctx, this.particles[this.particles.length - 1]);
+    }
+
+    paintAgitator(ctx, particle) {
+      ctx.save();
+      {
+        ctx.globalCompositeOperation = 'color-burn';
+        ctx.globalAlpha = 1.0;
+        ctx.strokeStyle = 'rgba(220, 200, 140, 0.03)';
+        ctx.fillStyle = 'rgba(220, 200, 140, 0.03)';
+        ctx.lineWidth = 10;
+        // ctx.fillRect(particle.getX() - 50, particle.getY() - 50, 100, 100);
+        this.drawLineH(ctx, particle.getX(), particle.getY());
+        // ctx.beginPath();
+        // ctx.arc(particle.getX(), particle.getY(), 80, 0, Math.PI * 2);
+        // ctx.fill();
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      ctx.restore();
+    }
+
+    paintParticle(ctx, p) {
+      let r = 5;
+      ctx.save();
+      {
+        if (p.label === 'agitator' || p.label === 'agitator2') {
+        } else if (p.label === 'horizontal') {
+          ctx.strokeStyle = 'rgba(0, 190, 90, 0.8)'; // Green with some transparency
+          r = this.radiusW;
+        } else if (p.label === 'vertical') {
+          ctx.strokeStyle = 'rgba(90, 190, 0, 0.8)'; // Green with some transparency
+          r = this.radiusH;
+        }
+        ctx.beginPath();
+        ctx.arc(p.getX(), p.getY(), r, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    paintPoint(ctx, x, y) {
+      ctx.save();
+      {
+        this.ctx.globalAlpha = 0.1;
+        ctx.strokeStyle = 'rgba(120, 20, 190, 1.0)'; // Purpl-ish
+        ctx.beginPath();
+        ctx.arc(x, y, 2, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    drawLineH(ctx, x, y) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(ctx.canvas.width, y);
+      ctx.stroke();
+    }
+  }
+
+  async function loadAndRunSimulation() {
+    try {
+      const canvas = createCanvas(800, 600);
+
+      const engine = new PhysicsEngine();
+      engine.setDimensions(canvas.width, canvas.height);
+      engine.detectCollisions = false;
+      engine.setWallTypeStr('reflecting');
+      engine.gravY = 0;
+      engine.gravConst = 3;
+      engine.wallFriction = 20;
+      engine.airResistance = .5;
+      engine.timeStep = .1; // physics time that passes per animation frame (lower is slower but more accurate)
+
+      // --------------------------------------------------------------
+      // Create 9 particles spanning the full width of the canvas
+      const numParticles = 8;
+      const springLengthX = canvas.width / (numParticles - 1);
+      const stringY = canvas.height / 2; // Middle of canvas vertically
+
+      const particles = [];
+      for (let i = 0; i < numParticles; i++) {
+        const x = i * springLengthX;
+        const particle = new Particle(
+          'horizontal',
+          new Vector2D(x, stringY), // position
+          new Vector2D(0, 0), // velocity
+          new Vector2D(0, 0), // force
+          5, // mass
+          5, // radius
+        );
+        particle.setColor('rgb(0, 255, 0)'); // green
+        particle.setFixedX(true);
+        engine.addParticle(particle);
+        particles.push(particle);
+      }
+
+      // Fix the leftmost particle's X position
+      particles[0].setFixedX(true);
+      particles[0].setColor('rgb(0, 180, 180)'); // Teal for left anchor
+
+      // Fix the rightmost particle's X position
+      particles[numParticles - 1].setFixedX(true);
+      particles[numParticles - 1].setColor('rgb(180, 0, 180)'); // Magenta for right anchor
+
+      // --------------------------------------------------------------
+      // Create 6 particles spanning the full height of the canvas
+      const numParticlesV = 6;
+      const springLengthY = canvas.height / (numParticlesV - 1);
+      const stringX = canvas.width / 2; // Middle of canvas horizontally
+
+      const particlesY = [];
+      for (let i = 0; i < numParticlesV; i++) {
+        const y = i * springLengthY;
+        const particle = new Particle(
+          'vertical',
+          new Vector2D(stringX, y), // position
+          new Vector2D(0, 0), // velocity
+          new Vector2D(0, 0), // force
+          5, // mass
+          5, // radius
+        );
+        particle.setColor('rgb(0, 255, 0)'); // green
+        particle.setFixedY(true);
+        engine.addParticle(particle);
+        particlesY.push(particle);
+      }
+
+      // Fix the topmost particle's Y position
+      particlesY[0].setFixedY(true);
+      particlesY[0].setColor('rgb(0, 180, 180)'); // Teal for left anchor
+
+      // Fix the bottommost particle's Y position
+      particlesY[numParticlesV - 1].setFixedY(true);
+      particlesY[numParticlesV - 1].setColor('rgb(180, 0, 180)'); // Magenta for right anchor
+
+      // --------------------------------------------------------------
+      // add two free roaming particles to shake things up
+
+      const agitator = new Particle(
+        'agitator',
+        new Vector2D(300, 170), // position
+        new Vector2D(Math.random() * 10 - 5, 0), // velocity
+        new Vector2D(0, 0), // force
+        100, // mass
+        5, // radius
+      );
+      agitator.setColor('rgb(0, 0, 255)'); // green
+      engine.addParticle(agitator);
+
+      const agitator2 = new Particle(
+        'agitator2',
+        new Vector2D(540, 170), // position
+        new Vector2D(0, 0), // velocity
+        new Vector2D(0, 0), // force
+        120, // mass
+        5, // radius
+      );
+      agitator2.setColor('rgb(0, 0, 255)'); // green
+      engine.addParticle(agitator2);
+
+      // renderer and animation loop
+      const renderer = new RenderCircles(engine.particles, engine.springs, canvas, springLengthX / 2.1, springLengthY / 2.1);
+      const mouseHandler = new MouseHandler(canvas, engine, renderer);
+      const animationLoop = new AnimationLoop(engine, renderer);
+      animationLoop.start();
+
+      console.log('String simulation started successfully!');
+    } catch (error) {
+      console.error('Failed to initialize simulation:', error);
+    }
+  }
+
+  loadAndRunSimulation();
+</script>
+
+</html>

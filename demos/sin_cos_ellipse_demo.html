@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #000;
+        }
+
+        canvas {
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        class Oscillator {
+            constructor(frequency = 1, type = 'sin', phase = 0) {
+                this.frequency = frequency;
+                this.type = type;
+                this.phase = phase;
+                this.startTime = performance.now();
+            }
+
+            getValue(currentTime = performance.now()) {
+                const elapsedTime = (currentTime - this.startTime) / 1000;
+                const angle = 2 * Math.PI * this.frequency * elapsedTime + this.phase;
+                return this.type === 'cos' ? Math.cos(angle) : Math.sin(angle);
+            }
+        }
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 800;
+        canvas.height = 600;
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        // Elliptical orbit using different radii
+        const radiusX = 200; // Semi-major axis
+        const radiusY = 120; // Semi-minor axis
+
+        const xOscillator = new Oscillator(0.2, 'cos');
+        const yOscillator = new Oscillator(0.2, 'sin');
+
+        function animate() {
+            ctx.fillStyle = '#0A1929';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw sun
+            ctx.fillStyle = '#FDB813';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw elliptical orbit
+            ctx.strokeStyle = 'rgba(107, 155, 209, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Calculate planet position (elliptical)
+            const x = centerX + xOscillator.getValue() * radiusX;
+            const y = centerY + yOscillator.getValue() * radiusY;
+
+            // Draw planet
+            ctx.fillStyle = '#6B9BD1';
+            ctx.beginPath();
+            ctx.arc(x, y, 15, 0, Math.PI * 2);
+            ctx.fill();
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+
+</html>

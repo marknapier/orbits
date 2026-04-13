@@ -1,0 +1,165 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Physics2D Wave Simulation</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      display:block; 
+      border: 1px solid black
+    }
+  </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+  import PhysicsEngine from '../js/physics2D/PhysicsEngine.js';
+  import Particle from '../js/physics2D/Particle.js';
+  import Spring from '../js/physics2D/Spring.js';
+  import Vector2D from '../js/physics2D/Vector2D.js';
+  import RenderCurves from '../js/app/RenderCurves.js';
+  import MouseHandler from '../js/app/MouseHandler.js';
+  import AnimationLoop from '../js/app/AnimationLoop.js';
+
+  function createCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'sim';
+    canvas.width = width;
+    canvas.height = height;
+    document.body.appendChild(canvas);
+    return canvas;
+  }
+
+  async function loadAndRunSimulation() {
+    try {
+      const canvas = createCanvas(800, 600);
+
+      const engine = new PhysicsEngine();
+      engine.setDimensions(canvas.width, canvas.height);
+      engine.detectCollisions = false;
+      engine.setWallTypeStr('absorbing');
+      engine.gravY = 0;
+      engine.gravConst = 10;
+      engine.wallFriction = 20;
+
+      // Create 10 particles spanning the full width of the canvas
+      const numParticles = 10;
+      const margin = 0; // Small margin from edges
+      const stringStartX = margin;
+      const stringEndX = canvas.width - margin;
+      const totalLength = stringEndX - stringStartX;
+      const springLength = totalLength / (numParticles - 1);
+      const stringY = canvas.height / 2; // Middle of canvas vertically
+
+      // Create particles in a horizontal line
+      const particles = [];
+      for (let i = 0; i < numParticles; i++) {
+        const x = stringStartX + i * springLength;
+        const particle = new Particle(
+          `particle${i}`,
+          new Vector2D(x, stringY), // position
+          new Vector2D(0, 0), // velocity
+          new Vector2D(0, 0), // force
+          5, // mass
+          5, // radius
+        );
+        particle.setColor('rgb(0, 255, 0)'); // green
+        engine.addParticle(particle);
+        particles.push(particle);
+      }
+
+      // Fix the leftmost particle's X position
+      particles[0].setFixedX(true);
+      particles[0].setColor('rgb(0, 180, 180)'); // Teal for left anchor
+
+      // Fix the rightmost particle's X position
+      particles[numParticles - 1].setFixedX(true);
+      particles[numParticles - 1].setColor('rgb(180, 0, 180)'); // Magenta for right anchor
+
+      // Create springs connecting consecutive particles
+      for (let i = 0; i < numParticles - 1; i++) {
+        const spring = new Spring(
+          particles[i],
+          particles[i + 1],
+          5,  // spring constant
+          1,  // damping
+          springLength // relaxed length matches initial spacing
+        );
+        engine.addSpring(spring);
+      }
+
+      // add two free roaming particles to shake things up, with particls at top and bottom
+
+      const top = new Particle(
+        'top',
+        new Vector2D(300, 0), // position
+        new Vector2D(0, 0), // velocity
+        new Vector2D(0, 0), // force
+        1, // mass
+        3, // radius
+      );
+      top.setColor('rgb(60, 60, 60)'); // gray
+      top.setFixedX(true);
+      top.setFixedY(true);
+      engine.addParticle(top);
+      
+      const agitator = new Particle(
+        'agitator',
+        new Vector2D(300, 200), // position
+        new Vector2D(0, 0), // velocity
+        new Vector2D(0, 0), // force
+        100, // mass
+        5, // radius
+      );
+      agitator.setColor('rgb(0, 0, 255)'); // green
+      engine.addParticle(agitator);
+
+      const agitator2 = new Particle(
+        'agitator2',
+        new Vector2D(540, 200), // position
+        new Vector2D(0, 0), // velocity
+        new Vector2D(0, 0), // force
+        120, // mass
+        5, // radius
+      );
+      agitator2.setColor('rgb(0, 0, 255)'); // green
+      engine.addParticle(agitator2);
+
+      const bottom = new Particle(
+        'bottom',
+        new Vector2D(300, 600), // position
+        new Vector2D(0, 0), // velocity
+        new Vector2D(0, 0), // force
+        1, // mass
+        3, // radius
+      );
+      bottom.setColor('rgb(60, 60, 60)'); // gray
+      bottom.setFixedX(true);
+      bottom.setFixedY(true);
+      engine.addParticle(bottom);
+
+      const renderer = new RenderCurves(engine.particles, engine.springs, canvas);
+      const mouseHandler = new MouseHandler(canvas, engine, renderer);
+      const animationLoop = new AnimationLoop(engine, renderer);
+      animationLoop.start();
+
+      console.log('String simulation started successfully!');
+    } catch (error) {
+      console.error('Failed to initialize simulation:', error);
+    }
+  }
+  
+  loadAndRunSimulation();
+</script>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a1a;
+        }
+        canvas {
+            border: 2px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        class TexturedCircle {
+            constructor(x, y, radius, textureImageSrc) {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.vx = 0;
+                this.vy = 0;
+                
+                this.textureImage = new Image();
+                this.textureImage.src = textureImageSrc;
+                
+                this.offscreenCanvas = document.createElement('canvas');
+                this.offscreenCtx = this.offscreenCanvas.getContext('2d');
+                
+                this.textureLoaded = false;
+                this.textureImage.onload = () => {
+                    this.textureLoaded = true;
+                    this.updateOffscreenCanvas();
+                };
+            }
+            
+            updateOffscreenCanvas() {
+                const diameter = Math.ceil(this.radius * 2);
+                this.offscreenCanvas.width = diameter;
+                this.offscreenCanvas.height = diameter;
+                
+                this.offscreenCtx.clearRect(0, 0, diameter, diameter);
+                this.offscreenCtx.save();
+                
+                // Circular clip
+                this.offscreenCtx.beginPath();
+                this.offscreenCtx.arc(this.radius, this.radius, this.radius, 0, Math.PI * 2);
+                this.offscreenCtx.clip();
+                
+                // Draw texture
+                if (this.textureLoaded) {
+                    this.offscreenCtx.drawImage(
+                        this.textureImage,
+                        0, 0,
+                        diameter, diameter
+                    );
+                }
+                
+                this.offscreenCtx.restore();
+            }
+            
+            update(deltaTime, canvasWidth, canvasHeight) {
+                this.x += this.vx * deltaTime;
+                this.y += this.vy * deltaTime;
+                
+                // Bounce off walls
+                if (this.x - this.radius < 0 || this.x + this.radius > canvasWidth) {
+                    this.vx *= -1;
+                    this.x = Math.max(this.radius, Math.min(canvasWidth - this.radius, this.x));
+                }
+                if (this.y - this.radius < 0 || this.y + this.radius > canvasHeight) {
+                    this.vy *= -1;
+                    this.y = Math.max(this.radius, Math.min(canvasHeight - this.radius, this.y));
+                }
+            }
+            
+            setRadius(radius) {
+                if (this.radius !== radius) {
+                    this.radius = radius;
+                    if (this.textureLoaded) {
+                        this.updateOffscreenCanvas();
+                    }
+                }
+            }
+            
+            draw(ctx) {
+                if (!this.textureLoaded) return;
+                
+                ctx.drawImage(
+                    this.offscreenCanvas,
+                    this.x - this.radius,
+                    this.y - this.radius
+                );
+            }
+        }
+        
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 800;
+        canvas.height = 600;
+        
+        // Create textured circles with different images
+        // You can use any image URL or data URL
+        const circles = [
+            new TexturedCircle(200, 200, 60, 'https://picsum.photos/200/200?random=1'),
+            new TexturedCircle(400, 300, 80, 'https://picsum.photos/200/200?random=2'),
+            new TexturedCircle(600, 400, 50, 'https://picsum.photos/200/200?random=3')
+        ];
+        
+        // Set velocities
+        circles[0].vx = 100;
+        circles[0].vy = 80;
+        circles[1].vx = -120;
+        circles[1].vy = 60;
+        circles[2].vx = 90;
+        circles[2].vy = -70;
+        
+        let lastTime = performance.now();
+        let time = 0;
+        
+        function animate(currentTime) {
+            const deltaTime = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+            time += deltaTime;
+            
+            // Clear canvas
+            ctx.fillStyle = '#0A1929';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Animate radius with sine wave
+            circles.forEach((circle, i) => {
+                circle.update(deltaTime, canvas.width, canvas.height);
+                
+                // Pulsating radius
+                const baseRadius = 60 + i * 20;
+                const newRadius = baseRadius + Math.sin(time * 2 + i) * 15;
+                circle.setRadius(newRadius);
+                
+                circle.draw(ctx);
+            });
+            
+            requestAnimationFrame(animate);
+        }
+        
+        animate(performance.now());
+    </script>
+</body>
+</html>

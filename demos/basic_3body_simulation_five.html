@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>3 Body Problem</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #simulations-wrapper {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .simulation-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    canvas {
+      display: block;
+      border: 1px solid black;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="simulations-wrapper"></div>
+</body>
+
+<script type="module">
+  import PendulumSimulation from '../js/app/PendulumSimulation.js';
+
+  async function loadAndRunSimulation() {
+    try {
+      const wrapper = document.getElementById('simulations-wrapper');
+      const simulations = [];
+
+      // Create 5 pendulum simulations
+      for (let i = 0; i < 5; i++) {
+        const container = document.createElement('div');
+        container.className = 'simulation-container';
+        wrapper.appendChild(container);
+
+        const simulation = new PendulumSimulation(container, 100, 600);
+        simulation.start();
+        simulations.push(simulation);
+      }
+
+      window.simulations = simulations; // Expose for debugging
+
+      console.log('5 Pendulum simulations started successfully!');
+    } catch (error) {
+      console.error('Failed to initialize simulations:', error);
+    }
+  }
+
+  loadAndRunSimulation();
+</script>
+
+</html>

@@ -19,6 +19,7 @@
   import AnimationLoop from './js/app/AnimationLoop.js';
   import RenderCassini from './js/app/RenderCassini.js';
   import Model from './js/app/Model.js';
+  import Page from './js/app/Page.js'
 
   const modelJSON = {
     "environment": {
@@ -121,7 +122,7 @@
 
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
 
-      const renderer = new RenderCassini(canvas, null, engine.particles );
+      const renderer = new RenderCassini(engine.particles, null, canvas );
       const RB = renderer
       RB.bgColor = 'rgb(20, 0, 20)';
       RB.opacity = 0.08;
@@ -131,8 +132,12 @@
       renderer.clear();
 
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
+      mouseHandler.hideCursorAfterDelay();
+
       const animationLoop = new AnimationLoop(engine, renderer);
       animationLoop.start();
+
+      Page.setupKeyEvents(canvas, animationLoop, 'cassini3');
 
       window.engine = engine; // Expose for debugging
       console.log('Simulation started successfully!');

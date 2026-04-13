@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cassini 2</title>
+  <title>Cassini 3</title>
   <link rel="stylesheet" href="./styles/full_viewport_canvas.css">
 </head>
 
@@ -20,6 +20,7 @@
   import RenderCassini2 from './js/app/RenderCassini2.js';
   import RenderSimple from './js/app/RenderSimple.js';
   import Model from './js/app/Model.js';
+  import Page from './js/app/Page.js'
 
   const modelJSON = {
     "environment": {
@@ -163,61 +164,9 @@
     ]
   };
 
-  function createCanvas(width, height) {
-    const aspectRatio = 16/9;
-    const canvas = document.createElement('canvas');
-    canvas.id = 'sim';
-    canvas.width = Math.min(width, height*aspectRatio);
-    canvas.height = height;
-    document.body.appendChild(canvas);
-    return canvas;
-  }
-
-  function setupSaveCanvasToFile(canvas, filename = 'screenshot') {
-    // pause the animation loop
-    document.addEventListener('keydown', async (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-            e.preventDefault();
-            
-            // Convert canvas to blob
-            canvas.toBlob((blob) => {
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-                const fullFilename = `${filename}-${timestamp}.png`;
-                 
-                link.download = fullFilename;
-                link.href = url;
-                link.click();
-                
-                // Clean up
-                URL.revokeObjectURL(url);
-                console.log('Canvas saved to ', fullFilename);
-
-                // need callback to unpause animation loop
-            }, 'image/png', 1.0);
-        }
-    });
-  }
-
-  function setupPauseKey(animationLoop) {
-    // pause the animation loop
-    document.addEventListener('keydown', async (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
-        e.preventDefault();
-        if (animationLoop.running()) {
-          animationLoop.stop();
-        } 
-        else {
-          animationLoop.start();
-        }
-      }
-    });
-  }
-
   async function loadAndRunSimulation() {
     try {
-      const canvas = createCanvas(window.innerWidth, window.innerHeight);
+      const canvas = Page.createCanvas(window.innerWidth, window.innerHeight);
 
       const engine = new PhysicsEngine();
       engine.setDimensions(canvas.width, canvas.height);
@@ -230,7 +179,7 @@
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
 
       // const renderer = new RenderSimple(engine.particles, engine.springs, canvas );
-      const renderer = new RenderCassini2(canvas, null, engine.particles );
+      const renderer = new RenderCassini2(engine.particles, null, canvas);
       await renderer.init(); // load images for colors, textures, etc.
 
       renderer.bgColor = 'rgb(20, 0, 20)';
@@ -243,11 +192,12 @@
       engine.particles[3].color = 'rgba(10, 0, 10, .6)'; // fade black
 
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
+      mouseHandler.hideCursorAfterDelay();
+
       const animationLoop = new AnimationLoop(engine, renderer);
       animationLoop.start();
 
-      setupPauseKey(animationLoop);
-      setupSaveCanvasToFile(canvas, 'cassini3');  
+      Page.setupKeyEvents(canvas, animationLoop, 'cassini3');
 
       console.log('Simulation started successfully!');
     } catch (error) {

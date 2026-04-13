@@ -1,3 +1,19 @@
+/**
+ *  This css goes with the fullscreen canvas artworks, where the canvas is created
+ *  by javascript dynamically and is sized to fit the full vertical height and
+ *  width of the viewport where possible. 
+ *
+ *  The canvas width is capped at a 9x16 proportion to the height, which may leave 
+ *  blank space on either side of the canvas on wider viewports. In those cases the 
+ *  left:50% and transform: translateX(-50%) styles will center the canvas in the 
+ *  viewport.
+ *  
+ *  Multiple canvases will be stacked on top of each other.
+ *
+ *  Also styles .btn-back to create a back button in the upper left corner if present:
+ *    <button class="btn-back" onclick="history.back()">&#8249;</button>
+ */
+
 * {
   margin: 0;
   padding: 0;
@@ -13,14 +29,22 @@ body {
   min-height: 100dvh;
   font-family: Arial, sans-serif;
   position: relative;
+  overflow: hidden;
 }
 
-/* Canvas styling */
-#sim {
-  display: block;
+body canvas {
+  /* force canvases to upper left corner so they'll stack */
+  position: fixed;
+  top: 0;
+  /* center the canvas horizontally in the viewport */
+  left: 50%;
+  transform: translateX(-50%);
+  /* limit canvas size to viewport */
+  max-width: 100vw;
+  height: 100vh;
+  /* Canvas styling */
   cursor: crosshair;
   border: 1px solid rgb(60, 60, 60);
-  background-color: black;
 }
 
 .btn-back {
@@ -44,9 +68,14 @@ body {
   /* To fix Chrome Iphone issue where the canvas was pushed down below the button 
   instead of positioned in upper left full-viewport: buttons have user-agent stylesheet 
   margins that need to be explicitly overridden */
-  margin: 0; /* Explicit margin override for buttons */
-  -webkit-appearance: none; /* Remove iOS button styling */
+  margin: 0;
+  /* Explicit margin override for buttons */
+  -webkit-appearance: none;
+  /* Remove iOS button styling */
   appearance: none;
 }
-.btn-back:hover { background: #999; color: #222; }
 
+.btn-back:hover {
+  background: #999;
+  color: #222;
+}

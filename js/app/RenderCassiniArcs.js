@@ -1,27 +1,18 @@
-/**
- * This class renders into a canvas 2D context (ctx).
- */
-
-import Blob from './Blob.js';
 import Particle from '../physics2D/Particle.js';
 import ColorPalette from './ColorPalette.js';
+import RenderSimple from './RenderSimple.js'
 
-export default class RenderCassiniArcs {
+export default class RenderCassiniArcs extends RenderSimple {
   // Configurable options
   bgColor = "rgb(60,0,0)";          // background color
   opacity = 0.5;                      // alpha for all paint operations
   clearBG = true;                     // if false, leaves motion trails
   violetColors = ["rgb(25, 15, 30)", "rgb(20, 10, 25)", "rgb(15, 5, 20)", "rgb(10, 0, 15)"];
 
-  /**
-   * @param {object} opts
-   * @param {HTMLCanvasElement} opts.canvas
-   * @param {CanvasRenderingContext2D} [opts.ctx]
-   * @param {Array<any>} [opts.particles]
-   */
-  constructor(canvas, ctx = null, particles = []) {
+  constructor(particles = [], springs = null, canvas) {
+    super(particles, null, canvas);
     this.canvas = canvas;
-    this.ctx = ctx ?? canvas.getContext("2d");
+    this.ctx = canvas.getContext("2d");
     this.particles = particles;
     this.yellowGreenPalette = null; // colors will be loaded in init()
   }
@@ -235,18 +226,5 @@ export default class RenderCassiniArcs {
     // Draw a filled rectangle that covers the entire canvas
     this.ctx.fillStyle = "black";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-  }
-
-  setClosestParticle(particle) {
-    const closestParticle = particle;
-    if (particle) {
-      this.canvas.style.cursor = "pointer"; // Change cursor to hand when hovering near a particle
-    } else {
-      this.canvas.style.cursor = "crosshair"; // Reset cursor when not near any particle
-    }
-  }
-
-  setMouseXY(x, y) {
-    // This method can be used to track mouse position for hover effects or other interactions
   }
 }

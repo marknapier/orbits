@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        /**
+         * given a CSS gradient, outputs the code for a radial gradient to console
+         * const gradient = ctx.createRadialGradient(180, 180, 0, 200, 200, 50);
+         * gradient.addColorStop(0.14, 'rgba(255, 205, 176, 1)');
+         * gradient.addColorStop(0.46, 'rgba(179, 72, 23, 1)');
+         * gradient.addColorStop(0.64, 'rgba(153, 60, 17, 1)');
+         * gradient.addColorStop(0.86, 'rgba(140, 57, 18, 1)');
+         * gradient.addColorStop(0.98, 'rgba(179, 100, 71, 1)');
+         */
+        function parseCSSRadialGradient(cssGradient, centerX, centerY, radius) {
+            const content = cssGradient
+                .replace(/radial-gradient\s*\(\s*/i, '')
+                .replace(/\)\s*$/, '')
+                .trim();
+            
+            // Split by commas outside parentheses
+            const parts = [];
+            let current = '';
+            let depth = 0;
+            
+            for (let char of content) {
+                if (char === '(') depth++;
+                if (char === ')') depth--;
+                
+                if (char === ',' && depth === 0) {
+                    parts.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            if (current) parts.push(current.trim());
+            
+            // Filter color stops
+            const colorStops = parts.filter(part => 
+                part.match(/rgba?\s*\(/)
+            );
+            
+            // Create gradient
+            const gradient = ctx.createRadialGradient(
+                centerX+20, centerY-20, 0,
+                centerX, centerY, radius
+            );
+            
+            // Add color stops
+            let outputCode = `ctx.createRadialGradient(${centerX}, ${centerY}, 0, ${centerY}, ${centerY}, 50);\n`;
+            colorStops.forEach(stop => {
+                const colorMatch = stop.match(/(rgba?\([^)]+\))/);
+                const percentMatch = stop.match(/(\d+(?:\.\d+)?)\s*%?$/);
+                
+                if (colorMatch && percentMatch) {
+                    const color = colorMatch[1];
+                    const position = parseFloat(percentMatch[1]) / 100;
+                    gradient.addColorStop(position, color);
+                    outputCode += `gradient.addColorStop(${position}, '${color}');\n`;
+                }
+            });
+            
+            // output the code to the console
+            window.outputCode = outputCode;
+            console.log(outputCode);
+
+            return gradient;
+        }
+        
+        // Your CSS gradient
+        const cssGradient = 'radial-gradient(circle,rgba(255, 205, 176, 1) 14%, rgba(179, 72, 23, 1) 46%, rgba(153, 60, 17, 1) 64%, rgba(140, 57, 18, 1) 86%, rgba(179, 100, 71, 1) 98%)';
+        
+        // Draw background
+        ctx.fillStyle = '#0A1929';
+        ctx.fillRect(0, 0, 400, 400);
+        
+        // Draw circle with gradient (100px diameter = 50px radius)
+        const centerX = 200;
+        const centerY = 200;
+        const radius = 50;
+        const gradient = parseCSSRadialGradient(cssGradient, centerX, centerY, radius);
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Optional: Add stroke
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    </script>
+</body>
+</html>

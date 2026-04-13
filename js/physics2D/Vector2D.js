@@ -59,4 +59,21 @@ export default class Vector2D {
     }
     return 0;
   }
+
+  normalize() {
+    const magnitude = Math.sqrt(this.x * this.x + this.y * this.y);
+    if (magnitude > 0) {
+      this.x /= magnitude;
+      this.y /= magnitude;
+    } 
+    else {
+        this.x = 0;
+        this.y = 0;
+    }
+  }
+
+  multiply(scalar) {
+    this.x *= scalar;
+    this.y *= scalar;
+  }
 }

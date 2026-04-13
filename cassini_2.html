@@ -19,12 +19,13 @@
   import AnimationLoop from './js/app/AnimationLoop.js';
   import RenderCassiniArcs from './js/app/RenderCassiniArcs.js';
   import Model from './js/app/Model.js';
+  import Page from './js/app/Page.js'
 
   const modelJSON = {
     "environment": {
       "wallType": "Reflecting",
       "wallFriction": 0.5,
-      "gravityConstant": 10.0,
+      "gravityConstant": 20.0,
       "electricConstant": 0.0,
       "gravityFieldX": 0.0,
       "gravityFieldY": 0.0,
@@ -98,18 +99,9 @@
     "springs": []
   };
 
-  function createCanvas(width, height) {
-    const canvas = document.createElement('canvas');
-    canvas.id = 'sim';
-    canvas.width = width;
-    canvas.height = height;
-    document.body.appendChild(canvas);
-    return canvas;
-  }
-
   async function loadAndRunSimulation() {
     try {
-      const canvas = createCanvas(window.innerWidth, window.innerHeight);
+      const canvas = Page.createCanvas(window.innerWidth, window.innerHeight);
 
       const engine = new PhysicsEngine();
       engine.setDimensions(canvas.width, canvas.height);
@@ -121,7 +113,7 @@
 
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
 
-      const renderer = new RenderCassiniArcs(canvas, null, engine.particles );
+      const renderer = new RenderCassiniArcs(engine.particles, null, canvas);
       await renderer.init(); // load images for colors, textures, etc.
       renderer.bgColor = 'rgb(20, 0, 20)';
       renderer.opacity = 0.1;
@@ -133,8 +125,12 @@
       engine.particles[3].color = 'rgba(10, 0, 10, .6)'; // fade black
 
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
+      mouseHandler.hideCursorAfterDelay();
+
       const animationLoop = new AnimationLoop(engine, renderer);
       animationLoop.start();
+
+      Page.setupKeyEvents(canvas, animationLoop, 'cassini2');
 
       console.log('Simulation started successfully!');
     } catch (error) {

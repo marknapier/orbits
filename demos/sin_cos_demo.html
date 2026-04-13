@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #000;
+        }
+
+        canvas {
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        /**
+         * Generates sequential sin or cos values that progress over time using performance.now().
+         * Usage for orbits:
+         * X position: centerX + cos_oscillator.getValue() * radius
+         * Y position: centerY + sin_oscillator.getValue() * radius
+         * Elliptical: Use different radii for x and y
+        */
+        class Oscillator {
+            static instances = [];
+
+            constructor(frequency = 1, type = 'sin', phase = 0) {
+                this.frequency = frequency;  // Controls orbit speed (Hz = cycles per second) 1.0 = 1 second per orbit, 0.5 = 2 secs per, 0.1 = 10 secs per
+                this.type = type;    // 'sin' or 'cos', use cos for x, sin for y for standard circular orbit
+                this.phase = phase;  // Optional starting angle offset (in radians)
+                this.startTime = performance.now();
+                this.elapsedTime = 0; // time since startTime in seconds, floating point
+                this.pausedTime = 0;  // current time when pause() was called
+                this.paused = false;
+                Oscillator.instances.push(this);
+            }
+
+            // returns -1 to 1
+            getValue(currentTime = performance.now()) {
+                if (!this.paused) {
+                    this.elapsedTime = (currentTime - this.startTime) / 1000;
+                }
+                const angle = 2 * Math.PI * this.frequency * this.elapsedTime + this.phase;
+                return this.type === 'cos' ? Math.cos(angle) : Math.sin(angle);
+            }
+
+            pause() {
+                if (!this.paused) {
+                    this.paused = true;
+                    this.pausedTime = performance.now();
+                }
+            }
+
+            resume() {
+                if (this.paused) {
+                    this.paused = false;
+                    this.startTime += performance.now() - this.pausedTime;
+                }
+            }
+
+            static pauseAll() {
+                for (const p of Oscillator.instances) {
+                    p.pause();
+                }
+            }
+
+            static resumeAll() {
+                for (const p of Oscillator.instances) {
+                    p.resume();
+                }
+            }
+        }
+
+        window.O = Oscillator;
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 800;
+        canvas.height = 600;
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        // Define planets with different orbits
+        const planets = [
+            {
+                name: 'Mercury',
+                color: '#A8A8A8',
+                radius: 8,
+                orbitRadius: 80,
+                xOsc: new Oscillator(0.5, 'cos'),  // Fast orbit
+                yOsc: new Oscillator(0.5, 'sin')
+            },
+            {
+                name: 'Venus',
+                color: '#FFC649',
+                radius: 12,
+                orbitRadius: 130,
+                xOsc: new Oscillator(0.3, 'cos'),
+                yOsc: new Oscillator(0.3, 'sin')
+            },
+            {
+                name: 'Earth',
+                color: '#6B9BD1',
+                radius: 13,
+                orbitRadius: 180,
+                xOsc: new Oscillator(0.2, 'cos'),
+                yOsc: new Oscillator(0.2, 'sin')
+            },
+            {
+                name: 'Mars',
+                color: '#CD5C5C',
+                radius: 10,
+                orbitRadius: 230,
+                xOsc: new Oscillator(0.15, 'cos'),  // Slower orbit
+                yOsc: new Oscillator(0.15, 'sin')
+            }
+        ];
+
+        function animate() {
+            ctx.fillStyle = '#0A1929';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw sun
+            ctx.fillStyle = '#FDB813';
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#FDB813';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Draw orbits and planets
+            planets.forEach(planet => {
+                // Draw orbit path
+                ctx.strokeStyle = 'rgba(107, 155, 209, 0.2)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, planet.orbitRadius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Calculate position
+                const x = centerX + planet.xOsc.getValue() * planet.orbitRadius;
+                const y = centerY + planet.yOsc.getValue() * planet.orbitRadius;
+
+                // Draw planet
+                ctx.fillStyle = planet.color;
+                ctx.beginPath();
+                ctx.arc(x, y, planet.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            window.planets = planets;
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+
+</html>

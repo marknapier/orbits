@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>3 Particles with Gravity in a Box</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      display: block;
+      border: 1px solid black
+    }
+  </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+  import PhysicsEngine from '../js/physics2D/PhysicsEngine.js';
+  import Particle from '../js/physics2D/Particle.js';
+  import Spring from '../js/physics2D/Spring.js';
+  import Vector2D from '../js/physics2D/Vector2D.js';
+  import Renderer from '../js/app/RenderSimple.js';
+  import MouseHandler from '../js/app/MouseHandler.js';
+  import AnimationLoop from '../js/app/AnimationLoop.js';
+
+  function createCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'sim';
+    canvas.width = width;
+    canvas.height = height;
+    document.body.appendChild(canvas);
+    return canvas;
+  }
+
+  async function loadAndRunSimulation() {
+    try {
+      const canvas = createCanvas(100, 600);
+
+      const engine = new PhysicsEngine();
+      engine.setDimensions(canvas.width, canvas.height);
+      engine.detectCollisions = false;
+      engine.setWallTypeStr('reflecting');
+      engine.gravY = 0;
+      engine.gravConst = 10;
+
+      // Create 3 green particles with mass 5
+      const totalLength = canvas.height / 1.5; // Total length of the pendulum string
+      const canvasCenterX = canvas.width / 2;
+      const stringStartX = canvasCenterX;
+      const stringStartY = canvas.height / 5;
+
+      const particle1 = new Particle(
+        'top',
+        new Vector2D(stringStartX, stringStartY), // position
+        new Vector2D(1, 1), // velocity
+        new Vector2D(0, 0), // force
+        10, // mass
+        20, // radius
+      );
+      // particle1.setFixed(true); // Fix the first particle to anchor the string
+      particle1.setColor('rgb(0, 180, 180)'); // Make the anchor particle teal for visibility
+      engine.addParticle(particle1);
+
+      const particle2 = new Particle(
+        'middle',
+        new Vector2D(stringStartX, stringStartY + (totalLength * .4)), // position
+        new Vector2D(0, 0), // velocity
+        new Vector2D(0, 0), // force
+        10, // mass
+        15, // radius
+      );
+      particle2.setColor('rgb(0, 180, 0)');
+      engine.addParticle(particle2);
+
+      const particle3 = new Particle(
+        'bottom',
+        new Vector2D(stringStartX, stringStartY + (totalLength * .7)), // position
+        new Vector2D(0, 0), // velocity
+        new Vector2D(0, 0), // force
+        15, // mass
+        10, // radius
+      );
+      particle3.setColor('rgb(180, 0, 0)');
+      engine.addParticle(particle3);
+
+      const spring1 = new Spring(
+        particle1,
+        particle2,
+        150,  // spring constant
+        10,  // damping
+        0 //springLength
+      );
+      // engine.addSpring(spring1);
+
+      const spring2 = new Spring(
+        particle2,
+        particle3,
+        150,  // spring constant
+        10,  // damping
+        0 //springLength
+      );
+      // engine.addSpring(spring2);
+
+      const renderer = new Renderer(engine.particles, engine.springs, canvas);
+      const mouseHandler = new MouseHandler(canvas, engine, renderer);
+      const animationLoop = new AnimationLoop(engine, renderer);
+      animationLoop.start();
+
+      window.engine = engine; // Expose for debugging
+
+      console.log('String simulation started successfully!');
+    } catch (error) {
+      console.error('Failed to initialize simulation:', error);
+    }
+  }
+
+  loadAndRunSimulation();
+</script>
+
+</html>

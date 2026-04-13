@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <canvas id="canvas" width="600" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        function getCircleIntersections(x1, y1, r1, x2, y2, r2) {
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            
+            if (d > r1 + r2 || d < Math.abs(r1 - r2)) return [];
+            
+            const a = (r1 * r1 - r2 * r2 + d * d) / (2 * d);
+            const h = Math.sqrt(r1 * r1 - a * a);
+            
+            const px = x1 + (dx * a) / d;
+            const py = y1 + (dy * a) / d;
+            
+            const offsetX = -(dy * h) / d;
+            const offsetY = (dx * h) / d;
+            
+            return [
+                { x: px + offsetX, y: py + offsetY },
+                { x: px - offsetX, y: py - offsetY }
+            ];
+        }
+        
+        // Test with two circles
+        const c1 = { x: 200, y: 200, r: 80 };
+        const c2 = { x: 280, y: 200, r: 60 };
+        
+        // Draw circles
+        ctx.strokeStyle = 'rgba(107, 155, 209, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(c1.x, c1.y, c1.r, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        ctx.strokeStyle = 'rgba(139, 126, 200, 0.5)';
+        ctx.beginPath();
+        ctx.arc(c2.x, c2.y, c2.r, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Get and mark intersection points
+        const points = getCircleIntersections(c1.x, c1.y, c1.r, c2.x, c2.y, c2.r);
+        
+        ctx.fillStyle = '#F4D03F';
+        points.forEach((point, i) => {
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, 6, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = 'black';
+            ctx.font = '14px Arial';
+            ctx.fillText(
+                `Point ${i + 1}: (${point.x.toFixed(1)}, ${point.y.toFixed(1)})`,
+                point.x + 15,
+                point.y
+            );
+            ctx.fillStyle = '#F4D03F';
+        });
+    </script>
+</body>
+</html>

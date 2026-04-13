@@ -127,9 +127,10 @@ export default class PhysicsEngine {
   }
 
   // Move simulation objects one step
-  step() {
+  step(customForcesHook = null) {
     this.checkBounds();
     this.calcAllForces();
+    customForcesHook && customForcesHook();
     this.updateVelocities();
     if (this.detectCollisions) 
       this.handleCollisions(); 

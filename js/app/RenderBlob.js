@@ -12,13 +12,12 @@
  *    - color: CSS color string (e.g. "#ff00aa" or "rgb(0,0,0)")
  *    - pos: { x, y } (or { getX(), getY() })
  *    - radius: number
- *
- * This class renders into a canvas 2D context (ctx).
  */
 
 import Blob from './Blob.js';
+import RenderSimple from './RenderSimple.js'
 
-export default class RenderBlob {
+export default class RenderBlob extends RenderSimple {
   // Configurable options
   fillColor = "rgb(255,127,90)";    // good flesh tone
   bgColor = "rgb(60,0,0)";          // background color
@@ -39,9 +38,10 @@ export default class RenderBlob {
    * @param {CanvasRenderingContext2D} [opts.ctx]
    * @param {Array<any>} [opts.particles]
    */
-  constructor(canvas, ctx = null, particles = []) {
+  constructor(canvas, springs = null, particles = []) {
+    super(particles, null, canvas)
     this.canvas = canvas;
-    this.ctx = ctx ?? canvas.getContext("2d");
+    this.ctx = canvas.getContext("2d");
     this.particles = particles;
 
     // Blob instance: set number of steps to curve, more steps = smoother curve but more CPU
@@ -209,18 +209,5 @@ export default class RenderBlob {
     // Draw a filled rectangle that covers the entire canvas
     this.ctx.fillStyle = "black";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-  }
-
-  setClosestParticle(particle) {
-    const closestParticle = particle;
-    if (particle) {
-      this.canvas.style.cursor = "pointer"; // Change cursor to hand when hovering near a particle
-    } else {
-      this.canvas.style.cursor = "crosshair"; // Reset cursor when not near any particle
-    }
-  }
-
-  setMouseXY(x, y) {
-    // This method can be used to track mouse position for hover effects or other interactions
   }
 }

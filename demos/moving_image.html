@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Animated Pattern Generator</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: white;
+    }
+
+    canvas {
+      display: block;
+      border: 1px solid black;
+    }
+  </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+  import PhysicsEngine from '../js/physics2D/PhysicsEngine.js';
+  import RendererSimple from '../js/app/RenderSimple.js';
+  import MouseHandler from '../js/app/MouseHandler.js';
+  import AnimationLoop from '../js/app/AnimationLoop.js';
+  import MovingImageDots from '../js/app/MovingImageDots.js';
+  import Particle from '../js/physics2D/Particle.js';
+  import Vector2D from '../js/physics2D/Vector2D.js';
+
+  function createCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'sim';
+    canvas.width = width;
+    canvas.height = height;
+    document.body.appendChild(canvas);
+    return canvas;
+  }
+
+  class RenderMovingImageDots extends RendererSimple {
+    constructor(particles = [], springs = [], target, movingImageDots) {
+      super(particles, null, target);
+      this.movingImageDots = movingImageDots;
+      this.bgColor = 'rgb(253, 253, 250)';
+    }
+
+    paintParticle(ctx, particle) {
+      if (!particle || !particle.pos) return;
+      const x = particle.getX();
+      const y = particle.getY();
+      const r = particle.getRadius();
+      ctx.save();
+      {
+        // Create circle clipping path
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.clip();
+        // Draw the moving image scaled to fit the circle's bounding box
+        ctx.drawImage(this.movingImageDots.getCanvas(), x - r, y - r, 2 * r, 2 * r);
+      }
+      ctx.restore();
+    }
+  }
+
+  async function loadAndRunSimulation() {
+    try {
+      const canvas = createCanvas(800, 600);
+
+      // Make 2 large random particles
+      const particles = [];
+      for (let i = 0; i < 2; i++) {
+        const name = `particle${i}`;
+        const posX = Math.random() * canvas.width;
+        const posY = Math.random() * canvas.height;
+        const velX = (Math.random() - 0.5) * 30; // Random velocity between -25 and 25
+        const velY = (Math.random() - 0.5) * 30;
+        const mass = Math.random() * 9 + 1; // Random mass between 1 and 10
+        const radius = Math.random() * 50 + 100; // Random radius between 10 and 50
+        const color = `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
+
+        particles.push(new Particle(
+          name,
+          new Vector2D(posX, posY), // random position
+          new Vector2D(velX, velY), // random velocity
+          new Vector2D(0, 0), // force
+          mass, // random mass
+          radius, // random radius
+        ));
+        particles[i].setColor(color); // set random color
+      }
+
+      const engine = new PhysicsEngine();
+      engine.setDimensions(canvas.width, canvas.height);
+      engine.detectCollisions = true;
+      engine.setWallTypeStr('reflecting');
+      engine.addParticles(particles);
+      engine.detectCollisions = false;
+      engine.margin = 0;
+      engine.gravY = 0;
+
+      const movingImageDots = new MovingImageDots(700, 700);
+      movingImageDots.step();
+
+      const renderer = new RenderMovingImageDots(engine.particles, engine.springs, canvas, movingImageDots);
+      const mouseHandler = new MouseHandler(canvas, engine, renderer);
+      const animationLoop = new AnimationLoop(() => {
+        engine.step();
+        movingImageDots.step();
+        renderer.render();
+      });
+      animationLoop.start();
+
+      window.engine = engine; // Expose for debugging
+
+      console.log('String simulation started successfully!');
+    } catch (error) {
+      console.error('Failed to initialize simulation:', error);
+    }
+  }
+
+  loadAndRunSimulation();
+</script>
+
+</html>

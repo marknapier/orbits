@@ -1,0 +1,75 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: black;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+}
+
+.parent-container {
+  display: flex;
+  align-items: center; /* Centers content vertically */
+  justify-content: center; /* Centers content horizontally (optional) */
+  height: 100vh; /* Example height to demonstrate vertical centering */
+}
+
+.nav-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+  width: 100%;
+  position: relative;
+}
+
+.nav-simulations {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.nav-simulations a,
+.nav-actions a {
+  display: inline-block;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.nav-simulations a:hover,
+.nav-actions a:hover {
+  opacity: 0.7;
+}
+
+.nav-actions {
+  display: flex;
+  gap: 10px;
+  position: absolute;
+  right: 20px;
+}
+
+/* Image styling */
+.nav-simulations img,
+.nav-actions img {
+  width: 16px;
+  height: 16px;
+  margin: 0 10px;
+  border: none;
+  display: block;
+}
+
+/* Canvas styling */
+#sim {
+  display: block;
+  cursor: crosshair;
+  border: 1px solid rgb(60, 60, 60);
+  background-color: black;
+}
