@@ -26,6 +26,10 @@ export default class RenderLenses extends RenderSimple {
     this.texturedCircle = null;
     this.redButton = null;
     this.scaleFactor = 1;
+    this.W = this.canvas.width;
+    this.H = this.canvas.height;
+    this.halfW = this.W / 2;
+    this.halfH = this.H / 2;
     this.giant = this.particles.find(p => p.label === 'giant');
   }
 
@@ -33,7 +37,8 @@ export default class RenderLenses extends RenderSimple {
     try {
       // adjust sizes based on screen size
       this.scaleFactor = scale;
-
+      this.M *= this.scaleFactor;
+      
       this.grayPalette = await ColorPalette.createFromImage('./images/gray_ridges.png');
       this.grayRidgesImg = await ImageLoader.loadImage('./images/gray_ridges.png');
       this.grayRidgesPattern = this.ctx.createPattern(this.grayRidgesImg, 'repeat');
@@ -41,8 +46,8 @@ export default class RenderLenses extends RenderSimple {
         this.particles[1].getX(), this.particles[1].getY(), this.particles[1].getRadius(), './images/cloud_wisp_200.jpg' //'./images/saturns_rings.jpg'
       );
       const redButton = await ImageLoader.loadImage('./images/shiny_button_red.png');
-      this.redButton = this.scaleImage(redButton, 30 * this.scaleFactor, 30 * this.scaleFactor);
-      this.redButtonRadius = 15 * this.scaleFactor;
+      this.redButton = this.scaleImage(redButton, 30, 30);
+      this.redButtonRadius = 15;
     } catch (error) {
       console.error(error.message);
     }
@@ -63,8 +68,8 @@ export default class RenderLenses extends RenderSimple {
     ctx.globalAlpha = 0.2;
 
     // Calculate giant planet position (elliptical path based on sin/cos)
-    const ex = (600 * this.scaleFactor) + (this.xOscillator.getValue() * 1200 * this.scaleFactor); //1
-    const ey = (500 * this.scaleFactor) + (this.yOscillator.getValue() * 400 * this.scaleFactor); //0
+    const ex = this.halfW + this.xOscillator.getValue() * this.W;
+    const ey = this.halfH + this.yOscillator.getValue() * this.halfH;
     this.giant.pos.setXY(ex, ey);
 
     // draw large circles centered on each particle
@@ -156,7 +161,7 @@ export default class RenderLenses extends RenderSimple {
     // if (false) {
     //   // ctx.strokeStyle = 'rgba(253, 184, 19 .1)';
     //   ctx.strokeStyle = 'rgba(255, 213, 44, 0.14)';
-    //   ctx.lineWidth = 4;
+    //   ctx.lineWidth = 4 * this.scaleFactor;
     //   ctx.beginPath();
     //   // Outer arc from interP1 to interP2
     //   ctx.arc(x1, y1, r1, angle1_outer, angle2_outer, false);
@@ -187,24 +192,24 @@ export default class RenderLenses extends RenderSimple {
 
     // Draw the intersection "lens" in bright green outline, magenta fill
     if (true) {
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 1 * this.scaleFactor;
       ctx.strokeStyle = 'rgba(6, 254, 18, .5)';
       // Inner arc of circle 2 (counterclockwise)
       ctx.beginPath();
       ctx.arc(x2, y2, r2, angle2_inner, angle1_inner, true);
       // // Inner arc of circle 1 (counterclockwise)
-      ctx.arc(x1, y1, r1, angle1_outer, angle2_outer, true);
+      // ctx.arc(x1, y1, r1, angle1_outer, angle2_outer, true);
       // ctx.closePath();  // nice effect but blows the rendering performance!!!
       ctx.stroke();
 
-      ctx.fillStyle = 'rgba(212, 0, 255, 0.04)'; // This was ON but killed performance!!!
-      ctx.fill()
+      // ctx.fillStyle = 'rgba(212, 0, 255, 0.04)'; // This was ON but killed performance!!!
+      // ctx.fill()
     }
 
     // Show guide circles if requested
-    if (false && showGuides) {
+    if (true && showGuides) {
       // inner arc in blue
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 1 * this.scaleFactor;
       ctx.strokeStyle = 'rgba(8, 119, 245, 0.3)';
       ctx.beginPath();
       ctx.arc(x1, y1, r1, 0, Math.PI * 2);
@@ -244,8 +249,9 @@ export default class RenderLenses extends RenderSimple {
   // }
 
   drawCircle(ctx, p, r, color) {
+    return;
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2 * this.scaleFactor;
     ctx.beginPath();
     ctx.arc(p.getX(), p.getY(), r, 0, Math.PI * 2);
     ctx.stroke();
@@ -303,7 +309,7 @@ export default class RenderLenses extends RenderSimple {
     // Draw ellipse
     ctx.fillStyle = 'rgba(107, 155, 209, 0.2)';
     ctx.strokeStyle = '#6B9BD1';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2 * this.scaleFactor;
     ctx.beginPath();
     ctx.ellipse(centerX, centerY, a, b, rotation, 0, Math.PI * 2);
     ctx.fill();
@@ -326,7 +332,7 @@ export default class RenderLenses extends RenderSimple {
 
     // Draw line connecting points
     ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1 * this.scaleFactor;
     ctx.setLineDash([5, 5]);
     ctx.beginPath();
     ctx.moveTo(x1, y1);
@@ -343,7 +349,7 @@ export default class RenderLenses extends RenderSimple {
 
     // Draw reference circle
     ctx.strokeStyle = 'rgba(0,0,0,0.1)';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1 * this.scaleFactor;
     ctx.setLineDash([5, 5]);
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
@@ -352,7 +358,7 @@ export default class RenderLenses extends RenderSimple {
 
     // Draw arc
     ctx.strokeStyle = color;
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 4 * this.scaleFactor;
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, angle1, angle2, counterclockwise);
     ctx.stroke();

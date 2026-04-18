@@ -171,6 +171,7 @@
       const engine = new PhysicsEngine();
       engine.setDimensions(canvas.width, canvas.height);
       engine.detectCollisions = false;
+      engine.timeStep *= Page.scaleFactor; // scale time step to keep velocity in proportion to canvas size
 
       const model = new Model();
       model.parseConfig(modelJSON);

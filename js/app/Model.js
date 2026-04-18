@@ -167,4 +167,21 @@ export default class ModelLoader {
       p.pos.y += dy;
     }
   }
+
+  /**
+   * Scale all particle positions by the given factor.
+   *
+   * @param {number} scaleFactor - factor by which to scale particle positions
+   */
+  scalePositions(scaleFactor = 1) {
+    if (scaleFactor === 1) {
+      return;
+    }
+    // apply to every particle
+    for (const p of this.particles) {
+      p.pos.x *= scaleFactor;
+      p.pos.y *= scaleFactor;
+      p.radius *= scaleFactor;
+    }
+  }
 }

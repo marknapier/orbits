@@ -19,8 +19,8 @@ class Page {
     canvas.width = Math.min(width, height * aspectRatio);
     canvas.height = height;
     document.body.appendChild(canvas);
-    Page.scaleFactor = canvas.height / 1080; // base height of 1600px for scaling
-    console.log(`Canvas created with dimensions ${canvas.width}x${canvas.height}, scaleFactor set to ${Page.scaleFactor.toFixed(2)}`);
+    Page.scaleFactor = Math.min(canvas.height, canvas.width) / 1080; // base height of 1600px for scaling
+    console.log(`Canvas created with dimensions ${canvas.width}x${canvas.height}, scaleFactor ${Page.scaleFactor.toFixed(2)}`);
     return canvas;
   }
 

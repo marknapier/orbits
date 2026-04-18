@@ -25,15 +25,10 @@ export default class RenderLenses extends RenderSimple {
     this.grayPalette = null;
     this.texturedCircle = null;
     this.redButton = null;
-    this.scaleFactor = 1;
-    this.giant = this.particles.find(p => p.label === 'giant');
   }
 
-  async init(scale = 1) {
+  async init() {
     try {
-      // adjust sizes based on screen size
-      this.scaleFactor = scale;
-
       this.grayPalette = await ColorPalette.createFromImage('./images/gray_ridges.png');
       this.grayRidgesImg = await ImageLoader.loadImage('./images/gray_ridges.png');
       this.grayRidgesPattern = this.ctx.createPattern(this.grayRidgesImg, 'repeat');
@@ -41,8 +36,8 @@ export default class RenderLenses extends RenderSimple {
         this.particles[1].getX(), this.particles[1].getY(), this.particles[1].getRadius(), './images/cloud_wisp_200.jpg' //'./images/saturns_rings.jpg'
       );
       const redButton = await ImageLoader.loadImage('./images/shiny_button_red.png');
-      this.redButton = this.scaleImage(redButton, 30 * this.scaleFactor, 30 * this.scaleFactor);
-      this.redButtonRadius = 15 * this.scaleFactor;
+      this.redButton = this.scaleImage(redButton, 30, 30);
+      this.redButtonRadius = 15;
     } catch (error) {
       console.error(error.message);
     }
@@ -63,14 +58,15 @@ export default class RenderLenses extends RenderSimple {
     ctx.globalAlpha = 0.2;
 
     // Calculate giant planet position (elliptical path based on sin/cos)
-    const ex = (600 * this.scaleFactor) + (this.xOscillator.getValue() * 1200 * this.scaleFactor); //1
-    const ey = (500 * this.scaleFactor) + (this.yOscillator.getValue() * 400 * this.scaleFactor); //0
-    this.giant.pos.setXY(ex, ey);
+    const giant = this.particles[1];
+    const ex = 600 + this.xOscillator.getValue() * 1200;
+    const ey = 500 + this.yOscillator.getValue() * 400;
+    giant.pos.setXY(ex, ey);
 
     // draw large circles centered on each particle
     for (const p of this.particles) {
       p.sizeMultiplier = this.M;
-      if (p === this.giant) {
+      if (p === giant) {
         ctx.globalCompositeOperation = 'overlay';  // THIS WAS ON!!!
         this.drawCircle(ctx, p, p.radius * p.sizeMultiplier, 'rgba(221, 255, 3, 0.58)');
         ctx.globalCompositeOperation = 'source-over';

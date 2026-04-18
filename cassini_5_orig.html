@@ -5,15 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cassini 4</title>
   <link rel="stylesheet" href="./styles/full_viewport_canvas.css">
-  <style>
-    #sim {
-      z-index: 10;
-    }
-
-    #sim2 {
-      z-index: 20;
-    }
-  </style>
 </head>
 
 <body class="canvas-wrapper">
@@ -26,7 +17,8 @@
   import Vector2D from './js/physics2D/Vector2D.js';
   import MouseHandler from './js/app/MouseHandler.js';
   import AnimationLoop from './js/app/AnimationLoop.js';
-  import RenderLens from './js/app/RenderLens.js';
+  import RenderLenses from './js/app/RenderLenses.js';
+  import RenderLensesOrig from './js/app/RenderLensesOrig.js';
   import Model from './js/app/Model.js';
   import Page from './js/app/Page.js'
 
@@ -106,7 +98,7 @@
       },
       {
         "particleNumber": 5,
-        "label": "six",
+        "label": "red",
         "color": "green",
         "initialPositionX": 10.0,
         "initialPositionY": 450.0,
@@ -118,7 +110,7 @@
       },
       {
         "particleNumber": 6,
-        "label": "seven",
+        "label": "tiny",
         "color": "green",
         "initialPositionX": 240.0,
         "initialPositionY": 550.0,
@@ -129,30 +121,7 @@
         "trace": false
       },
     ],
-    "springs": [
-      // {
-      //   "springNumber": 0,
-      //   "particle1": 4,
-      //   "particle2": 5,
-      //   "damping": .5,
-      //   "springConstant": 5.0,
-      //   "relaxedLength": 0,
-      //   "amplitude": 0.0,
-      //   "frequency": 0.0,
-      //   "phase": 0.0
-      // },
-      // {
-      //   "springNumber": 1,
-      //   "particle1": 5,
-      //   "particle2": 6,
-      //   "damping": .15,
-      //   "springConstant": 2.0,
-      //   "relaxedLength": 0,
-      //   "amplitude": 0.0,
-      //   "frequency": 0.0,
-      //   "phase": 0.0
-      // },
-    ]
+    "springs": []
   };
 
   async function loadAndRunSimulation() {
@@ -162,16 +131,21 @@
 
       const model = new Model();
       model.parseConfig(modelJSON);
-      model.scalePositions(Page.scaleFactor); // scale first, then center
-      model.centerAt(canvas.width / 3, canvas.height / 2);
+      model.centerAt(canvas.width / 2, canvas.height / 3);
+
+      const model2 = new Model();
+      model2.parseConfig(modelJSON);
+      model2.centerAt(canvas.width / 1.5, canvas.height / 1.5);
+      model2.particles[1].setFixedX(false);
 
       const engine = new PhysicsEngine();
       engine.setDimensions(canvas.width, canvas.height);
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
+      engine.addModel(model2.getParticles(), model2.getSprings(), model2.getEnvironment());
       engine.detectCollisions = false;
       engine.timeStep *= Page.scaleFactor; // scale time step to keep velocity in proportion to canvas size
 
-      const renderer = new RenderLens(engine.particles, engine.springs, canvas);
+      const renderer = new RenderLensesOrig(engine.particles, engine.springs, canvas);
       await renderer.init(Page.scaleFactor);
       renderer.clear();
 
@@ -179,7 +153,7 @@
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
       mouseHandler.hideCursorAfterDelay();
 
-      // animation loop calls update function that draws both canvases
+      // animation loop calls update function that animates and renders the simulation
       const animationLoop = new AnimationLoop(() => {
         engine.step();
         renderer.render();
@@ -187,18 +161,17 @@
       animationLoop.start();
 
       // setup screen capture and pause keys, also stop/start sin curve generators
-      Page.setupKeyEvents(canvas, animationLoop, 'cassini4');
+      Page.setupKeyEvents(canvas, animationLoop, 'cassini5');
       Page.onPause(() => renderer.pauseOscillators());
       Page.onResume(() => renderer.resumeOscillators());
 
-      console.log('Simulation started successfully!', engine.constructor.name);
+      console.log('Simulation started successfully!');
     } catch (error) {
       console.error('Failed to initialize simulation:', error);
     }
   }
 
   loadAndRunSimulation();
-
 </script>
 
 </html>

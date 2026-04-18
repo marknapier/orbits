@@ -17,8 +17,13 @@
   import Vector2D from './js/physics2D/Vector2D.js';
   import MouseHandler from './js/app/MouseHandler.js';
   import AnimationLoop from './js/app/AnimationLoop.js';
-  import RenderOverlay from './js/app/RenderOverlay.js';
   import RenderLenses from './js/app/RenderLenses.js';
+  import RenderLensesOrig from './js/app/RenderLensesOrig.js';
+  import RenderLensesBlueGreenWithGuidesOnlyArcs from './js/app/RenderLensesBlueGreenWithGuidesOnlyArcs.js';
+  import RenderLensesBlueGreenWithGuides from './js/app/RenderLensesBlueGreenWithGuides.js';
+  import RenderLensesGreenArcs from './js/app/RenderLensesGreenArcs.js';
+  import RenderLensesNoVioletFill from './js/app/RenderLensesNoVioletFill.js';
+  import RenderLensesHelloYellow from './js/app/RenderLensesHelloYellow.js';
   import Model from './js/app/Model.js';
   import Page from './js/app/Page.js'
 
@@ -126,15 +131,16 @@
 
   async function loadAndRunSimulation() {
     try {
-      // main drawing canvas
       const canvas = Page.createCanvas(window.innerWidth, window.innerHeight, 'sim');
 
       const model = new Model();
       model.parseConfig(modelJSON);
+      model.scalePositions(Page.scaleFactor); // scale first, then center
       model.centerAt(canvas.width / 2, canvas.height / 3);
 
       const model2 = new Model();
       model2.parseConfig(modelJSON);
+      model2.scalePositions(Page.scaleFactor); // scale first, then center
       model2.centerAt(canvas.width / 1.5, canvas.height / 1.5);
       model2.particles[1].setFixedX(false);
 
@@ -143,9 +149,15 @@
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
       engine.addModel(model2.getParticles(), model2.getSprings(), model2.getEnvironment());
       engine.detectCollisions = false;
+      engine.timeStep *= Page.scaleFactor; // scale time step to keep velocity in proportion to canvas size
 
+      // const renderer = new RenderLensesOrig(engine.particles, engine.springs, canvas);
       const renderer = new RenderLenses(engine.particles, engine.springs, canvas);
-      await renderer.init();
+      // const renderer = new RenderLensesHelloYellow(engine.particles, engine.springs, canvas);
+      // const renderer = new RenderLensesBlueGreenWithGuides(engine.particles, engine.springs, canvas);
+      // const renderer = new RenderLensesBlueGreenWithGuidesOnlyArcs(engine.particles, engine.springs, canvas);
+      // const renderer = new RenderLensesGreenArcs(engine.particles, engine.springs, canvas);
+      await renderer.init(Page.scaleFactor);
       renderer.clear();
 
       // mouse listens for events on the top canvas
@@ -164,7 +176,7 @@
       Page.onPause(() => renderer.pauseOscillators());
       Page.onResume(() => renderer.resumeOscillators());
 
-      console.log('Simulation started successfully!', engine.constructor.name);
+      console.log('Simulation started successfully!');
     } catch (error) {
       console.error('Failed to initialize simulation:', error);
     }
