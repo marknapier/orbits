@@ -1,0 +1,325 @@
+<!doctype html>
+<html>
+<!-- This version is an accurate match to verion 4, but scales up to full viewport size. 
+At larger size, the velocity feels hectic, as the shapes are larger and more visually impactful,
+but if I slow down the simulation then the transluscent shapes tend to "burn in" and the colors
+lose some of the overlapping effects that make them visually appealing. For this version I run
+the simulation at the same speed as circle intersections 4 -->
+<head>
+  <meta charset="utf-8" />
+  <title>Circle Intersections 5A</title>
+  <link rel="stylesheet" href="./styles/full_viewport_canvas.css">
+</head>
+
+<body>
+</body>
+
+<script type="module">
+  import PhysicsEngine from '../js/physics2D/PhysicsEngine.js';
+  import RenderSimple from '../js/app/RenderSimple.js';
+  import MouseHandler from '../js/app/MouseHandler.js';
+  import AnimationLoop from '../js/app/AnimationLoop.js';
+  import MovingImageDots from '../js/app/MovingImageDots.js';
+  import Particle from '../js/physics2D/Particle.js';
+  import Vector2D from '../js/physics2D/Vector2D.js';
+  import Circles from '../js/app/Circles.js';
+  import ImageLoader from '../js/app/ImageLoader.js';
+  import Page from '../js/app/Page.js';
+
+  class RenderIntersections extends RenderSimple {
+    constructor(particles = [], springs = [], target, movingImageDots) {
+      super(particles, null, target);
+      this.movingImageDots = movingImageDots;
+      this.bgColor = 'white';
+      // not visible, used as source material for final canvas
+      this.offCanvas = document.createElement('canvas');
+      this.offCanvas.width = target.width;
+      this.offCanvas.height = target.height;
+      this.offCtx = this.offCanvas.getContext('2d');
+      // clear to white one time at the start
+      this.clear();
+      // pre-calculate these constants used for dimentions and positions, relative to an 800x600 canvas; they'll scale up on larger canvases
+      this.onehundred = this.canvas.width * 0.125;    // 100 pixels
+      this.twohundred = this.canvas.width * 0.25;     // 200 pixels
+      this.threehundred = this.canvas.width * 0.375;  // 300 pixels
+      this.fivehundred = this.canvas.width * 0.625;   // 500 pixels
+      this.sevenhundred = this.canvas.width * 0.875;  // 700 pixels
+      this.twopixels = this.canvas.width * 0.0025;    // 2 pixels
+      this.fivepixels = this.canvas.width * 0.00625;  // 5 pixels
+      this.eightpixels = this.canvas.width * 0.01;    // 8 pixels
+    }
+
+    async init() {
+      this.specklesImg = await ImageLoader.loadImage('../images/seamless_noise_pattern_speckles_light_s.png');
+      this.noisePattern = this.offCtx.createPattern(this.specklesImg, 'repeat');
+    }
+
+    render() {
+      this.offCtx.globalAlpha = 0.035; // low alpha for blurring effect
+      this.paintIntersections();
+      this.paintArcMadeByLine();
+      for (const particle of this.particles) {
+        this.paintParticle(this.offCtx, particle);
+      }
+      this.drawToMainCanvas();
+    }
+
+    paintIntersections() {
+      const p1 = this.particles[0]; // large circle
+      const p2 = this.particles[1]; // large circle
+      const p3 = this.particles[2]; // vertical line
+      const r1 = p1.getRadius();
+      const x1 = p1.getX();
+      const y1 = p1.getY();
+      const r2 = p2.getRadius();
+      const x2 = p2.getX();
+      const y2 = p2.getY();
+      const lineX = p3.getX();
+      const interPointsC = Circles.getCircleIntersections(x1, y1, r1, x2, y2, r2);
+      const interPointsL1 = Circles.getLineCircleIntersections(lineX, 0, lineX, this.canvas.height, x1, y1, r1);
+      const interPointsL2 = Circles.getLineCircleIntersections(lineX, 0, lineX, this.canvas.height, x2, y2, r2);
+
+      if (interPointsC.length === 2) {
+        this.paintPoint(this.offCtx, interPointsC[0].x, interPointsC[0].y);
+        this.paintPoint(this.offCtx, interPointsC[1].x, interPointsC[1].y);
+      }
+      if (interPointsL1.length > 0) {
+        this.paintPoint(this.offCtx, interPointsL1[0].x, interPointsL1[0].y);
+        this.paintPoint(this.offCtx, interPointsL1[1].x, interPointsL1[1].y);
+      }
+      if (interPointsL2.length > 0) {
+        this.paintPoint(this.offCtx, interPointsL2[0].x, interPointsL2[0].y);
+        this.paintPoint(this.offCtx, interPointsL2[1].x, interPointsL2[1].y);
+      }
+    }
+
+    paintArcMadeByLine() {
+      const p1 = this.particles[0];
+      const p2 = this.particles[1];
+      const p3 = this.particles[2];
+      const r1 = p1.getRadius();
+      const r2 = p2.getRadius();
+      const x1 = p1.getX();
+      const y1 = p1.getY();
+      const x2 = p2.getX();
+      const y2 = p2.getY();
+      const lineX = p3.getX();
+      const overlapShapes1 = Circles.getLineOverlapShapes(lineX, 0, lineX, this.canvas.height, x1, y1, r1);
+      const overlapShapes2 = Circles.getLineOverlapShapes(lineX, 0, lineX, this.canvas.height, x2, y2, r2);
+      const overlapShapesC = Circles.getOverlapShapes(x1, y1, r1, x2, y2, r2);
+
+      if (overlapShapes1) {
+        const arc = lineX > x1 ? overlapShapes1.arc2 : overlapShapes1.arc1;
+        this.offCtx.save();
+        this.offCtx.fillStyle = 'rgba(120, 20, 190, 0.6)'; // Purpl-ish
+        this.offCtx.lineWidth = this.eightPixels; // 8 pixels for an 800 pixel wide canvas
+        this.offCtx.beginPath();
+        this.offCtx.arc(arc.x, arc.y, arc.r, arc.angleStart, arc.angleEnd, arc.counterClockwise);
+        this.offCtx.closePath();
+        this.offCtx.fill();
+        this.offCtx.restore();
+      }
+      if (overlapShapes2) {
+        const arc = lineX > x2 ? overlapShapes2.arc2 : overlapShapes2.arc1;
+        this.offCtx.save();
+        this.offCtx.fillStyle = 'rgba(20, 120, 190, 0.6)'; // Blue-ish
+        this.offCtx.beginPath();
+        this.offCtx.arc(arc.x, arc.y, arc.r, arc.angleStart, arc.angleEnd, arc.counterClockwise);
+        this.offCtx.closePath();
+        this.offCtx.fill();
+        this.offCtx.restore();
+      }
+      if (overlapShapesC) {
+        const arc1 = overlapShapesC.crescent1.arc1;
+        const arc2 = overlapShapesC.crescent1.arc2;
+        this.offCtx.save();
+        this.offCtx.fillStyle = 'rgba(190, 120, 20, 0.3)'; // Orange-ish
+        this.offCtx.lineWidth = this.eightPixels; // 8 pixels for an 800 pixel wide canvas
+        this.offCtx.beginPath();
+        this.offCtx.arc(arc1.x, arc1.y, arc1.r, arc1.angleStart, arc1.angleEnd, arc1.counterClockwise);
+        this.offCtx.arc(arc2.x, arc2.y, arc2.r, arc2.angleStart, arc2.angleEnd, arc2.counterClockwise);
+        this.offCtx.fill();
+        this.offCtx.restore();
+      }
+    }
+
+    paintParticle(ctx, particle) {
+      if (!particle || !particle.pos) return;
+      const x = particle.getX();
+      const y = particle.getY();
+      const r = particle.getRadius();
+
+      ctx.save();
+      {
+        // paint a thin outside circle for this particle
+        ctx.beginPath();
+        ctx.strokeStyle = particle.getColor();
+        ctx.lineWidth = this.twopixels; // 2 pixels for an 800 pixel wide canvas
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // special handling for some particles, based on label
+        if (particle.label === 'line1') {
+          ctx.globalAlpha = 0.035; // low alpha for blurring effect
+          ctx.globalCompositeOperation = 'multiply';
+          this.drawLineV(particle.getX(), particle.getY());
+          ctx.globalCompositeOperation = 'source-over';
+        }
+        else if (particle.label === 'line2') {
+          ctx.lineWidth = this.fivepixels; // 5 pixels for an 800 pixel wide canvas
+          ctx.globalAlpha = 0.5;  // higher contrast for the eraser line, so that it creates more visible edge
+          ctx.strokeStyle = this.noisePattern;
+          this.drawLineV(particle.getX(), particle.getY());
+        }
+        else if (particle.label === 'small') {
+          ctx.save();
+          {
+            ctx.globalAlpha = 1.0;
+            ctx.fillStyle = 'rgba(20, 10, 0, .1)'; // dark almost black
+            ctx.beginPath();
+            ctx.arc(x, y, particle.getRadius(), 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+      }
+      ctx.restore();
+    }
+
+    paintPoint(ctx, x, y) {
+      ctx.save();
+      {
+        ctx.strokeStyle = 'rgba(190, 90, 160, 1.0)'; // Purpl-ish
+        ctx.globalAlpha = 0.2; // crisper points for more contrast in the blur
+        // ctx.strokeStyle = 'rgba(200, 100, 120, 1.0)'; // Rust-ish
+        ctx.lineWidth = this.twopixels; // 2 pixels for an 800 pixel wide canvas
+        ctx.beginPath();
+        ctx.arc(x, y, this.twopixels, 0, Math.PI * 2);  // radius of 2 pixels for an 800 pixel wide canvas
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    drawToMainCanvas() {
+      this.ctx.drawImage(this.offCanvas,
+        this.sevenhundred, 0, this.onehundred, this.canvas.height,  // source
+        this.twohundred + 1, 0, this.onehundred, this.canvas.height  // dest
+      );
+      this.ctx.drawImage(this.offCanvas,
+        this.fivehundred, 0, this.twohundred, this.canvas.height,
+        this.threehundred + 2, 0, this.twohundred, this.canvas.height
+      );
+      this.ctx.drawImage(this.offCanvas,
+        this.threehundred, 0, this.twohundred, this.canvas.height, // source
+        0, 0, this.twohundred, this.canvas.height // dest
+      );
+      this.ctx.drawImage(this.offCanvas,
+        this.onehundred, 0, this.twohundred, this.canvas.height, // source
+        this.fivehundred + 3, 0, this.twohundred, this.canvas.height // dest
+      );
+      this.ctx.drawImage(this.offCanvas,
+        0, 0, this.onehundred, this.canvas.height, // source
+        this.sevenhundred + 4, 0, this.onehundred, this.canvas.height // dest
+      );
+    }
+
+    drawLineV(ctx, x, y) {
+      this.offCtx.beginPath();
+      this.offCtx.moveTo(x, 0);
+      this.offCtx.lineTo(x, this.canvas.height);
+      this.offCtx.stroke();
+    }
+
+    clear() {
+      this.offCtx.fillStyle = this.bgColor;
+      this.offCtx.globalAlpha = 1.0;
+      this.offCtx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+  }
+
+  async function loadAndRunSimulation() {
+    try {
+      const canvas = Page.createCanvas(window.innerWidth, window.innerHeight, 'sim');
+
+      // Make 5 random particles
+      // pixel dimensions are relative to an 800x600 canvas; they'll scale up on larger canvases
+      const particles = [];
+      for (let i = 0; i < 5; i++) {
+        const name = `particle${i}`;
+        const posX = Math.random() * canvas.width;   // random position
+        const posY = Math.random() * canvas.height;
+        const velX = (Math.random() - 0.5) * (canvas.width * 0.0375); // Random velocity between -30 and 30
+        const velY = (Math.random() - 0.5) * (canvas.width * 0.0375);
+        const mass = Math.random() * 9 + 1; // Random mass between 1 and 10
+        const radius = Math.random() * (canvas.width * 0.15) + (canvas.width * 0.188); // Random radius between 120 and 270
+
+        particles.push(new Particle(
+          name,
+          new Vector2D(posX, posY),  // position
+          new Vector2D(velX, velY),  // velocity
+          new Vector2D(0, 0), // force
+          mass, // random mass
+          radius, // random radius
+        ));
+      }
+
+      const ten = 0.0125 * canvas.width; // 10 pixels for a 800 pixel wide canvas
+      const two = 0.0025 * canvas.width; // 2 pixels for a 800 pixel wide canvas
+
+      // large circle
+      particles[0].setColor('rgb(127, 211, 220)'); // light blue
+      // large circle
+      particles[1].setColor('rgb(255, 182, 193)'); // light pink
+      // vertical line
+      particles[2].setColor('rgb(198, 78, 144)'); // light magenta for line
+      particles[2].setRadius(two); // 2 pixels for a 800 pixel wide canvas
+      particles[2].setLabel('line1');
+      // vertical line
+      particles[3].setColor('rgb(250, 255, 252)'); // white-ish eraser line
+      particles[3].setRadius(two); // 2 pixels for a 800 pixel wide canvas
+      particles[3].setLabel('line2');
+      particles[3].setVel(new Vector2D((ten / 2), (ten / 2)));
+      // small circle (slow moving)
+      particles[4].setY(canvas.height * 0.7);
+      particles[4].setColor('rgb(209, 72, 0)'); // rust red-orange
+      particles[4].setRadius(ten * 2.5); // 25 pixels for a 800 pixel wide canvas
+      particles[4].setVel(new Vector2D(Math.random() * (ten / 2), 0));
+      particles[4].setLabel('small');
+
+      const engine = new PhysicsEngine();
+      engine.setDimensions(canvas.width, canvas.height);
+      engine.detectCollisions = true;
+      engine.setWallTypeStr('reflecting');
+      engine.addParticles(particles);
+      engine.detectCollisions = false;
+      engine.margin = canvas.width * 0.1875; // 150 pixels for a 800 pixel wide canvas
+      engine.gravY = 0;
+      // Smaller timestep means that particles will move in smaller increments. Since this renderer
+      // use alpha blending to create a blur effect, smaller increments will make the blur "burn in"
+      // more quickly, creating denser color, but also reducing some of the layering of translucent colors 
+      // that creates visual interest.
+      engine.timeStep = .05; // slower
+
+      const renderer = new RenderIntersections(engine.particles, engine.springs, canvas);
+      await renderer.init();
+
+      const mouseHandler = new MouseHandler(canvas, engine, renderer);
+      const animationLoop = new AnimationLoop(() => {
+        engine.step();
+        renderer.render();
+      });
+      animationLoop.start();
+
+      // setup screen capture and pause keys, also stop/start sin curve generators
+      Page.setupKeyEvents(canvas, animationLoop, 'circle_intersections_blur_5');
+
+      console.log('String simulation started successfully!');
+    } catch (error) {
+      console.error('Failed to initialize simulation:', error);
+    }
+  }
+
+  loadAndRunSimulation();
+</script>
+
+</html>

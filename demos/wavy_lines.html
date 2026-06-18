@@ -1,0 +1,301 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Physics2D Wave Simulation</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: rgb(31, 31, 48);
+    }
+
+    canvas {
+      display: block;
+      border: 1px solid black
+    }
+  </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+  import PhysicsEngine from '../js/physics2D/PhysicsEngine.js';
+  import Particle from '../js/physics2D/Particle.js';
+  import Spring from '../js/physics2D/Spring.js';
+  import Vector2D from '../js/physics2D/Vector2D.js';
+  import RenderCurves from '../js/app/RenderCurves.js';
+  import MouseHandler from '../js/app/MouseHandler.js';
+  import AnimationLoop from '../js/app/AnimationLoop.js';
+
+  function createCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'sim';
+    canvas.width = width;
+    canvas.height = height;
+    document.body.appendChild(canvas);
+    return canvas;
+  }
+
+  // Returns the intersection point of two line segments, or null if they don't cross.
+  // Uses parametric form: segment 1 = A + t*(B-A), segment 2 = C + u*(D-C).
+  // An intersection exists when both t and u are in [0, 1].
+  function segmentIntersect(ax, ay, bx, by, cx, cy, dx, dy) {
+    const dx1 = bx - ax, dy1 = by - ay;
+    const dx2 = dx - cx, dy2 = dy - cy;
+    const det = dx2 * dy1 - dx1 * dy2;
+    if (Math.abs(det) < 1e-10) return null; // parallel or collinear
+    const t = (dx2 * (cy - ay) - dy2 * (cx - ax)) / det;
+    const u = (dx1 * (cy - ay) - dy1 * (cx - ax)) / det;
+    if (t >= 0 && t <= 1 && u >= 0 && u <= 1)
+      return { x: ax + t * dx1, y: ay + t * dy1, t, u };
+    return null;
+  }
+
+  // Checks every segment pair between two polylines and returns all crossing points,
+  // including which segment each crossing falls on (segA/segB) and where within it (tA/tB).
+  function findIntersections(pointsA, pointsB) {
+    const result = [];
+    for (let i = 0; i < pointsA.length - 1; i++) {
+      for (let j = 0; j < pointsB.length - 1; j++) {
+        const pt = segmentIntersect(
+          pointsA[i].x, pointsA[i].y, pointsA[i + 1].x, pointsA[i + 1].y,
+          pointsB[j].x, pointsB[j].y, pointsB[j + 1].x, pointsB[j + 1].y,
+        );
+        if (pt) result.push({ x: pt.x, y: pt.y, segA: i, tA: pt.t, segB: j, tB: pt.u });
+      }
+    }
+    return result;
+  }
+
+  function lerp(a, b, t) {
+    return { x: a.x + t * (b.x - a.x), y: a.y + t * (b.y - a.y) };
+  }
+
+  // Returns the sequence of points along a polyline from position (seg1, t1) to (seg2, t2).
+  // Includes the interpolated start and end points plus any vertices in between.
+  function subPath(points, seg1, t1, seg2, t2) {
+    const path = [lerp(points[seg1], points[seg1 + 1], t1)];
+    for (let i = seg1 + 1; i <= seg2; i++) path.push({ x: points[i].x, y: points[i].y });
+    path.push(lerp(points[seg2], points[seg2 + 1], t2));
+    return path;
+  }
+
+  // For each consecutive pair of intersection points (sorted by position along A),
+  // builds a closed polygon from the A-arc forward and the B-arc in reverse.
+  function findEnclosedRegions(pointsA, pointsB) {
+    const intersections = findIntersections(pointsA, pointsB);
+    if (intersections.length < 2) return [];
+
+    intersections.sort((a, b) => (a.segA + a.tA) - (b.segA + b.tA));
+
+    const regions = [];
+    for (let k = 0; k < intersections.length - 1; k++) {
+      const p1 = intersections[k];
+      const p2 = intersections[k + 1];
+
+      const pathA = subPath(pointsA, p1.segA, p1.tA, p2.segA, p2.tA);
+
+      // Walk B between the same two intersection points.
+      // Direction along B depends on which of p1/p2 comes first on B.
+      const pos1B = p1.segB + p1.tB;
+      const pos2B = p2.segB + p2.tB;
+      const pathB = pos2B >= pos1B
+        ? subPath(pointsB, p1.segB, p1.tB, p2.segB, p2.tB).reverse()
+        : subPath(pointsB, p2.segB, p2.tB, p1.segB, p1.tB);
+
+      regions.push([...pathA, ...pathB]);
+    }
+    return regions;
+  }
+
+  // Fills the area between a curve and a horizontal baseline (e.g. bottom of canvas).
+  // Uses the same midpoint-quadratic approach as RenderCurves.drawQuadraticBezier so
+  // the filled edge lies exactly on the drawn curve.
+  function fillUnderCurve(ctx, points, baselineY, color) {
+    if (points.length < 2) return;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 0; i < points.length - 1; i++) {
+      const xc = (points[i].x + points[i + 1].x) / 2;
+      const yc = (points[i].y + points[i + 1].y) / 2;
+      ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+    }
+    const last = points[points.length - 1];
+    ctx.lineTo(last.x, last.y);
+    ctx.lineTo(last.x, baselineY);
+    ctx.lineTo(points[0].x, baselineY);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function fillRegions(ctx, regions, color) {
+    ctx.fillStyle = color;
+    for (const polygon of regions) {
+      if (polygon.length < 3) continue;
+      ctx.beginPath();
+      ctx.moveTo(polygon[0].x, polygon[0].y);
+      for (let i = 0; i < polygon.length - 1; i++) {
+        const xc = (polygon[i].x + polygon[i + 1].x) / 2;
+        const yc = (polygon[i].y + polygon[i + 1].y) / 2;
+        ctx.quadraticCurveTo(polygon[i].x, polygon[i].y, xc, yc);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  function drawIntersections(ctx, points) {
+    ctx.fillStyle = 'red';
+    for (const pt of points) {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function createLine(engine, y, color, numParticles, startX, springLength) {
+    const particles = [];
+    for (let i = 0; i < numParticles; i++) {
+      const particle = new Particle(
+        `p_${y}_${i}`,
+        new Vector2D(startX + i * springLength, y),
+        new Vector2D(0, 0),
+        new Vector2D(0, 0),
+        3, // mass
+        2, // radius
+      );
+      particle.setColor(color);
+      engine.addParticle(particle);
+      particles.push(particle);
+    }
+    particles[0].setFixedX(true);
+    particles[0].setMass(1);
+    particles[numParticles - 1].setFixedX(true);
+    particles[numParticles - 1].setMass(1);
+    for (let i = 0; i < numParticles - 1; i++) {
+      engine.addSpring(new Spring(particles[i], particles[i + 1], 5, 1, springLength));
+    }
+    return particles;
+  }
+
+  async function loadAndRunSimulation() {
+    try {
+      const canvas = createCanvas(1066, 600);
+
+      const engine = new PhysicsEngine();
+      engine.setDimensions(canvas.width, canvas.height);
+      engine.detectCollisions = false;
+      engine.setWallTypeStr('absorbing');
+      engine.gravY = 0;
+      engine.gravConst = 10;
+      engine.wallFriction = 20;
+      engine.timeStep = 0.05;  //.15 worked
+
+      const numParticles = 10;
+      const springLength = canvas.width / (numParticles - 1);
+
+      const line1 = createLine(engine, canvas.height * 1 / 4, 'rgb(0, 220, 80)', 9, 0, canvas.width / (9 - 1));
+      const line2 = createLine(engine, canvas.height * 2 / 4, 'rgb(80, 160, 255)', 10, 0, canvas.width / (10 - 1));
+      const line3 = createLine(engine, canvas.height * 3 / 4, 'rgb(220, 80, 200)', 11, 0, canvas.width / (11 - 1));
+
+      const lines = [line1, line2, line3];
+
+      /* */
+      const agitator = new Particle(
+        'agitator',
+        new Vector2D(300, canvas.height / 1.2),
+        new Vector2D(0, 0),
+        new Vector2D(0, 0),
+        150, // mass
+        15,   // radius
+      );
+      agitator.setColor('rgb(0, 0, 255)');
+      engine.addParticle(agitator);
+
+      const agitator2 = new Particle(
+        'agitator2',
+        new Vector2D(540, canvas.height / 1.5),
+        new Vector2D(0, 0),
+        new Vector2D(0, 0),
+        200, // mass
+        15,   // radius
+      );
+      agitator2.setColor('rgb(0, 0, 255)');
+      engine.addParticle(agitator2);
+
+      const agitator3 = new Particle(
+        'agitator3',
+        new Vector2D(540, canvas.height / 3),
+        new Vector2D(0, 0),
+        new Vector2D(0, 0),
+        180, // mass
+        15,   // radius
+      );
+      agitator3.setColor('rgb(0, 0, 255)');
+      engine.addParticle(agitator3);
+
+      const underColors = [
+        'rgba(0, 220, 80,   0.12)',   // line1
+        'rgba(80, 160, 255, 0.12)',   // line2
+        // 'rgba(220, 250, 250, 0.22)',   // line3
+        'rgba(220, 80, 200, 0.12)',   // line3
+      ];
+
+      const pairColors = [
+        'rgba(100, 255, 120, 0.03)',  // line1 ∩ line2
+        'rgba(255, 120, 100, 0.03)',  // line1 ∩ line3
+        'rgba(120, 160, 255, 0.03)',  // line2 ∩ line3
+      ];
+
+      const renderer = new RenderCurves(engine.particles, engine.springs, canvas);
+      const ctx = canvas.getContext('2d');
+      const mouseHandler = new MouseHandler(canvas, engine, renderer);
+      const animationLoop = new AnimationLoop(() => {
+        renderer.clear();
+        const wavesData = lines.map(line => line.map(p => ({ x: p.getX(), y: p.getY() })));
+        engine.step();
+        renderer.render(wavesData);
+        wavesData.forEach((pts, idx) => fillUnderCurve(ctx, pts, canvas.height, underColors[idx]));
+        // ctx.fillStyle = 'rgb(0, 200, 60)';
+        // for (const pts of wavesData) {
+        //   for (const pt of pts) {
+        //     ctx.beginPath();
+        //     ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
+        //     ctx.fill();
+        //   }
+        // }
+        // ctx.fillStyle = 'rgb(0, 20, 250)';
+        // for (const pt of [agitator, agitator2, agitator3]) {
+        //   ctx.beginPath();
+        //   ctx.arc(pt.getX(), pt.getY(), 6, 0, Math.PI * 2);
+        //   ctx.fill();
+        // }
+        let colorIdx = 0;
+        for (let i = 0; i < wavesData.length - 1; i++) {
+          for (let j = i + 1; j < wavesData.length; j++) {
+            const intersections = findIntersections(wavesData[i], wavesData[j]);
+            fillRegions(ctx, findEnclosedRegions(wavesData[i], wavesData[j]), pairColors[colorIdx++]);
+            // drawIntersections(ctx, intersections);
+          }
+        }
+      });
+      animationLoop.start();
+
+      console.log('String simulation started successfully!');
+    } catch (error) {
+      console.error('Failed to initialize simulation:', error);
+    }
+  }
+
+  loadAndRunSimulation();
+</script>
+
+</html>

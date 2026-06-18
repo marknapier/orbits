@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>3 Particles with Gravity in a Box</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      /* gap: 4px; */
+    }
+
+    canvas {
+      display: block;
+      border: 0px solid black
+    }
+  </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+  import PhysicsEngine from '../js/physics2D/PhysicsEngine.js';
+  import Particle from '../js/physics2D/Particle.js';
+  import Spring from '../js/physics2D/Spring.js';
+  import Vector2D from '../js/physics2D/Vector2D.js';
+  import RenderSimple from '../js/app/RenderSimple.js';
+  import MouseHandler from '../js/app/MouseHandler.js';
+  import AnimationLoop from '../js/app/AnimationLoop.js';
+
+  class Renderer extends RenderSimple {
+    paintParticle(ctx, particle) {
+      if (!particle || !particle.pos) return;
+      ctx.fillStyle = particle.getColor();
+      ctx.beginPath();
+      ctx.arc(particle.getX(), particle.getY(), particle.getRadius() * 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  class Simulation {
+    constructor(width, height) {
+      this.width = width;
+      this.height = height;
+    }
+
+    async start() {
+      const canvas = document.createElement('canvas');
+      canvas.width = this.width;
+      canvas.height = this.height;
+      document.body.appendChild(canvas);
+
+      const engine = new PhysicsEngine();
+      engine.setDimensions(canvas.width + 50, canvas.height);
+      engine.detectCollisions = false;
+      engine.setWallTypeStr('reflecting');
+      engine.gravY = 0;
+      engine.gravConst = 10;
+
+      for (let i = 0; i < 10; i++) {
+        const radius = 5 + Math.random() * 8;
+        const mass = 5 + Math.random() * 20;
+        const x = radius + Math.random() * (canvas.width - radius * 2);
+        const y = radius + Math.random() * (canvas.height - radius * 2);
+        const vx = (Math.random() - 0.5) * 4;
+        const vy = (Math.random() - 0.5) * 4;
+        const r = Math.floor(Math.random() * 256);
+        const g = Math.floor(Math.random() * 256);
+        const b = Math.floor(Math.random() * 256);
+        const a = 0.4 + (Math.random() * 0.6);
+        const p = new Particle(
+          `p${i}`,
+          new Vector2D(x, y),
+          new Vector2D(vx, vy),
+          new Vector2D(0, 0),
+          mass,
+          radius,
+        );
+        p.setColor(`rgba(${r}, ${g}, ${b}, ${a})`);
+        engine.addParticle(p);
+      }
+
+      const renderer = new Renderer(engine.particles, engine.springs, canvas);
+      const mouseHandler = new MouseHandler(canvas, engine, renderer);
+      const animationLoop = new AnimationLoop(engine, renderer);
+      animationLoop.start();
+    }
+  }
+
+  for (let i = 0; i < 15; i++) {
+    new Simulation(50, 800).start();
+  }
+</script>
+
+</html>

@@ -1,4 +1,8 @@
 export default class Vector2D {
+  /**
+   * @param {number | {x: number, y: number}} x - X component, or an object with x/y properties
+   * @param {number} y - Y component (ignored when x is an object)
+   */
   constructor(x = 0, y = 0) {
     // Support both formats: new Vector2D(x, y) and new Vector2D({ x, y })
     if (typeof x === 'object' && x !== null) {

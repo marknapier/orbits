@@ -1,5 +1,6 @@
 <!doctype html>
 <html>
+
 <head>
   <meta charset="utf-8" />
   <title>Physics2D Wave Simulation</title>
@@ -14,7 +15,7 @@
     }
 
     canvas {
-      display:block; 
+      display: block;
       border: 1px solid black
     }
   </style>
@@ -101,19 +102,6 @@
 
       // add two free roaming particles to shake things up, with particls at top and bottom
 
-      const top = new Particle(
-        'top',
-        new Vector2D(300, 0), // position
-        new Vector2D(0, 0), // velocity
-        new Vector2D(0, 0), // force
-        1, // mass
-        3, // radius
-      );
-      top.setColor('rgb(60, 60, 60)'); // gray
-      top.setFixedX(true);
-      top.setFixedY(true);
-      engine.addParticle(top);
-      
       const agitator = new Particle(
         'agitator',
         new Vector2D(300, 200), // position
@@ -136,22 +124,14 @@
       agitator2.setColor('rgb(0, 0, 255)'); // green
       engine.addParticle(agitator2);
 
-      const bottom = new Particle(
-        'bottom',
-        new Vector2D(300, 600), // position
-        new Vector2D(0, 0), // velocity
-        new Vector2D(0, 0), // force
-        1, // mass
-        3, // radius
-      );
-      bottom.setColor('rgb(60, 60, 60)'); // gray
-      bottom.setFixedX(true);
-      bottom.setFixedY(true);
-      engine.addParticle(bottom);
-
       const renderer = new RenderCurves(engine.particles, engine.springs, canvas);
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
-      const animationLoop = new AnimationLoop(engine, renderer);
+      const animationLoop = new AnimationLoop(() => {
+        // the points that make up the wave, not including the two agitators
+        const wavePoints = particles.map(p => ({ x: p.getX(), y: p.getY() }));
+        engine.step();
+        renderer.render([wavePoints]);
+      });
       animationLoop.start();
 
       console.log('String simulation started successfully!');
@@ -159,7 +139,8 @@
       console.error('Failed to initialize simulation:', error);
     }
   }
-  
+
   loadAndRunSimulation();
 </script>
+
 </html>

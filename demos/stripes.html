@@ -1,0 +1,193 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Plaid effect</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      display: block;
+      border: 1px solid black
+    }
+  </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+  import PhysicsEngine from '../js/physics2D/PhysicsEngine.js';
+  import RendererSimple from '../js/app/RenderSimple.js';
+  import MouseHandler from '../js/app/MouseHandler.js';
+  import Stripe from '../js/app/Stripe.js';
+  import Oscillator from '../js/app/Oscillator.js';
+  import AnimationLoop from '../js/app/AnimationLoop.js';
+  import Particle from '../js/physics2D/Particle.js';
+  import Vector2D from '../js/physics2D/Vector2D.js';
+
+  function splitmix32(a) {
+    return function () {
+      a |= 0;
+      a = a + 0x9e3779b9 | 0;
+      var t = a ^ a >>> 16;
+      t = Math.imul(t, 0x21f0aaad);
+      t = t ^ t >>> 15;
+      t = Math.imul(t, 0x735a2d97);
+      return ((t = t ^ t >>> 15) >>> 0) / 4294967296;
+    }
+  }
+
+  const seed = 2327661330;
+  // const seed = (Math.random() * 2 ** 32) >>> 0;
+  const rand = splitmix32(seed);
+  console.log('Random Seed:', seed);
+
+  function parseRGB(cssColor) {
+    const m = cssColor.match(/\d+/g);
+    return [parseInt(m[0]), parseInt(m[1]), parseInt(m[2])];
+  }
+
+  function randomRGB() {
+    return [Math.floor(rand() * 256), Math.floor(rand() * 256), Math.floor(rand() * 256)];
+  }
+
+  function randomOsc() {
+    const freq = rand() * 0.04 + 0.005;
+    const type = rand() < 0.5 ? 'sin' : 'cos';
+    const phase = rand() * Math.PI * 2;
+    return new Oscillator(freq, type, phase);
+  }
+
+  function createCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'sim';
+    canvas.width = width;
+    canvas.height = height;
+    document.body.appendChild(canvas);
+    return canvas;
+  }
+
+  class RenderStripes extends RendererSimple {
+    constructor(particles = [], springs = [], target) {
+      super(particles, null, target);
+      this.bgColor = 'rgb(253, 253, 250)';
+      // this.ctx.globalAlpha = 0.008; // nice blurry effect
+      // this.ctx.globalAlpha = 0.02; // nice blurry effect with stripe alpha set to 0.5
+      this.ctx.globalAlpha = 0.2; // nice blurry effect with stripe alpha set to 0.5
+      // this.ctx.globalAlpha = 1.0; // opaque 
+      this.stripes = particles.map(p => new Stripe({
+        widthBase: p.getRadius(),
+        widthDelta: rand() * 30 + 5,
+        position: p.getX(),
+        darkColor: parseRGB(p.getColor()),
+        lightColor: randomRGB(),
+        oscWidth: randomOsc(),
+        oscColor: randomOsc(),
+        alpha: rand() * 0.7 + 0.3, // random alpha between 0.3 and 1.0
+      }));
+      this.stripes[5].dashPattern = [20, 10];
+      this.stripes[9].dashPattern = [7, 31];
+    }
+
+    render() {
+      for (let i = 0; i < this.particles.length; i++) {
+        const particle = this.particles[i];
+        const stripe = this.stripes[i];
+        stripe.position = particle.getX();
+        stripe.step();
+        this.ctx.save();
+        this.ctx.strokeStyle = stripe.cssColor;
+        this.ctx.lineWidth = stripe.w;
+        this.ctx.setLineDash(stripe.dashPattern || []);
+        this.drawLineV(particle.getX(), particle.getY());
+        this.ctx.restore();
+
+        if (i === 2) {
+          this.ctx.save();
+          this.ctx.fillStyle = this.stripes[0].cssColor;
+          this.ctx.beginPath();
+          this.ctx.arc(particle.getX(), particle.getY(), 200, 0, Math.PI * 2);
+          this.ctx.fill();
+          this.ctx.restore();
+        } else if (i === 3) {
+          this.ctx.save();
+          this.ctx.strokeStyle = this.stripes[1].cssColor;
+          this.ctx.lineWidth = stripe.w;
+          this.ctx.beginPath();
+          this.ctx.arc(particle.getX(), particle.getY(), 300, 0, Math.PI * 2);
+          this.ctx.setLineDash([20, 2]);
+          this.ctx.stroke();
+          this.ctx.restore();
+        }
+      }
+    }
+
+    drawLineV(x, y) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(x, 0);
+      this.ctx.lineTo(x, this.canvas.height);
+      this.ctx.stroke();
+    }
+  }
+
+  async function loadAndRunSimulation() {
+    try {
+      const canvas = createCanvas(1200, 800);
+
+      // Make 20 random particles
+      const particles = [];
+      for (let i = 0; i < 20; i++) {
+        const name = `particle${i}`;
+        const posX = rand() * canvas.width;
+        const posY = rand() * canvas.height;
+        const velX = (rand() - 0.5) * 6; // Random velocity between -3 and 3
+        const velY = (rand() - 0.5) * 6;
+        const mass = rand() * 9 + 1; // Random mass between 1 and 10
+        const radius = rand() * 98 + 2; // Random radius between 2 and 100
+        const color = `rgb(${Math.floor(rand() * 256)}, ${Math.floor(rand() * 256)}, ${Math.floor(rand() * 256)})`;
+
+        particles.push(new Particle(
+          name,
+          new Vector2D(posX, posY), // random position
+          new Vector2D(velX, velY), // random velocity
+          new Vector2D(0, 0), // force
+          mass, // random mass
+          radius, // random radius
+        ));
+        particles[i].setColor(color); // set random color
+      }
+
+      const engine = new PhysicsEngine();
+      engine.setDimensions(canvas.width, canvas.height);
+      engine.detectCollisions = true;
+      engine.setWallTypeStr('reflecting');
+      engine.addParticles(particles);
+      engine.gravY = 0;
+      engine.timeStep = 0.1;
+
+      const renderer = new RenderStripes(engine.particles, engine.springs, canvas);
+      const mouseHandler = new MouseHandler(canvas, engine, renderer);
+      const animationLoop = new AnimationLoop(engine, renderer);
+      animationLoop.start();
+
+      window.engine = engine; // Expose for debugging
+
+      console.log('String simulation started successfully!');
+    } catch (error) {
+      console.error('Failed to initialize simulation:', error);
+    }
+  }
+
+  loadAndRunSimulation();
+</script>
+
+</html>

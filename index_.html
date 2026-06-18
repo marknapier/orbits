@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orbits</title>
+  <link rel="icon" type="image/x-icon" href="/orbits/favicon.ico">
+  <link rel="stylesheet" href="./styles/full_viewport_canvas.css">
+  <style>
+    body {
+        overflow-y: auto;
+    }
+    .square-link {
+      display: block;
+      width: 2rem;
+      height: 2rem;
+      border: 1px solid #eee !important;
+      border-radius: 5%;
+      background-color: transparent;
+      transition: background-color 0.3s ease;
+    }
+    .square-link:hover {
+      background-color: #ccc;
+    }
+    .nav-container .square-link {
+      margin: 3rem 2rem;
+    }
+    .thumbnail {
+      display: block;
+      margin: 3rem;
+      border: 1px solid #414141;
+    }
+    .thumbnail:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .thumbnail img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <button class="btn-back" onclick="history.back()" aria-label="Go back">&#8249;</button>  
+  <div class="nav-container">
+    <a href="cassini_2.html" class="thumbnail" title="cassini 2" alt="cassini 2"><img src="images/cassini_2_tn.jpg" alt="cassini 2 thumbnail"></a>
+    <a href="cassini_3.html" class="thumbnail" title="cassini 3" alt="cassini 3"><img src="images/cassini_3_tn.jpg" alt="cassini 3 thumbnail"></a>
+    <a href="cassini_4.html" class="thumbnail" title="cassini 4" alt="cassini 4"><img src="images/cassini_4_tn.jpg" alt="cassini 4 thumbnail"></a>
+    <a href="cassini_5.html" class="thumbnail" title="cassini 5" alt="cassini 5"><img src="images/cassini_5_tn.jpg" alt="cassini 5 thumbnail"></a>
+  </div>
+</body>
+
+</script>
+</html>

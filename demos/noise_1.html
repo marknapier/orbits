@@ -1,0 +1,394 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Physics2D Gravity Demo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      display: block;
+      border: 1px solid black
+    }
+  </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+  function createCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'sim';
+    canvas.width = width;
+    canvas.height = height;
+    document.body.appendChild(canvas);
+    return canvas;
+  }
+
+  // Resize canvas dynamically
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  // 2D Time-varying Sine Noise (Returns 0 to 1)
+  function sineNoise2D(x, y, t) {
+    // Irrational primes to destroy patterns
+    const n1 = Math.sin(x * 0.005 + t * 0.4) * 2.11;
+    const n2 = Math.sin(y * 0.003 - t * 0.6) * 3.57;
+    const n3 = Math.sin((x + y) * 0.002 + t * 0.2) * 1.61;
+
+    // Combine waves and normalize to [0, 1] range
+    let combined = Math.sin(n1 + n2 + n3);
+    return (combined + 1) * 0.5;
+  }
+
+  /**
+   * Parameterized 2D Sine Noise
+   * @param {number} x - The X coordinate
+   * @param {number} y - The Y coordinate
+   * @param {number} t - The elapsed time
+   * @param {object} config - Tuning properties
+   * @param {number} config.scale - Spatial density (smaller = smoother/larger, bigger = noisier/frenetic)
+   * @param {number} config.speed - How fast the noise changes over time
+   * @param {number} config.amplitude - Controls structural contrast and spikes
+   */
+  function customSineNoise2D(x, y, t, config = { scale: 0.005, speed: 0.5, amplitude: 1.0 }) {
+    const { scale, speed, amplitude } = config;
+
+    // Apply scale to coordinates and speed to time
+    const sx = x * scale;
+    const sy = y * scale;
+    const st = t * speed;
+
+    // Mix stacked frequencies modulated by amplitude
+    const n1 = Math.sin(sx * 1.0 + st * 0.8) * 2.11;
+    const n2 = Math.sin(sy * 1.2 - st * 1.2) * 3.57;
+    const n3 = Math.sin((sx + sy) * 0.7 + st * 0.4) * 1.61;
+
+    // Combine waves and apply structural amplitude modifier
+    let combined = Math.sin((n1 + n2 + n3) * amplitude);
+
+    // Normalize safely to a [0, 1] range
+    return (combined + 1) * 0.5;
+  }
+
+  // Calming, slow-moving, atmospheric gradients.
+  const smoothConfig = {
+    scale: 0.001,   // Stretches the waves out wide across the screen
+    speed: 0.1,     // Lazily evolves over time
+    amplitude: 0.5  // Mild blending for softer gradients
+  };
+
+  // Frenetic, lightning-fast transitions with sharp visual boundaries.
+  const extremeConfig = {
+    scale: 0.04,    // Condenses the pattern tightly into tiny regions
+    speed: 2.5,     // Hyperactive time evolution
+    amplitude: 4.0  // Overdrives the sine stacking, forcing harsh, rapid transitions
+  };
+
+  // A balanced preset ideal for particle flow fields or floating canvas elements.
+  const waveConfig = {
+    scale: 0.008,
+    speed: 0.8,
+    amplitude: 1.2
+  };
+
+
+  function drawGridPattern(t) {
+    const spacing = 30;
+
+    for (let x = spacing; x < canvas.width; x += spacing) {
+      for (let y = spacing; y < canvas.height; y += spacing) {
+        // Get noise value based on current grid point and time
+        let noise = sineNoise2D(x, y, t);
+
+        // Map noise to rotation angle (0 to 360 degrees in radians)
+        let angle = noise * Math.PI * 2;
+        let length = noise * 25;
+
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+
+        // Dynamic hue shifts using the noise value
+        ctx.strokeStyle = `hsla(${noise * 360}, 80%, 60%, 0.7)`;
+        ctx.lineWidth = noise * 3;
+
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(length, 0);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+  }
+
+  function drawBlob(t) {
+    let centerX = canvas.width / 2;
+    let centerY = canvas.height / 2;
+    let baseRadius = 150;
+
+    ctx.beginPath();
+    for (let angle = 0; angle <= Math.PI * 2; angle += 0.05) {
+      // Translate polar coordinates back to Cartesian to sample noise
+      let xOffset = Math.cos(angle) * 100;
+      let yOffset = Math.sin(angle) * 100;
+
+      // Sample noise and adjust radius
+      let noise = sineNoise2D(xOffset, yOffset, t);
+      let currentRadius = baseRadius + (noise * 80 - 40); // +/- 40px variance
+
+      let vx = centerX + Math.cos(angle) * currentRadius;
+      let vy = centerY + Math.sin(angle) * currentRadius;
+
+      if (angle === 0) ctx.moveTo(vx, vy);
+      else ctx.lineTo(vx, vy);
+    }
+    ctx.closePath();
+    ctx.fillStyle = `hsla(${t * 10 % 360}, 70%, 50%, 0.8)`;
+    ctx.fill();
+  }
+
+  function drawSmokyGrid(t) {
+    // Switch between configs here to change behaviors
+    let activeConfig = smoothConfig;
+
+    for (let x = 0; x < canvas.width; x += 20) {
+      for (let y = 0; y < canvas.height; y += 20) {
+
+        // Pass the configuration profile
+        let val = customSineNoise2D(x, y, t, activeConfig);
+
+        ctx.fillStyle = `rgba(255, 255, 255, ${val})`;
+        ctx.fillRect(x, y, 18, 18);
+      }
+    }
+  }
+
+  let xpos = 0;
+  function drawLineH(t) {
+    // Switch between configs here to change behaviors
+    let activeConfig = smoothConfig;
+
+    // for (let x = 0; x < canvas.width; x += 1) {
+    //   let val = customSineNoise2D(x, 0, t, activeConfig);
+
+    //   ctx.fillStyle = `rgba(255, 255, 255, ${val})`;
+    //   ctx.fillRect(x, val * canvas.height, 5, 5);
+    // }
+
+    xpos += .2;
+    if (xpos >= canvas.width) {
+      xpos = 0;
+    }
+
+    // let val = customSineNoise2D(xpos, 0, t, activeConfig);
+    let val = layeredNoise2D(xpos, 0, t, 4, 2.1, 0.45);
+
+    ctx.fillStyle = `rgba(255, 255, 255, 1.0)`;
+    ctx.fillRect(xpos, (val * canvas.height), 5, 5);
+  }
+
+  // Base lightweight 2D Sine Noise
+  function baseNoise2D(x, y, t) {
+    const n1 = Math.sin(x * 1.0 + t * 0.8) * 2.11;
+    const n2 = Math.sin(y * 1.2 - t * 1.2) * 3.57;
+    const n3 = Math.sin((x + y) * 0.7 + t * 0.4) * 1.61;
+    return (Math.sin(n1 + n2 + n3) + 1) * 0.5;
+  }
+
+  // Base lightweight 1D Sine Noise
+  function baseNoise1D(x, t) {
+    const n1 = Math.sin(x * 0.05 + t * 2.0) * 2.5;
+    const n2 = Math.sin(x * 0.12 - t * 4.3) * 1.8;
+    const n3 = Math.sin(x * 0.02 + t * 0.7) * 3.1;
+    return (Math.sin(n1 + n2 + n3) + 1) * 0.5;
+  }
+
+  /**
+   * Layered Fractal Noise (fBm)
+   * @param {number} x, y - Coordinates
+   * @param {number} t - Time
+   * @param {number} octaves - Total layers of detail (3 to 5 is ideal for performance)
+   * @param {number} lacunarity - Frequency multiplier per layer (typically ~2.0)
+   * @param {number} gain - Amplitude reduction per layer (typically ~0.5)
+   */
+  function layeredNoise2D(x, y, t, octaves = 4, lacunarity = 2.0, gain = 0.5) {
+    let total = 0;
+    let maxAmplitude = 0;
+
+    // Initial tracking states
+    let frequency = 0.005; // Starting base scale
+    let amplitude = 1.0;   // Starting weight of the first layer
+
+    for (let i = 0; i < octaves; i++) {
+      // Sample noise with current layer's frequency adjustments
+      let noiseValue = baseNoise2D(x * frequency, y * frequency, t);
+
+      // Accumulate weighted value
+      total += noiseValue * amplitude;
+      maxAmplitude += amplitude;
+
+      // Prepare parameters for the next, more detailed layer
+      frequency *= lacunarity; // Tighten the wave patterns
+      amplitude *= gain;       // Diminish visual power of the small details
+    }
+
+    // Normalize result safely back to a [0, 1] range
+    return total / maxAmplitude;
+  }
+
+  // Layered Fractal Noise (fBm) for detailed spikes
+  function layeredNoise1D(x, t, octaves = 3) {
+    let total = 0;
+    let maxAmp = 0;
+    let freq = 1.0;
+    let amp = 1.0;
+
+    for (let i = 0; i < octaves; i++) {
+      total += baseNoise1D(x * freq, t) * amp;
+      maxAmp += amp;
+      freq *= 2.1;
+      amp *= 0.4;
+    }
+    return total / maxAmp;
+  }
+
+  function drawGrid() {
+    ctx.strokeStyle = "rgba(25, 60, 35, 0.15)";
+    ctx.lineWidth = 1;
+    const size = 40;
+
+    ctx.beginPath();
+    for (let x = 0; x < canvas.width; x += size) {
+      ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height);
+    }
+    for (let y = 0; y < canvas.height; y += size) {
+      ctx.moveTo(0, y); ctx.lineTo(canvas.width, y);
+    }
+    ctx.stroke();
+  }
+
+  //========================================================================
+
+  const canvas = createCanvas(800, 600);
+  const ctx = canvas.getContext("2d");
+
+  window.addEventListener("resize", resize);
+  resize();
+
+  // Main animation loop
+  let startTime = Date.now();
+
+  function animateBlob() {
+    let t = (Date.now() - startTime) * 0.00002; // Scaled time factor
+
+    // Clear with slight alpha for trailing motion blur effects
+    ctx.fillStyle = "rgba(10, 10, 25, 0.03)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Trigger your visual rendering here
+    // drawGridPattern(t);
+    // drawBlob(t);
+    // drawSmokyGrid(t);
+    drawLineH(t);
+
+    requestAnimationFrame(animateBlob);
+  }
+
+  function animatePlasma() {
+    let t = (Date.now() - startTime) * 0.001; // Evolution clock
+
+    let width = canvas.width;
+    let height = canvas.height;
+    let imgData = ctx.createImageData(width, height);
+    let data = imgData.data;
+
+    // Loop through every single pixel on the canvas
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+
+        // Generate deep fractal noise using 4 octaves
+        let noise = layeredNoise2D(x, y, t, 4, 2.1, 0.45);
+
+        // Map 1D noise values into an RGB color palette
+        let index = (x + y * width) * 4;
+
+        // Plasma/Fire Color Palette Mapping Example
+        data[index] = Math.pow(noise, 1.5) * 255;  // Red channel (skewed for contrast)
+        data[index + 1] = Math.pow(noise, 2.5) * 200;  // Green channel
+        data[index + 2] = Math.pow(noise, 4.0) * 150;  // Blue channel
+        data[index + 3] = 255;                         // Opacity (Alpha)
+      }
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+    requestAnimationFrame(animatePlasma);
+  }
+
+  function animateEKG() {
+    let t = (Date.now() - startTime) * 0.001; // System clock
+
+    // Fading background for a glowing phosphor radar trail effect
+    ctx.fillStyle = "rgba(5, 12, 8, 0.12)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Grid lines for medical monitor aesthetic
+    drawGrid();
+
+    // EKG Line Drawing
+    ctx.beginPath();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "#33ff66"; // Neon EKG Green
+    ctx.shadowBlur = 12;         // Glow effect
+    ctx.shadowColor = "#33ff66";
+
+    let centerY = canvas.height / 2;
+
+    for (let x = 0; x < canvas.width; x += 2) {
+      // 1. Generate the base layered noise value (-0.5 to 0.5)
+      let noise = layeredNoise1D(x, t, 3) - 0.5;
+
+      // 2. Create a repeating rhythmic pulse envelope using sine
+      // This acts as the heartbeat trigger, forcing spikes to only happen periodically
+      let heartbeatTrigger = Math.sin(x * 0.005 - t * 2.5);
+      let pulseEnvelope = Math.pow(Math.max(0, heartbeatTrigger), 8);
+
+      // 3. Amplify noise inside the heartbeat window, keep flat outside of it
+      // The multiplying factor (350) controls the max height of the EKG jump
+      let yOffset = noise * pulseEnvelope * 350;
+
+      // 4. Add a tiny bit of baseline resting noise so it isn't a perfectly dead line
+      let restingNoise = (baseNoise1D(x * 0.1, t) - 0.5) * 4;
+
+      let finalY = centerY + yOffset + restingNoise;
+
+      if (x === 0) {
+        ctx.moveTo(x, finalY);
+      } else {
+        ctx.lineTo(x, finalY);
+      }
+    }
+
+    ctx.stroke();
+    ctx.shadowBlur = 0; // Reset glow for other elements
+
+    requestAnimationFrame(animateEKG);
+  }
+
+
+  animateBlob();
+
+</script>
+
+</html>

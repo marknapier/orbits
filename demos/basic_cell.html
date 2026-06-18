@@ -48,18 +48,6 @@
     }
 
     build() {
-      // Create central particle
-      // this.centerParticle = new Particle(
-      //   `center_${this.centerX}_${this.centerY}`,
-      //   new Vector2D(this.centerX, this.centerY),
-      //   new Vector2D(0, 0),
-      //   new Vector2D(0, 0),
-      //   5,  // mass
-      //   15  // radius
-      // );
-      // this.centerParticle.setColor('rgb(255, 0, 0)'); // Red for center
-      // this.engine.addParticle(this.centerParticle);
-
       // Create particles in a circle
       for (let i = 0; i < this.numParticles; i++) {
         const angle = (i / this.numParticles) * 2 * Math.PI;
@@ -92,37 +80,6 @@
         );
         this.engine.addSpring(spring);
       }
-
-      // Create springs connecting each outer particle to the center (spokes)
-      // for (let i = 0; i < this.numParticles; i++) {
-      //   const spring = new Spring(
-      //     this.outerParticles[i],
-      //     this.centerParticle,
-      //     5,      // spring constant (stronger for spokes)
-      //     0.8,    // damping
-      //     this.radius  // rest length (radius)
-      //   );
-      //   this.engine.addSpring(spring);
-      // }
-
-      // Create 4 bracing springs connecting opposite particles across the wheel
-      // const bracingPairs = [
-      //   [0, 6],
-      //   [3, 9],
-      //   [1, 7],
-      //   [4, 10]
-      // ];
-
-      // for (const [i, j] of bracingPairs) {
-      //   const spring = new Spring(
-      //     this.outerParticles[i],
-      //     this.outerParticles[j],
-      //     20,                    // spring constant
-      //     0.8,                  // damping
-      //     this.radius * 2      // rest length (diameter)
-      //   );
-      //   this.engine.addSpring(spring);
-      // }
     }
 
     /**
@@ -144,7 +101,7 @@
       return { x: cx, y: cy };
     }
 
-    applyGlobalForces() {
+    pushParticesAwayFromCenter() {
       const centroid = this.computeCentroid();
       if (!centroid) return;
 
@@ -251,8 +208,9 @@
 
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
       const animationLoop = new AnimationLoop(() => {
+        // pass a function to step() that applies forces to the wheel particles before each physics update
         engine.step(() => {
-          wheel1.applyGlobalForces();
+          wheel1.pushParticesAwayFromCenter();
         });
         renderer.render();
       });

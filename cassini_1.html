@@ -115,7 +115,7 @@
       const engine = new PhysicsEngine();
       engine.setDimensions(canvas.width, canvas.height);
       engine.detectCollisions = false;
-      engine.timeStep *= Page.scaleFactor; // scale time step to keep velocity in proportion to canvas size
+      engine.timeStep *= (Page.scaleFactor || 1); // scale time step to keep velocity in proportion to canvas size
 
       const model = new Model();
       model.parseConfig(modelJSON);
@@ -124,8 +124,8 @@
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
 
       const renderer = new RenderCassini(engine.particles, null, canvas );
-      const RB = renderer
-      RB.bgColor = 'rgb(20, 0, 20)';
+      const RB = renderer;
+      RB.bgColor = 'rgb(20, 20, 20)';
       RB.opacity = 0.08;
       RB.clearBG = false;
       engine.particles[3].pos = new Vector2D(300 + (Math.random()*200), 300 + (Math.random()*200));
@@ -138,7 +138,7 @@
       const animationLoop = new AnimationLoop(engine, renderer);
       animationLoop.start();
 
-      Page.setupKeyEvents(canvas, animationLoop, 'cassini3');
+      Page.setupKeyEvents(canvas, animationLoop, 'cassini1');
 
       window.engine = engine; // Expose for debugging
       console.log('Simulation started successfully!');

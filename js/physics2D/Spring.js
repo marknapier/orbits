@@ -1,6 +1,13 @@
 import Particle from './Particle.js';
 
 export default class Spring {
+  /**
+   * @param {Particle} p1 - First endpoint particle
+   * @param {Particle} p2 - Second endpoint particle
+   * @param {number} k - Spring constant (stiffness)
+   * @param {number} damping - Damping coefficient
+   * @param {number | null} len - Rest length; defaults to the distance between p1 and p2 at construction
+   */
   constructor(p1, p2, k = 0, damping = 0, len = null) {
     if (!len && p1 && p2) {
       // If no rest length is provided, calculate it based on the initial positions of the particles

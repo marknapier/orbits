@@ -1,0 +1,522 @@
+<!doctype html>
+<html>
+<!-- 
+Draws to an offscreen canvas, then assembles strips of that canvas onto the display
+canvas. Blurred neutral aqua tones and dark red-violet.
+-->
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cassini 6B</title>
+  <link rel="stylesheet" href="./styles/full_viewport_canvas.css">
+  <!-- <style>
+    /* for debugging layout issues */
+    body {
+      transform: none;
+      overflow: scroll;
+    }
+
+    body canvas {
+      transform: none;
+      position: relative;
+    }
+  </style> -->
+</head>
+
+<body>
+  <button class="btn-back" onclick="history.back()" aria-label="Go back">&#8249;</button>
+  <!-- Canvas will be inserted here -->
+</body>
+
+<script type="module">
+  import PhysicsEngine from './js/physics2D/PhysicsEngine.js';
+  import Vector2D from './js/physics2D/Vector2D.js';
+  import MouseHandler from './js/app/MouseHandler.js';
+  import AnimationLoop from './js/app/AnimationLoop.js';
+  import Model from './js/app/Model.js';
+  import Page from './js/app/Page.js'
+  import Random from './js/app/Random.js';
+  import Particle from './js/physics2D/Particle.js';
+  import ColorPalette from './js/app/ColorPalette.js';
+  import RenderSimple from './js/app/RenderSimple.js'
+
+  const modelJSON = {
+    "environment": {
+      "wallType": "Reflecting",
+      "wallFriction": 0.5,
+      "gravityConstant": 15.0,
+      "electricConstant": 0.0,
+      "gravityFieldX": 0.0,
+      "gravityFieldY": 0.0,
+      "electricFieldX": 0.0,
+      "electricFieldY": 0.0,
+      "magneticFieldZ": 0.0,
+      "airResistance": 0.05,
+    },
+    "particles": [
+      {
+        "particleNumber": 0,
+        "label": "one",
+        "color": "red",
+        "initialPositionX": 1,
+        "initialPositionY": 100,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 26.0,
+        "mass": 25.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 1,
+        "label": "two",
+        "color": "green",
+        "initialPositionX": 380,
+        "initialPositionY": 180,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 6.0,
+        "mass": 30.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 2,
+        "label": "three",
+        "color": "blue",
+        "initialPositionX": 600,
+        "initialPositionY": 220,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 8.0,
+        "mass": 20.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 3,
+        "label": "four",
+        "color": "magenta",
+        "initialPositionX": 700,
+        "initialPositionY": 230,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 5.0,
+        "mass": 50.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 4,
+        "label": "agitator",
+        "color": "black",
+        "initialPositionX": 600,
+        "initialPositionY": 10,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 10.0,
+        "mass": 500.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 5,
+        "label": "tiny",
+        "color": "yellow",
+        "initialPositionX": 620,
+        "initialPositionY": 10,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 4.0,
+        "mass": 2.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      }
+    ],
+    "springs": [
+      // {
+      //   "label": "spring1",
+      //   "color": "white",
+      //   "particle1": 0,
+      //   "particle2": 1,
+      //   "springConstant": 0.5,
+      //   "damping": 0.8,
+      //   "relaxedLength": 0
+      // },
+      {
+        "label": "spring2",
+        "color": "white",
+        "particle1": 1,
+        "particle2": 2,
+        "springConstant": 0.5,
+        "damping": 0.8,
+        "relaxedLength": 0
+      },
+      {
+        "label": "spring3",
+        "color": "white",
+        "particle1": 2,
+        "particle2": 3,
+        "springConstant": 0.5,
+        "damping": 0.8,
+        "relaxedLength": 0
+      },
+      {
+        "label": "spring4",
+        "color": "white",
+        "particle1": 4,
+        "particle2": 5,
+        "springConstant": 5.5,
+        "damping": 0.8,
+        "relaxedLength": 0
+      },
+    ]
+  };
+
+  export default class RenderVerticals extends RenderSimple {
+    // Configurable options
+    bgColor = "rgb(60,0,0)";          // background color
+    opacity = 0.2;                      // alpha for all paint operations
+    clearBG = true;                     // if false, leaves motion trails
+    violetColors = ["rgb(6, 2, 10)", "rgb(25, 10, 30)", "rgb(20, 5, 25)", "rgb(12, 0, 10)"];
+    orangeColors = ["rgb(250, 110, 0)", "rgb(245, 115, 0)", "rgb(255, 110, 10)", "rgb(240, 108, 8)", "rgb(230, 100, 10)", "rgb(240, 100, 5)", "rgb(235, 85, 0)", "rgb(255, 105, 80)",];
+
+    constructor(sim, canvas) {
+      super(sim.particles, null, canvas);
+      this.yellowGreenPalette = null; // colors will be loaded in init()
+
+      // High-DPI monitors, such as Retina displays, can have 2 or 3 times the pixel density of standard displays. 
+      // To ensure our canvas looks crisp on these displays, we scale it up proportionally to the device pixel ratio. 
+      // (see Page.createCanvas()). 
+      this.dpiRatio = RenderSimple.getCanvasDPIRatio(this.canvas);
+
+      //!!! get the screen to physics ratio
+      this.canvasScreenSize = RenderSimple.getCanvasScreenSize(this.canvas);
+      this.canvasScreenToSimRatioH = this.canvasScreenSize.height / sim.getHeight();
+
+      // The final amount we'll scale by, including the DPI ratio and the screen-to-physics ratio.
+      this.totalScale = this.dpiRatio * this.canvasScreenToSimRatioH;
+
+      // Make an offscreen canvas for drawing - will be copied to display canvas in parts
+      this.offscreenCanvas = Page.createOffscreenCanvasDPI(this.canvasScreenSize.width, this.canvasScreenSize.height, 'offscreen');
+
+      // this.ctx will draw to the offscreen canvas.
+      this.ctxDisplay = this.ctx; // save the on-screen context
+      this.ctx = this.offscreenCanvas.getContext('2d'); // off screen context
+
+      // Scale the offscreen context to fit the high pixel density and the screen-to-physics ratio.
+      this.ctx.scale(this.totalScale, this.totalScale);
+
+      // save some dimensions for later use
+      this.simWidth = sim.getWidth();    // physics units, need to be scaled up to fit full-sized canvas
+      this.simHeight = sim.getHeight();
+      this.canvasH = this.offscreenCanvas.height;    // actual pixels, no need to scale when using these
+      this.canvasW = this.offscreenCanvas.width;
+
+      console.log('Canvas DPI ratio:', this.dpiRatio);
+      console.log('Screen to physics ratio:', this.canvasScreenToSimRatioH, this.canvasScreenToSimRatioW);
+      console.log('TOTAL scale:', this.totalScale);
+    }
+
+    setParticles(particles) {
+      this.particles = particles ?? [];
+    }
+
+    async init() {
+      this.fleshtonesPalette = await ColorPalette.createFromImage('./images/flesh_tones.png');
+      this.yellowGreenPalette = await ColorPalette.createFromImage('./images/titan_blur.jpg');
+    }
+
+    // ============================================================
+    // Render the physics simulation into the canvas
+    render() {
+      const ctx = this.ctx;
+      const w = this.simWidth; // may be scaled for high-DPI canvas
+      const h = this.simHeight; // may be scaled for high-DPI canvas
+
+      // Clear bg if configured to do so, with a low alpha to create motion trails
+      if (this.clearBG) {
+        ctx.save();
+        ctx.globalAlpha = 0.1;
+        ctx.fillStyle = this.bgColor;
+        ctx.fillRect(0, 0, w, this.canvasScreenSize.height);
+        ctx.restore();
+      }
+
+      // Set a constant alpha composite for subsequent drawing
+      ctx.save();
+      ctx.globalAlpha = this.opacity;
+
+      const particles = this.particles;
+
+      const p0 = particles[0]; // red
+      const p1 = particles[1]; // green
+      const p2 = particles[2]; // blue
+      const p3 = particles[3]; // magenta
+      const p4 = particles[4]; // agitator - black
+      const p5 = particles[5]; // tiny - yellow
+
+      const radius1 = Particle.distance(p0, p1);
+      const radius2 = Particle.distance(p1, p2);
+      const radius3 = Particle.distance(p2, p3);
+      const radius4 = Particle.distance(p3, p0);
+
+      // ------------------------------------------------------------------------------------------------
+      // Draw a circle for each particle pair, using the distance between particles as the radius.
+      // ------------------------------------------------------------------------------------------------
+
+      // Dark violet circle p0 - p1
+      // Make a 0-1 value that represents the radius length relative to the canvas height
+      const radiusPercent = Math.max(Math.min(radius1 / this.simHeight, 1), 0.1);
+      ctx.save();
+      {
+        ctx.globalAlpha = 0.2;
+        ctx.strokeStyle = "red"; //this.violetColors[(radiusPercent * 3) | 0];
+        ctx.lineWidth = 5 * radiusPercent;
+        ctx.globalCompositeOperation = 'color-burn';
+        this.drawArcPath(ctx, p0, p1);
+        this.drawLineV(p0.getX(), p0.getY());
+        // ctx.strokeStyle = "rgb(16, 12, 23)";
+        // ctx.lineWidth = 4;
+        // this.drawLineV(p1.getX(), p1.getY());
+      }
+      ctx.restore();
+
+      // draw a flesh-colored circle whose edges pass through p1 and p2
+      // and blue/green vertical line
+      // const yellowColor = this.yellowGreenPalette.getNextColor();
+      const fleshColor = this.fleshtonesPalette.getNextColor();
+      ctx.save();
+      {
+        ctx.globalAlpha = 0.5; // was .5
+        ctx.strokeStyle = fleshColor;
+        ctx.lineWidth = 8; // was 5
+        ctx.globalCompositeOperation = 'color-burn';
+        this.drawArcPath(ctx, p1, p2);
+        // bluegreen vertical line
+        ctx.globalAlpha = 0.3; // was .3
+        ctx.strokeStyle = "rgb(60, 90, 100)";
+        ctx.lineWidth = 8;
+        this.drawLineV(p2.getX(), p2.getY());
+      }
+      ctx.restore();
+
+      // draw a ??? circle whose edges pass through p2 and p3
+      ctx.save();
+      {
+        ctx.globalAlpha = 0.2;
+        ctx.strokeStyle = p3.getColor();
+        ctx.lineWidth = 2;
+        this.drawArcPath(ctx, p2, p3);
+        // greenish vertical
+        ctx.strokeStyle = "rgb(144, 200, 151)";
+        this.drawLineV(p3.getX(), p3.getY());
+      }
+      ctx.restore();
+
+      // draw a ??? circle whose edges pass through p2 and p3
+      ctx.save();
+      {
+        ctx.globalAlpha = 0.2;
+        ctx.strokeStyle = "rgb(60, 200, 160)";
+        ctx.lineWidth = 2;
+        this.drawArcPath(ctx, p1, p3);
+      }
+      ctx.restore();
+
+      // light blue circle with thick border at p2
+      const gradientPercent = Math.max(Math.min(radius3 / this.simHeight, 1), 0.1);
+      ctx.save();
+      {
+        ctx.globalAlpha = 0.2;
+        ctx.beginPath();
+        ctx.arc(p2.getX(), p2.getY(), Math.max((radius3 / 2) - 20, 0), 0, Math.PI * 2);
+        ctx.strokeStyle = `rgb(1, 200, 250)`;
+        ctx.lineWidth = 4;
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // Orange circle around p3, and vertical line through p2
+      ctx.save();
+      {
+        ctx.globalAlpha = 0.005;
+        ctx.strokeStyle = this.orangeColors[Math.random() * this.orangeColors.length | 0];
+        ctx.lineWidth = 8;
+        this.drawLineV(p3.getX(), p3.getY());
+        ctx.globalAlpha = 0.2;
+        ctx.strokeStyle = 'rgb(200, 110, 0)';
+        ctx.lineWidth = 1;
+        this.drawArcPath(ctx, p2, p3);
+      }
+      ctx.restore();
+
+      // Green line at agitator
+      ctx.save();
+      {
+        ctx.globalAlpha = 0.2;
+        // ctx.strokeStyle = 'rgb(100, 200, 60)';  // light green
+        ctx.strokeStyle = 'rgb(110, 155, 140)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([250, 1]);
+        this.drawLineV(p4.getX(), p4.getY());
+        ctx.setLineDash([]);
+      }
+      ctx.restore();
+
+      // draw a ??? circle whose edges pass through p2 and p3
+      ctx.save();
+      {
+        ctx.globalAlpha = 0.2;
+        ctx.strokeStyle = "rgb(120, 200, 40)";
+        ctx.lineWidth = 1;
+        this.drawArcPath(ctx, p4, p5);
+      }
+      ctx.restore();
+
+      // draw circles at each particle
+      ctx.save();
+      {
+        ctx.globalAlpha = 1.0;
+        for (let i = 0; i < particles.length - 1; i++) { // excludes 'tiny' particle which is the last one
+          const p = particles[i];
+          ctx.fillStyle = p.getColor();
+          ctx.beginPath();
+          ctx.ellipse(p.getX(), p.getY(), p.getRadius(), p.getRadius(), 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+
+      // =============================================================
+      // Draw the offscreen canvas onto the display canvas in pieces.
+      // First draw the left half of the offscreen canvas from x=0 up to the x position of p0, then draw the right half from p0's x to the end of the canvas.
+      // NOTE: Have to use this.totalScale to scale the source and dest coordinates here to 
+      // adapt to high-DPI displays, because the drawImage method works with the actual pixel dimensions of the canvas, 
+      // it is not covered by the ctx.scale() call we made earlier.
+      // NOTE: draw images at integer positions so the canvas won't interpolate partial
+      // pixels. This should improve performance.
+      const sliceWidth1 = Math.round(10 * this.totalScale);
+      const sliceWidth2 = Math.round(((Math.abs(p2.getX() - p3.getX()) / 4) || 2) * this.totalScale);
+
+      // draw normally with some alpha for blending
+      this.ctxDisplay.globalAlpha = 0.2;
+      this.ctxDisplay.drawImage(this.offscreenCanvas,
+        Math.round(p3.getX() * this.totalScale), 0, sliceWidth1, this.canvasH,
+        Math.round((p4.getX() * this.totalScale) - sliceWidth1), 0, sliceWidth1, this.canvasH
+      );
+      this.ctxDisplay.drawImage(this.offscreenCanvas,
+        Math.round(p1.getX() * this.totalScale), 0, sliceWidth2, this.canvasH,
+        Math.round(p4.getX() * this.totalScale), 0, sliceWidth2, this.canvasH
+      );
+
+      if (true) {
+        // draw with effect
+        this.ctxDisplay.globalAlpha = 0.03;
+        this.ctxDisplay.globalCompositeOperation = 'overlay';
+        this.ctxDisplay.drawImage(this.offscreenCanvas,
+          Math.round(p2.getX() * this.totalScale), 0, sliceWidth2, this.canvasH,
+          Math.round(p4.getX() * this.totalScale - 50), 0, 10, this.canvasH
+        );
+      }
+
+      this.ctxDisplay.globalCompositeOperation = 'source-over'; // reset to default
+
+      ctx.restore();
+    }
+
+    drawArcPath(ctx, p1, p2) {
+      // compute midpoint and radius from p1 and p2
+      const x1 = p1.getX(), y1 = p1.getY();
+      const x2 = p2.getX(), y2 = p2.getY();
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+      const radius = Math.hypot(x2 - x1, y2 - y1) / 2;
+      ctx.beginPath();
+      ctx.arc(mx, my, radius, 0, Math.PI * 2);
+      ctx.stroke();
+
+    }
+
+    // ============================================================
+    // Draw a vertical line from top to bottom of canvas through point (x, y)
+    drawLineV(x, y) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(x, 0);
+      this.ctx.lineTo(x, this.simHeight); // drawing operations are scaled up, so we use the simulation dimensions here
+      this.ctx.stroke();
+    }
+
+    drawLineH(x, y) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(0, y);
+      this.ctx.lineTo(this.simWidth, y); // drawing operations are scaled up, so we use the simulation dimensions here
+      this.ctx.stroke();
+    }
+
+    clear() {
+      // Draw a filled rectangle that covers the entire canvas
+      this.ctx.fillStyle = "black";
+      this.ctx.fillRect(0, 0, this.simWidth, this.simHeight); // drawing operations are scaled up, so we use the simulation dimensions here
+    }
+  }
+
+  async function loadAndRunSimulation() {
+    try {
+      const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight, 'sim', true); //!!!
+
+      const engine = new PhysicsEngine();
+      engine.setDimensions(1920, 1080); //!!!  fixed size with ratio 16x9
+      engine.detectCollisions = false;
+
+      const model = new Model();
+      model.parseConfig(modelJSON);
+      model.centerAt(engine.getWidth() / 2.2, engine.getHeight() / 2);
+
+      engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
+
+      const renderer = new RenderVerticals(engine, canvas);
+      await renderer.init(); // load images for colors, textures, etc.
+      renderer.bgColor = 'rgb(20, 0, 20)';
+      renderer.opacity = 0.05;
+      renderer.clearBG = false;
+      renderer.clear();
+
+      // Add a little randomness to one particle position
+      // engine.particles[3].pos = new Vector2D(300 + (Math.random() * 200), 300 + (Math.random() * 200));
+      // engine.particles[3].color = 'rgba(10, 0, 10, .6)'; // fade black
+
+      const mouseHandler = new MouseHandler(canvas, engine, renderer);
+      mouseHandler.hideCursorAfterDelay();
+
+      const animationLoop = new AnimationLoop(() => {
+        engine.step();
+        renderer.render();
+      });
+      animationLoop.start();
+
+      Page.setupKeyEvents(canvas, animationLoop, 'cassini6B');
+
+      console.log('Simulation started successfully!');
+    } catch (error) {
+      console.error('Failed to initialize simulation:', error);
+    }
+  }
+
+  loadAndRunSimulation();
+
+</script>
+
+</html>

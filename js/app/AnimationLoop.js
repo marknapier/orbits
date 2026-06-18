@@ -1,19 +1,24 @@
-// Usage:
-// const canvas = document.getElementById('sim');
-// const sim = new PhysicsEngine();
-// const renderer = new Renderer(particles, springs, canvas);
-// const animationLoop = new AnimationLoop(sim, renderer);
-//
-// Start the animation
-// animationLoop.start();
-//
-// Stop the animation (if needed)
-// animationLoop.stop();
-//
-// Get current FPS (if needed)
-// console.log(animationLoop.getFPS());
-
+/**
+ * Drives a requestAnimationFrame loop for a physics simulation.
+ *
+ * @example
+ * // With a sim + renderer pair:
+ * const loop = new AnimationLoop(engine, renderer);
+ *
+ * // With a single update callback:
+ * const loop = new AnimationLoop(() => { engine.step(); renderer.render(); });
+ *
+ * loop.start();
+ * loop.stop();
+ * console.log(loop.getFPS());
+ */
 export default class AnimationLoop {
+  /**
+   * @param {Function|Object} sim - Either a callback invoked each frame, or a physics
+   *   engine with a `step()` method. When a function is passed, `renderer` is ignored.
+   * @param {Object} [renderer] - Renderer with a `render()` method, used when `sim` is
+   *   a physics engine rather than a callback.
+   */
   constructor(sim, renderer) {
     this.updateFunction = null;
     this.sim = sim;

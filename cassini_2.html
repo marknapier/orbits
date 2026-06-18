@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cassini 2</title>
   <link rel="stylesheet" href="./styles/full_viewport_canvas.css">
+  <!-- Use to be sized 1651x929 and looked better 
+  or 1792x1120, scaleFactor 1.04 
+  -->
 </head>
 
 <body>
@@ -20,6 +23,7 @@
   import RenderCassiniArcs from './js/app/RenderCassiniArcs.js';
   import Model from './js/app/Model.js';
   import Page from './js/app/Page.js'
+  import RenderSimple from './js/app/RenderSimple.js';
 
   const modelJSON = {
     "environment": {
@@ -101,20 +105,28 @@
 
   async function loadAndRunSimulation() {
     try {
-      const canvas = Page.createCanvas(window.innerWidth, window.innerHeight);
+      // Don't use DPI sized canvas here. The renderer drops frames when all the circles are 
+      // large at the same time on a 2x DPI screen.
+      const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight, 'sim', true); //!!!
 
+      // Physics coordinate space is 16x9 proportion, but fixed in size (doesn't match canvas size).
+      // This keeps the physics behavior consistent regardless of the display size.
+      // The renderer will scale up the visuals to fit the canvas, using context.scale(). This 
+      // makes Page.scaleFactor unnecessary (basically it was doing the same thing as scale()).
       const engine = new PhysicsEngine();
-      engine.setDimensions(canvas.width, canvas.height);
+      engine.setDimensions(1651, 929); //!!!  16x9 but smaller size and looks better
       engine.detectCollisions = false;
-      engine.timeStep *= Page.scaleFactor; // scale time step to keep velocity in proportion to canvas size
+      engine.timeStep = 0.2;  //.2
 
+      // Physics coordinate space
+      // NOTE: the model is centered in the physics space, not DPI or screen, so it will be centered on the canvas regardless of the canvas size.
       const model = new Model();
       model.parseConfig(modelJSON);
-      model.centerAt(canvas.width / 2.2, canvas.height/2);
+      model.centerAt(engine.getWidth() / 2.2, engine.getHeight()/2); //!!! center in the physics space, not DPI or screen
 
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
 
-      const renderer = new RenderCassiniArcs(engine.particles, null, canvas);
+      const renderer = new RenderCassiniArcs(engine, canvas); //!!! two params only
       await renderer.init(); // load images for colors, textures, etc.
       renderer.bgColor = 'rgb(20, 0, 20)';
       renderer.opacity = 0.1;

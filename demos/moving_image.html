@@ -104,7 +104,7 @@
       engine.margin = 0;
       engine.gravY = 0;
 
-      const movingImageDots = new MovingImageDots(700, 700);
+      const movingImageDots = new MovingImageDots(800, 800);
       movingImageDots.step();
 
       const renderer = new RenderMovingImageDots(engine.particles, engine.springs, canvas, movingImageDots);
@@ -115,8 +115,6 @@
         renderer.render();
       });
       animationLoop.start();
-
-      window.engine = engine; // Expose for debugging
 
       console.log('String simulation started successfully!');
     } catch (error) {

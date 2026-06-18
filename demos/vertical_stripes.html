@@ -1,0 +1,172 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Vertical Stripes</title>
+  <style>
+    body {
+      margin: 0;
+      background: #1a1a1a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      padding: 40px;
+      box-sizing: border-box;
+    }
+
+    .label {
+      color: #555;
+      font-family: sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    #tile-canvas {
+      border: 1px solid #333;
+    }
+
+    #fill-canvas {
+      border: 1px solid #333;
+    }
+  </style>
+</head>
+
+<body>
+  <script type="module">
+    import Oscillator from '../js/app/Oscillator.js';
+
+    const AQUA_BORDER_W = 3;
+
+    // Tile dimensions — the repeating unit
+    // Stripe order: [aqua, cream, sand, cream, sand, cream]
+    const TILE_W = 480;
+    const TILE_H = 240;
+
+    // Large canvas that tiles the pattern
+    const FILL_W = 1440;
+    const FILL_H = 720;
+
+    // Base widths for the colored stripes; cream fills whatever remains
+    const AQUA_BASE = 150;
+    const AQUA_AMP  = 50;
+
+    const SAND_BASE = 55;
+    const SAND_AMP  = 20;
+
+    // Color ranges as RGB arrays — each stripe oscillates between its two endpoints
+    const AQUA_DARK   = [70,  128, 132];  // deep teal
+    const AQUA_LIGHT  = [192, 226, 228];  // pale aqua
+
+    const SAND_WARM    = [218, 188, 88];  // warm yellow
+    const SAND_NEUTRAL = [208, 200, 184]; // neutral off-white
+
+    const CREAM_WARM = [248, 240, 226];   // warm cream
+    const CREAM_COOL = [236, 238, 238];   // cool off-white
+
+    // Width oscillators
+    const oscAqua = new Oscillator(0.05,  'sin', 0);
+    const oscSand = new Oscillator(0.075, 'sin', Math.PI * 0.5);
+
+    // Color oscillators — independent cadences so color and width drift out of phase
+    const oscAquaColor  = new Oscillator(0.033, 'sin', Math.PI * 0.7);
+    const oscSandColor  = new Oscillator(0.041, 'sin', Math.PI * 1.3);
+    const oscCreamColor = new Oscillator(0.025, 'sin', Math.PI * 0.2);
+
+    function lerpRGB(a, b, t) {
+      return [
+        Math.round(a[0] + (b[0] - a[0]) * t),
+        Math.round(a[1] + (b[1] - a[1]) * t),
+        Math.round(a[2] + (b[2] - a[2]) * t),
+      ];
+    }
+
+    function toCSS([r, g, b]) { return `rgb(${r},${g},${b})`; }
+
+    // Tile preview canvas
+    const tileCanvas = document.createElement('canvas');
+    tileCanvas.id = 'tile-canvas';
+    tileCanvas.width = TILE_W;
+    tileCanvas.height = TILE_H;
+    const tileCtx = tileCanvas.getContext('2d');
+
+    const tileLabel = document.createElement('div');
+    tileLabel.className = 'label';
+    tileLabel.textContent = 'Tile source';
+
+    document.body.appendChild(tileLabel);
+    document.body.appendChild(tileCanvas);
+
+    // Large fill canvas
+    const fillCanvas = document.createElement('canvas');
+    fillCanvas.id = 'fill-canvas';
+    fillCanvas.width = FILL_W;
+    fillCanvas.height = FILL_H;
+    const fillCtx = fillCanvas.getContext('2d');
+
+    const fillLabel = document.createElement('div');
+    fillLabel.className = 'label';
+    fillLabel.textContent = 'Tiled pattern';
+
+    document.body.appendChild(fillLabel);
+    document.body.appendChild(fillCanvas);
+
+    function drawFrame() {
+      const aquaW  = Math.max(20, AQUA_BASE + oscAqua.getValue() * AQUA_AMP);
+      const sandW  = Math.max(8,  SAND_BASE + oscSand.getValue() * SAND_AMP);
+      const creamW = Math.max(4,  (TILE_W - aquaW - 2 * sandW) / 3);
+
+      // Map each oscillator's -1..1 output to a 0..1 blend factor
+      const tAqua  = (oscAquaColor.getValue()  + 1) / 2;
+      const tSand  = (oscSandColor.getValue()  + 1) / 2;
+      const tCream = (oscCreamColor.getValue() + 1) / 2;
+
+      const aquaRGB   = lerpRGB(AQUA_DARK, AQUA_LIGHT, tAqua);
+      const borderRGB = aquaRGB.map(c => Math.round(c * 0.62)); // always darker than current aqua
+      const sandRGB   = lerpRGB(SAND_WARM, SAND_NEUTRAL, tSand);
+      const creamRGB  = lerpRGB(CREAM_WARM, CREAM_COOL, tCream);
+
+      const stripes = [
+        { color: toCSS(aquaRGB),  w: aquaW  },
+        { color: toCSS(creamRGB), w: creamW },
+        { color: toCSS(sandRGB),  w: sandW  },
+        { color: toCSS(creamRGB), w: creamW },
+        { color: toCSS(sandRGB),  w: sandW  },
+        { color: toCSS(creamRGB), w: creamW },
+      ];
+
+      tileCtx.clearRect(0, 0, TILE_W, TILE_H);
+      let cursor = 0;
+      for (const stripe of stripes) {
+        const x0 = Math.round(cursor);
+        cursor += stripe.w;
+        const x1 = Math.round(cursor);
+        tileCtx.fillStyle = stripe.color;
+        tileCtx.fillRect(x0, 0, x1 - x0, TILE_H);
+      }
+
+      // Border tracks current aqua color, always proportionally darker
+      const aquaX1 = Math.round(aquaW);
+      tileCtx.fillStyle = toCSS(borderRGB);
+      tileCtx.fillRect(0, 0, AQUA_BORDER_W, TILE_H);
+      tileCtx.fillRect(aquaX1 - AQUA_BORDER_W, 0, AQUA_BORDER_W, TILE_H);
+
+      const pattern = fillCtx.createPattern(tileCanvas, 'repeat');
+      fillCtx.fillStyle = pattern;
+      fillCtx.fillRect(0, 0, FILL_W, FILL_H);
+
+      requestAnimationFrame(drawFrame);
+    }
+
+    drawFrame();
+  </script>
+</body>
+
+</html>

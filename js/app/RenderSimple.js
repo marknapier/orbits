@@ -15,7 +15,7 @@ export default class RenderSimple {
 
   setTarget(target) {
     this.canvas = target;
-    this.ctx = target.getContext('2d');
+    this.ctx = target.getContext('2d'); //, { colorSpace: 'display-p3' });
   }
 
   render() {
@@ -80,5 +80,32 @@ export default class RenderSimple {
 
   setClosestParticle(particle) {
     // This method can be used to to highlight particle near mouse cursor
+  }
+
+  /**
+   * Returns the ratio of the actual pixel dimensions of the canvas / CSS pixel dimensions of the canvas onscreen. 
+   * For a regular canvas this will be 1, but for a canvas that is scaled up for high DPI screens, 
+   * this will be > 1 (e.g. 2 for typical Retina displays).
+   * @see Page.createCanvasDPI for how to create a canvas that is scaled for high DPI screens.
+   * @param {*} canvas 
+   * @returns the scale factor the canvas
+   */
+  static getCanvasDPIRatio(canvas) {
+    const style = window.getComputedStyle(canvas);
+    const screenHeight = parseInt(style.height, 10); // just using height as a proxy
+    return canvas.height / screenHeight;
+  }
+
+  /**
+   * Get the size of the canvas as displayed on the screen (in CSS pixels). 
+   * This may be smaller than canvas.width and canvas.height if the canvas is scaled for high DPI screens.
+   * @param {*} canvas 
+   * @returns the dimensions of the canvas in CSS pixels.
+   */
+  static getCanvasScreenSize(canvas) {
+    const style = window.getComputedStyle(canvas);
+    const width = parseInt(style.width, 10);
+    const height = parseInt(style.height, 10);
+    return { width, height };
   }
 }

@@ -54,7 +54,7 @@ export default class RenderCassini extends RenderSimple {
     // Clear bg if configured to do so, with a low alpha to create motion trails
     if (this.clearBG) {
       ctx.save();
-      ctx.globalAlpha = 0.1;
+      ctx.globalAlpha = 0.01;
       ctx.fillStyle = this.bgColor;
       ctx.fillRect(0, 0, w, h);
       ctx.restore();

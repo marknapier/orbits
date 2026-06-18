@@ -2,6 +2,15 @@ import Vector2D from './Vector2D.js';
 import MyMath from './MyMath.js';
 
 export default class Particle {
+  /**
+   * @param {string} label - Display name for the particle
+   * @param {Vector2D} pos - Initial position
+   * @param {Vector2D} vel - Initial velocity
+   * @param {Vector2D} force - Initial force vector
+   * @param {number} mass - Mass of the particle
+   * @param {number} radius - Radius used for rendering and collision
+   * @param {number} charge - Electric charge
+   */
   constructor(label = 'Particle', pos = new Vector2D(), vel = new Vector2D(), force = new Vector2D(), mass = 1, radius = 10, charge = 0) {
     this.initPos = new Vector2D(pos.getX(), pos.getY());
     this.initVel = new Vector2D(vel.getX(), vel.getY());

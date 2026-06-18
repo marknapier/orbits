@@ -1,46 +1,106 @@
+/**
+ * MouseHandler manages mouse interactions with the canvas and translates them into actions on the physics simulation. 
+ * 
+ * Responsibilities:
+ * - Track mouse position relative to the canvas, accounting for canvas position and CSS scaling.
+ * - Listen for mouse events and call corresponding methods on the simulation.
+ * - Support touch events for mobile devices, translating them into equivalent mouse interactions.
+ * - Optionally hide the cursor after a period of inactivity.
+ * 
+ * Note: Mouse coordinates are in browser viewport "pixels" (CSS pixels), which may differ from the 
+ * physics simulation dimensions if the canvas is scaled for high-DPI displays. The MouseHandler 
+ * translates mouse coordinates to match the physics simulation dimensions before passing them to the simulation.
+ * 
+ * @property {HTMLCanvasElement} canvas - The canvas element to attach mouse listeners to.
+ * @property {Simulation} sim - The physics simulation instance to interact with based on mouse events.
+ * @property {Renderer|null} renderer - Optional renderer instance to communicate mouse position for visual feedback.
+ * @property {string} activeCursor - The current cursor style (e.g. 'crosshair', 'pointer').
+ * @property {number} scaleFactorX - Scaling factor for translating mouse X coordinates from canvas space to simulation space.
+ * @property {number} scaleFactorY - Scaling factor for translating mouse Y coordinates from canvas space to simulation space.
+ */
+
 export default class MouseHandler {
   constructor(canvas, sim, renderer) {
     this.canvas = canvas;
     this.sim = sim;
     this.renderer = renderer || null; // Use provided renderer if available
-    this.activeCursor = 'crosshair';    
+    this.activeCursor = 'crosshair';
+
+    //!!!
+    // The canvas size on screen (in CSS pixels) may differ from the actual canvas size in pixels if we are scaling for high-DPI displays. 
+    // For mouse position handling, we need the screen size of the canvas.
+    this.canvasScreenWidth = this.getCanvasScreenSize(canvas).width;
+    this.canvasScreenHeight = this.getCanvasScreenSize(canvas).height;
+    // Calculate scaling factors to translate mouse coordinates from canvas space to simulation space
+    this.scaleFactorX = this.sim.getWidth() / (this.canvasScreenWidth || this.canvas.width);
+    this.scaleFactorY = this.sim.getHeight() / (this.canvasScreenHeight || this.canvas.height);
     this.setupListeners();
   }
-  
-  // Get mouse position relative to canvas
+
+  // Return the mouse position relative to canvas, with upper left of canvas as 0,0.
+  // This accounts for canvas position and any CSS scaling.
+  // Mouse units are browser viewport "pixels", e.g. the onscreen CSS dimensions of the canvas. 
+  // Actual canvas size in pixels may be larger to support higher device pixel ratios.
+  //
+  // Note: if the canvas is larger than the physics simulation area, the mouse coordinates 
+  // need to be scaled from the coordinate space of the canvas to match the 
+  // physics simulation dimensions before being used in the simulation.
   getMousePos(event) {
     const rect = this.canvas.getBoundingClientRect(); // Get canvas position for mouse coordinate calculations
+    const x = Math.floor(event.clientX - rect.left);
+    const y = Math.floor(event.clientY - rect.top);
     return {
-      x: Math.floor(event.clientX - rect.left),
-      y: Math.floor(event.clientY - rect.top)
+      x: x,
+      y: y,
+      simX: x * this.scaleFactorX, // Scale mouse coords to simulation dimensions
+      simY: y * this.scaleFactorY,
     };
+  }
+
+  /**
+   * Get the size of the canvas as displayed on the screen (in CSS pixels). 
+   * This may be smaller than canvas.width and canvas.height if the canvas is scaled for high DPI screens.
+   * @param {*} canvas 
+   * @returns the dimensions of the canvas in CSS pixels.
+   */
+  getCanvasScreenSize(canvas) {
+    const style = window.getComputedStyle(canvas);
+    const width = parseInt(style.width, 10);
+    const height = parseInt(style.height, 10);
+    return { width, height };
   }
 
   mouseDown(e) {
     const pos = this.getMousePos(e);
-    this.sim.mousePressed(pos.x, pos.y);
+    console.log('Mouse down at:', pos, this.sim.particles);
+/*
+    scaleFactorX = 1.0854  should be 1.2072 
+    mouseX 1187  simx 1288 (not detected as near particle, but should be near p1)
+    mouseX 1321  simx 1433 (detected as near particle, but mouse is way off from scaled p1 position)
+*/
+    this.sim.mousePressed(pos.simX, pos.simY);
   }
 
   mouseUp(e) {
     const pos = this.getMousePos(e);
-    this.sim.mouseReleased(pos.x, pos.y);
+    this.sim.mouseReleased(pos.simX, pos.simY);
   }
 
   mouseMove(e, dragging = false) {
     const pos = this.getMousePos(e);
-    
+
     // Tell renderer the mouse position
     if (this.renderer != null) {
       this.renderer.setMouseXY(pos.x, pos.y);
     }
-    
+
     // If mouse button is pressed, it's a drag operation
     if (dragging) {
-      this.sim.mouseDragged(pos.x, pos.y);
+      this.sim.mouseDragged(pos.simX, pos.simY);
     }
     else {
       // Just a mouse move, not dragging, see if we are near any particles
-      const closestParticle = this.sim.mouseMoved(pos.x, pos.y);
+      const closestParticle = this.sim.mouseMoved(pos.simX, pos.simY);
       if (this.renderer) {
         // tell the renderer that mouse is near a particle (for possible hover effect)
         this.renderer.setClosestParticle(closestParticle);
@@ -49,7 +109,7 @@ export default class MouseHandler {
       }
     }
   }
-  
+
   setupListeners() {
     // Mouse pressed (mousedown)
     this.canvas.addEventListener('mousedown', (e) => {
@@ -78,14 +138,14 @@ export default class MouseHandler {
       const touch = e.touches[0];
       this.mouseDown(touch);
     });
-    
+
     // Touch and move on mobile is treated as a drag operation
     this.canvas.addEventListener('touchmove', (e) => {
       e.preventDefault();
       const touch = e.touches[0];
       this.mouseMove(touch, true);
     });
-    
+
     // Touch end on mobile is treated as mouse release
     this.canvas.addEventListener('touchend', (e) => {
       e.preventDefault();
@@ -94,7 +154,7 @@ export default class MouseHandler {
       this.mouseUp(touch);
     });
   }
-  
+
   setRenderer(renderer) {
     this.renderer = renderer;
   }
@@ -103,11 +163,11 @@ export default class MouseHandler {
     this.canvas.style.cursor = cursorType;
     this.activeCursor = cursorType;
   }
-  
+
   getActiveCursor() {
     return this.activeCursor;
   }
-  
+
   /**
    * Hides the cursor after a delay of 6 seconds. The getActiveCursorFunc returns a string
    * such as 'crosshair' or 'pointer' to set the cursor style when the cursor is visible.
@@ -116,8 +176,8 @@ export default class MouseHandler {
    */
   hideCursorAfterDelay(delayInMillis = 6000) {
     const cursorManager = new CursorManager(this.canvas, {
-        hideDelay: delayInMillis,
-        getActiveCursorFunc: this.getActiveCursor.bind(this),
+      hideDelay: delayInMillis,
+      getActiveCursorFunc: this.getActiveCursor.bind(this),
     });
   }
 }
@@ -139,27 +199,27 @@ class CursorManager {
     this.timeout = null;
     this.init();
   }
-  
+
   init() {
     this.resetTimer = this.resetTimer.bind(this);
     this.element.addEventListener('mousemove', this.resetTimer);
     this.resetTimer();
   }
-  
+
   showCursor() {
     this.element.style.cursor = this.getActiveCursorFunc();
   }
-  
+
   hideCursor() {
     this.element.style.cursor = 'none';
   }
-  
+
   resetTimer() {
     this.showCursor();
     clearTimeout(this.timeout);
     this.timeout = setTimeout(() => this.hideCursor(), this.hideDelay);
   }
-  
+
   destroy() {
     clearTimeout(this.timeout);
     this.element.removeEventListener('mousemove', this.resetTimer);

@@ -7,40 +7,43 @@ export default class RenderCassiniArcs extends RenderSimple {
   bgColor = "rgb(60,0,0)";          // background color
   opacity = 0.5;                      // alpha for all paint operations
   clearBG = true;                     // if false, leaves motion trails
-  violetColors = ["rgb(25, 15, 30)", "rgb(20, 10, 25)", "rgb(15, 5, 20)", "rgb(10, 0, 15)"];
+  violetColors = ["rgb(25, 15,40)", "rgb(20, 10, 35)", "rgb(15, 5, 30)", "rgb(10, 0, 25)"];
 
-  constructor(particles = [], springs = null, canvas) {
-    super(particles, null, canvas);
+  constructor(sim, canvas) {
+    super(sim.particles, sim.springs, canvas);
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
-    this.particles = particles;
+    this.particles = sim.particles;
     this.yellowGreenPalette = null; // colors will be loaded in init()
-  }
 
-  setParticles(particles) {
-    this.particles = particles ?? [];
+    //!!! The renderer needs to know the dimensions of the physics simulation space, which may be different from the canvas size.
+    this.width = sim.getWidth();
+    this.height = sim.getHeight();
+
+    //!!! dpiRatio will be > 1 if the canvas was created at high resolution for high DPI screens
+    this.dpiRatio = RenderSimple.getCanvasDPIRatio(this.canvas);
+
+    //!!! get the screen to physics ratio
+    this.canvasScreenSize = RenderSimple.getCanvasScreenSize(this.canvas);
+    this.canvasScreenToSimRatioH = this.canvasScreenSize.height / sim.getHeight();
+
+    //!!! Scale the context by both the DPI ratio and the screen to physics ratio.
+    this.ctx.scale(this.dpiRatio * this.canvasScreenToSimRatioH, this.dpiRatio * this.canvasScreenToSimRatioH);
+
+    console.log('Canvas DPI ratio:', this.dpiRatio);
+    console.log('Screen to physics ratio:', this.canvasScreenToSimRatioH, this.canvasScreenToSimRatioW);
   }
 
   async init() {
     this.yellowGreenPalette = await ColorPalette.createFromImage('./images/eye_closeup_green_extract.jpg');
-    window.yellowGreenPalette = this.yellowGreenPalette;
   }
 
   // ============================================================
   // Render the physics simulation into the canvas
   render() {
     const ctx = this.ctx;
-    const w = this.canvas.width;
-    const h = this.canvas.height;
-
-    // Clear bg if configured to do so, with a low alpha to create motion trails
-    if (this.clearBG) {
-      ctx.save();
-      ctx.globalAlpha = 0.1;
-      ctx.fillStyle = this.bgColor;
-      ctx.fillRect(0, 0, w, h);
-      ctx.restore();
-    }
+    const w = this.width;
+    const h = this.height;
 
     // Set a constant alpha composite for subsequent drawing
     ctx.save();
@@ -64,26 +67,24 @@ export default class RenderCassiniArcs extends RenderSimple {
 
     // Dark violet circle around p0
     // Make a 0-1 value that represents the radius length relative to the canvas height
-    const radiusPercent = Math.max(Math.min(radius1 / this.canvas.height, 1), 0.1);
+    const radiusPercent = Math.max(Math.min(radius1 / this.height, 1), 0.1);
     ctx.save();
     {
       ctx.strokeStyle = this.violetColors[(radiusPercent * 3) | 0];
       ctx.lineWidth = 20 * radiusPercent;
       this.drawArcPath(ctx, p0, p1);
       ctx.stroke();
-      this.drawLineV(p0.getX(), p0.getY());
+      // this.drawLineV(p0.getX(), p0.getY());
       ctx.stroke();
     }
     ctx.restore();
-
-
 
     // draw a yellow circle whose edges pass through p1 and p2
     const yellowColor = this.yellowGreenPalette.getNextColor();
     ctx.save();
     {
       ctx.strokeStyle = yellowColor;
-      ctx.lineWidth = 5;
+      ctx.lineWidth = 1;
       this.drawArcPath(ctx, p1, p2);
       ctx.stroke();
       // greenish horizontal
@@ -97,19 +98,11 @@ export default class RenderCassiniArcs extends RenderSimple {
     }
     ctx.restore();
 
-
-
     // light blue circle with thick border at p2
-    const gradientPercent = Math.max(Math.min(radius3 / this.canvas.height, 1), 0.1);
+    const gradientPercent = Math.max(Math.min(radius3 / this.height, 1), 0.1);
     ctx.save();
     {
       ctx.beginPath();
-      // if (gradientPercent < .4) {
-      //   ctx.arc(p2.getX(), p2.getY(), radius3/2, 0, Math.PI * 2);
-      //   ctx.fillStyle =  `rgb(1, 193, 193)`; 
-      //   ctx.fill();
-      // }
-      // else {
       // switch to a non-filled circle with a wide border, 
       // subtract 1/2 of border width to keep the same overall radius
       ctx.arc(p2.getX(), p2.getY(), Math.max((radius3 / 2) - 20, 0), 0, Math.PI * 2);
@@ -171,13 +164,13 @@ export default class RenderCassiniArcs extends RenderSimple {
   drawLineV(x, y) {
     this.ctx.beginPath();
     this.ctx.moveTo(x, 0);
-    this.ctx.lineTo(x, this.canvas.height);
+    this.ctx.lineTo(x, this.height); //!!! has to be the height of the sim (which is larger than canvas in this case). Canvas is scaled by .8, so canvas.height is too short.
   }
 
   drawLineH(x, y) {
     this.ctx.beginPath();
     this.ctx.moveTo(0, y);
-    this.ctx.lineTo(this.canvas.width, y);
+    this.ctx.lineTo(this.width, y);
   }
 
   // ============================================================
@@ -225,6 +218,6 @@ export default class RenderCassiniArcs extends RenderSimple {
   clear() {
     // Draw a filled rectangle that covers the entire canvas
     this.ctx.fillStyle = "black";
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.fillRect(0, 0, this.width, this.height);
   }
 }

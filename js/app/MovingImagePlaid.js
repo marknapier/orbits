@@ -6,16 +6,21 @@ export default class MovingImagePlaid extends MovingImageDots {
   constructor(width, height) {
     super(width, height);
 
-    // Make 20 random particles (overriding parent constructor)
+    const DIM = Math.min(width, height)/8; // max radius for particles based on canvas size
+
+    // clear the particles created by the parent constructor
+    this.engine.clear();
+
+    // Make 10 random particles (overriding parent constructor)
     this.particles = [];
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 10; i++) {
       const name = `particle${i}`;
       const posX = Math.random() * this.canvas.width;
       const posY = Math.random() * this.canvas.height;
       const velX = (Math.random() - 0.5) * 6; // Random velocity between -3 and 3
       const velY = (Math.random() - 0.5) * 6;
       const mass = Math.random() * 9 + 1; // Random mass between 1 and 10
-      const radius = Math.random() * 98 + 2; // Random radius between 2 and 100
+      const radius = Math.random() * DIM + 2; // Random radius between 2 and 1/4 of the smaller canvas dimension
       const color = `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
 
       this.particles.push(new Particle(
@@ -30,7 +35,8 @@ export default class MovingImagePlaid extends MovingImageDots {
     }
     this.engine.addParticles(this.particles);
 
-    this.engine.timeStep = 0.01; // slower physics for more visible plaid effect
+    // this.engine.timeStep = 0.01; // slower physics for more visible plaid effect
+    this.engine.timeStep = 0.1; // slower physics for more visible plaid effect
     this.ctx.globalAlpha = 0.4;
   }
 

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canvas Gamut Comparison: sRGB vs. Display P3</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 30px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 { text-align: center; margin-bottom: 5px; }
+    .subtitle { text-align: center; color: #888; margin-bottom: 30px; }
+    .comparison-container {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .canvas-card {
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 15px;
+      flex: 1;
+      min-width: 350px;
+      text-align: center;
+    }
+    .canvas-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .canvas-subtitle {
+      font-size: 0.85rem;
+      color: #aaa;
+      margin-bottom: 15px;
+    }
+    canvas {
+      background-color: #000;
+      border-radius: 4px;
+      width: 100%;
+      max-width: 400px;
+      aspect-ratio: 1;
+    }
+    .status-badge {
+      margin-top: 25px;
+      padding: 10px;
+      border-radius: 6px;
+      text-align: center;
+      font-weight: 500;
+    }
+    .supported { background-color: #1b4332; color: #75dc77; border: 1px solid #2d6a4f; }
+    .not-supported { background-color: #4a1212; color: #ff8888; border: 1px solid #6c1c1c; }
+  </style>
+</head>
+<body>
+
+  <h1>Canvas Gamut Comparison</h1>
+  <p class="subtitle">Look closely at the blocks on your MacBook Pro screen. The P3 panels should appear notably punchier and more saturated than the sRGB ones.</p>
+
+  <div class="comparison-container">
+    <!-- Standard sRGB Canvas -->
+    <div class="canvas-card">
+      <div class="canvas-title" style="color: #4da6ff;">Standard sRGB Canvas</div>
+      <div class="canvas-subtitle">Clamps color data to standard web gamut</div>
+      <canvas id="srgbCanvas" width="400" height="400"></canvas>
+    </div>
+
+    <!-- Display P3 Canvas -->
+    <div class="canvas-card">
+      <div class="canvas-title" style="color: #ff4da6;">Wide-Gamut Display P3 Canvas</div>
+      <div class="canvas-subtitle">Preserves full hardware vibrancy spectrum</div>
+      <canvas id="p3Canvas" width="400" height="400"></canvas>
+    </div>
+  </div>
+
+  <div id="status" class="status-badge">Checking system color capabilities...</div>
+
+  <script>
+    // 1. Core Feature Check Utility
+    function verifyP3Support() {
+      try {
+        const testCanvas = document.createElement('canvas');
+        const testCtx = testCanvas.getContext('2d', { colorSpace: 'display-p3' });
+        const browserSupports = testCtx.getContextAttributes().colorSpace === 'display-p3';
+        const hardwareSupports = window.matchMedia('(color-gamut: p3)').matches;
+        return browserSupports && hardwareSupports;
+      } catch(e) {
+        return false;
+      }
+    }
+
+    // Update system hardware status banner 
+    const statusDiv = document.getElementById('status');
+    if (verifyP3Support()) {
+      statusDiv.className = "status-badge supported";
+      statusDiv.innerText = "🎉 Your browser and MacBook Pro screen successfully support Display P3 Wide Gamut!";
+    } else {
+      statusDiv.className = "status-badge not-supported";
+      statusDiv.innerText = "⚠️ P3 Wide Gamut Canvas is unconfirmed. Both panels will render identically in sRGB mode.";
+    }
+
+    // 2. Initialize Canvas Contexts
+    const srgbCanvas = document.getElementById('srgbCanvas');
+    const p3Canvas = document.getElementById('p3Canvas');
+
+    // Note the explicit colorSpace instantiation parameter targeting the hardware
+    const ctxSRGB = srgbCanvas.getContext('2d', { colorSpace: 'srgb' });
+    const ctxP3 = p3Canvas.getContext('2d', { colorSpace: 'display-p3' });
+
+    // 3. Render Routine
+    function drawColorSwatches(ctx) {
+      const boxSize = 100;
+      const spacing = 130;
+      const startX = 25;
+      
+      // Clear base 
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, 400, 400);
+
+      // Row 1: Intense Reds
+      // Top square uses extreme P3 Red. Inside sRGB context this gets clamped.
+      ctx.fillStyle = 'color(display-p3 1 0 0)'; 
+      ctx.fillRect(startX, 25, boxSize, boxSize);
+      // Bottom square uses traditional standard web red for local baselining
+      ctx.fillStyle = 'rgb(255, 0, 0)'; 
+      ctx.fillRect(startX + spacing, 25, boxSize, boxSize);
+
+      // Row 2: Intense Greens
+      ctx.fillStyle = 'color(display-p3 0 1 0)'; 
+      ctx.fillRect(startX, 155, boxSize, boxSize);
+      ctx.fillStyle = 'rgb(0, 255, 0)'; 
+      ctx.fillRect(startX + spacing, 155, boxSize, boxSize);
+
+      // Row 3: Intense Blues
+      ctx.fillStyle = 'color(display-p3 0 0 1)'; 
+      ctx.fillRect(startX, 285, boxSize, boxSize);
+      ctx.fillStyle = 'rgb(0, 0, 255)'; 
+      ctx.fillRect(startX + spacing, 285, boxSize, boxSize);
+      
+      // Labels for clarity
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('P3 Target Values', startX, 20);
+      ctx.fillText('Standard sRGB Target', startX + spacing, 20);
+    }
+
+    // Execute drawing pipeline across both context nodes
+    drawColorSwatches(ctxSRGB);
+    drawColorSwatches(ctxP3);
+  </script>
+</body>
+</html>

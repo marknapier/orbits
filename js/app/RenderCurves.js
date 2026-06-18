@@ -8,44 +8,36 @@ export default class RenderCurves extends RenderSimple {
     this.springs = springs;
     this.mouseX = 0;
     this.mouseY = 0;
-    this.bgColor = 'white';
+    this.bgColor = 'rgba(255, 245, 230, 0.1)';
     this.setTarget(target);
   }
 
-  render() {
+  render(curveParticles = []) {
     if (!this.ctx || !this.canvas) return;
     const ctx = this.ctx;
 
     // clear canvas
-    this.clear();
+    // this.clear();
 
-    // draw particles
-    if (this.particles && this.particles.length > 0) {
-      for (let i = 0; i < this.particles.length; i++) {
-        this.paintParticle(ctx, this.particles[i]);
+    curveParticles.forEach(wavePoints => {
+      // draw particles
+      if (this.wavePoints && this.wavePoints.length > 0) {
+        for (let i = 0; i < this.wavePoints.length; i++) {
+          this.paintParticle(ctx, this.wavePoints[i].x, this.wavePoints[i].y, 2);
+        }
       }
-    }
 
-    const wavePoints = this.particles.slice(0,10).map(p => ({ x: p.getX(), y: p.getY() }));
-    // const vertPoints = this.particles.slice(10).map(p => ({ x: p.getX(), y: p.getY() }));
-    ctx.strokeStyle = '#6B9BD1';
-    ctx.lineWidth = 2;
-    // this.drawSpline(ctx, wavePoints, 0.2, false); // tension: 0.3, not closed  
-    // this.drawCatmullRomSpline(ctx, wavePoints, 1); // tension: 0 = sharp corners, 1 = very smooth  
-    this.drawQuadraticBezier(ctx, wavePoints);
-    // this.drawQuadraticBezier(ctx, vertPoints);
+      ctx.strokeStyle = '#6B9BD1';
+      ctx.lineWidth = 2;
+      this.drawQuadraticBezier(ctx, wavePoints);
+    });
   }
 
   // Draw a circle at particle position
-  paintParticle(ctx, particle) {
-    if (!particle || !particle.pos) return;
-    const x = particle.getX();
-    const y = particle.getY();
-    const r = Math.min(particle.getRadius(), 80);
-    ctx.fillStyle = particle.getColor();
+  paintParticle(ctx, x, y, r) {
+    ctx.fillStyle = 'blue';
     ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    // ctx.arc(x, y, 2, 0, Math.PI * 2);
+    ctx.arc(x, y, 2, 0, Math.PI * 2);
     ctx.fill();
   }
 

@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Physics2D Collision Demo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      display: block;
+      border: 1px solid black
+    }
+
+    button {
+      margin-top: 12px;
+      padding: 8px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      display: inline-block;
+    }
+  </style>
+</head>
+
+<body>
+  <div style="display:flex; align-items:center; gap:8px;">
+    <button id="startBtn">Start</button>
+    <span id="simTimeDisplay" style="font-family:sans-serif; font-size:12px;"></span>
+  </div>
+</body>
+
+<script type="module">
+  import PhysicsEngine from '../js/physics2D/PhysicsEngine.js';
+  import Renderer from '../js/app/RenderSimple.js';
+  import MouseHandler from '../js/app/MouseHandler.js';
+  import AnimationLoop from '../js/app/AnimationLoop.js';
+  import Particle from '../js/physics2D/Particle.js';
+  import Vector2D from '../js/physics2D/Vector2D.js';
+
+  function createCanvas(width, height, id = 'sim') {
+    const canvas = document.createElement('canvas');
+    canvas.id = id;
+    canvas.width = width;
+    canvas.height = height;
+    document.body.appendChild(canvas);
+    return canvas;
+  }
+
+  function createCanvasDPI(width, height, id = 'sim') {
+    const canvas = document.createElement('canvas');
+    const dpiRatio = window.devicePixelRatio || 1;
+    // Scale up the internal dimensions of the canvas by the device pixel ratio 
+    canvas.width = width * dpiRatio;
+    canvas.height = height * dpiRatio;
+    // Set the CSS dimensions of the canvas to the original width and height to maintain the intended size on the page
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+    canvas.id = id;
+    document.body.appendChild(canvas);
+    return canvas;
+  }
+
+  function addDocumentation(simName, sim) {
+    const text = `${simName} — Canvas size onscreen (css pixels): ${sim.canvas.style.width}x${sim.canvas.style.height}. Physics dimensions: ${sim.engine.D.width}x${sim.engine.D.height}. Actual canvas size: ${sim.canvas.width}x${sim.canvas.height}. Canvas scale factor (accounting for device pixel ratio): ${sim.canvasScaleFactor.toFixed(2)}. Device Pixel Ratio: ${sim.dpiRatio}.`;
+    const div = document.createElement('div');
+    div.style.maxWidth = '600px';
+    div.style.marginTop = '16px';
+    div.style.fontFamily = 'sans-serif';
+    div.style.fontSize = '14px';
+    div.innerHTML = `
+      <p>${text}</p>
+    `;
+    document.body.appendChild(div);
+  }
+
+  class ScaledRenderer extends Renderer {
+    constructor(particles, springs, canvas, scale) {
+      super(particles, springs, canvas);
+      this.scale = scale;
+    }
+    render() {
+      this.ctx.save();
+      this.ctx.scale(this.scale, this.scale);
+      super.render();
+      this.ctx.restore();
+    }
+  }
+
+  function buildSim(physicsWidth, physicsHeight, canvasId, canvasScale = 1) {
+    // const canvas = createCanvas(physicsWidth * canvasScale, physicsHeight * canvasScale, canvasId);
+    const canvas = createCanvasDPI(physicsWidth * canvasScale, physicsHeight * canvasScale, canvasId);
+
+    const particles = [];
+    particles.push(new Particle(
+      'one',
+      new Vector2D(100, physicsHeight / 2),
+      new Vector2D(100, 0),
+      new Vector2D(0, 0),
+      10,
+      20,
+    ));
+    particles[0].setColor('blue');
+
+    const engine = new PhysicsEngine();
+    engine.setDimensions(physicsWidth, physicsHeight);
+    engine.detectCollisions = true;
+    engine.setWallTypeStr('reflecting');
+    engine.addParticles(particles);
+    engine.gravY = 0;
+    engine.timeStep = .0166;
+
+    const renderer = new ScaledRenderer(engine.particles, engine.springs, canvas, canvasScale * window.devicePixelRatio);
+    const animationLoop = new AnimationLoop(() => {
+      engine.step();
+      renderer.render();
+    });
+
+    const mouseHandler = new MouseHandler(canvas, engine, renderer);
+
+    return { engine, animationLoop, canvas, canvasScaleFactor: canvasScale * window.devicePixelRatio, dpiRatio: window.devicePixelRatio };
+  }
+
+  async function loadAndRunSimulation() {
+    try {
+      const sim1 = buildSim(600, 100, 'sim1');
+      addDocumentation('Sim1', sim1);
+
+      const sim2 = buildSim(1200, 200, 'sim2');
+      addDocumentation('Sim2', sim2);
+
+      const sim3 = buildSim(600, 100, 'sim3', 2); // canvas size / physics size = 2. Physics size is constant across all sims for consistent motion.
+      addDocumentation('Sim3', sim3);
+
+      document.getElementById('startBtn').addEventListener('click', () => {
+        sim1.engine.simTime = 0;
+        sim2.engine.simTime = 0;
+        sim3.engine.simTime = 0;
+        sim1.animationLoop.start();
+        sim2.animationLoop.start();
+        sim3.animationLoop.start();
+        setTimeout(() => {
+          sim1.animationLoop.stop();
+          sim2.animationLoop.stop();
+          sim3.animationLoop.stop();
+          document.getElementById('simTimeDisplay').textContent =
+            `Sim 1: ${sim1.engine.simTime.toFixed(2)}s — Sim 2: ${sim2.engine.simTime.toFixed(2)}s — Sim 3: ${sim3.engine.simTime.toFixed(2)}s`;
+        }, 5000);
+      });
+
+      console.log('Device Pixel Ratio:', window.devicePixelRatio);
+      console.log('Simulations initialized successfully!');
+    } catch (error) {
+      console.error('Failed to initialize simulation:', error);
+    }
+  }
+
+  loadAndRunSimulation();
+</script>
+
+</html>

@@ -132,9 +132,18 @@
           ctx.strokeStyle = "rgba(44, 217, 151, 1.0)";
           this.drawLineH(p3.getX(), p3.getY());
 
-          ctx.strokeStyle = "rgba(16, 12, 70, 0.85)";
-          ctx.lineWidth = 4;
-          this.drawLineH(p1.getX(), p1.getY());
+          ctx.save();
+          {
+            // ctx.globalAlpha = 0.9;
+            // ctx.globalCompositeOperation = 'difference';
+            // ctx.strokeStyle = "white";
+
+            // ctx.strokeStyle = "rgba(16, 12, 70, 0.85)";
+            ctx.strokeStyle = "rgba(25, 20, 60, 0.85)";
+            ctx.lineWidth = 4;
+            this.drawLineH(p1.getX(), p1.getY());
+          }
+          ctx.restore();
         }
         ctx.restore();
 

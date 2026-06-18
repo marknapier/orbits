@@ -127,16 +127,16 @@
     paintAgitator(ctx, particle) {
       ctx.save();
       {
-        ctx.globalCompositeOperation = 'color-burn';
+        ctx.globalCompositeOperation = 'overlay';
         ctx.globalAlpha = 1.0;
         ctx.strokeStyle = 'rgba(220, 200, 140, 0.03)';
         ctx.fillStyle = 'rgba(220, 200, 140, 0.03)';
-        ctx.lineWidth = 10;
+        ctx.lineWidth = 3;
         // ctx.fillRect(particle.getX() - 50, particle.getY() - 50, 100, 100);
-        this.drawLineH(ctx, particle.getX(), particle.getY());
-        // ctx.beginPath();
-        // ctx.arc(particle.getX(), particle.getY(), 80, 0, Math.PI * 2);
-        // ctx.fill();
+        // this.drawLineH(ctx, particle.getX(), particle.getY());
+        ctx.beginPath();
+        ctx.arc(particle.getX(), particle.getY(), 3, 0, Math.PI * 2);
+        ctx.stroke();
         ctx.globalCompositeOperation = 'source-over';
       }
       ctx.restore();

@@ -1,0 +1,299 @@
+<!doctype html>
+<html>
+<!-- Composite couch with moving patterns.
+ -->
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfect Couch</title>
+  <link rel="stylesheet" href="./styles/full_viewport_canvas.css">
+</head>
+
+<body>
+  <button class="btn-back" onclick="history.back()" aria-label="Go back">&#8249;</button>
+  <!-- Canvas will be inserted here -->
+</body>
+
+<script type="module">
+  import PhysicsEngine from './js/physics2D/PhysicsEngine.js';
+  import Vector2D from './js/physics2D/Vector2D.js';
+  import MouseHandler from './js/app/MouseHandler.js';
+  import AnimationLoop from './js/app/AnimationLoop.js';
+  import Model from './js/app/Model.js';
+  import Page from './js/app/Page.js'
+  import Particle from './js/physics2D/Particle.js';
+  import ColorPalette from './js/app/ColorPalette.js';
+  import RenderSimple from './js/app/RenderSimple.js'
+  import MovingImageDots from '../js/app/MovingImageDots.js';
+  import MovingImagePlaid from '../js/app/MovingImagePlaid.js';
+  import MovingImagePlaid2 from '../js/app/MovingImagePlaid2.js';
+  import MovingImageStripes from '../js/app/MovingImageStripes.js';
+  import ImageLoader from '../js/app/ImageLoader.js';
+
+  function makePlaidConfig(width) {
+    return [
+      { // background stripe is full width, and has no oscWidth so it always fills full width
+        widthBase: width,
+        position: width / 2,
+        darkColor: [25, 45, 22],
+        lightColor: [220, 250, 250],
+        oscColor: { frequency: 0.0025, type: 'sin', phase: Math.PI * 0.2 },
+      },
+      {
+        widthBase: width * 0.25,
+        widthDelta: width * 0.20,
+        position: width * 0.25,
+        darkColor: [70, 128, 132],
+        lightColor: [192, 226, 228],
+        oscWidth: { frequency: 0.003, type: 'sin', phase: 0 },
+        oscColor: { frequency: 0.003, type: 'sin', phase: Math.PI * 0.7 },
+        alpha: 0.65,
+      },
+      {
+        widthBase: width * 0.20,
+        widthDelta: width * 0.10,
+        position: width * 0.25,
+        darkColor: [255, 128, 132],
+        lightColor: [255, 121, 13],
+        oscWidth: { frequency: 0.0025, type: 'sin', phase: 0 },
+        oscColor: { frequency: 0.0035, type: 'sin', phase: Math.PI * 0.8 },
+        alpha: 0.65,
+        alpha: 0.6,
+      },
+      {
+        widthBase: width * 0.10,
+        widthDelta: width * 0.08,
+        position: width * 0.70,
+        darkColor: [218, 188, 88],
+        lightColor: [208, 200, 184],
+        oscWidth: { frequency: 0.0075, type: 'cos', phase: 0 },
+        oscColor: { frequency: 0.02, type: 'sin', phase: Math.PI * 1.3 },
+        alpha: 0.65,
+      },
+      {
+        widthBase: width * 0.10,
+        widthDelta: width * 0.08,
+        position: width * 0.80,
+        darkColor: [218, 188, 88],
+        lightColor: [208, 200, 184],
+        oscWidth: { frequency: 0.0075, type: 'cos', phase: 0 },
+        oscColor: { frequency: 0.02, type: 'sin', phase: Math.PI * 1.3 },
+        alpha: 0.65,
+      },
+    ];
+  }
+
+
+    class RenderCouchWithDots extends RenderSimple {
+      constructor(particles = [], springs = [], target) {
+        super(particles, null, target);
+        this.bgColor = 'rgb(250, 250, 250)';
+        this.movingImageDots = new MovingImageDots(700, 700);
+        this.movingImagePlaid = new MovingImagePlaid(700, 700);
+        this.movingImagePlaid2 = new MovingImagePlaid2(200, 200, makePlaidConfig(200));
+        this.movingImageStripes = new MovingImageStripes(200, 200);
+        this.floorTop = this.canvas.height * 0.80;
+        this.floorH = this.canvas.height * 0.20;
+        this.yellowColor = [255, 255, 0];
+      }
+
+      createCouchBorderCanvas(spread = 8, color = 'white') {
+        const canvas = document.createElement('canvas');
+        canvas.width = this.canvas.width;
+        canvas.height = this.canvas.height;
+        const ctx = canvas.getContext('2d');
+
+        const x = this.canvas.width * 0.1;
+        const y = this.canvas.height * 0.2;
+        const w = this.canvas.width * 0.8;
+        const h = this.canvas.height * 0.75;
+
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 0;
+        for (const [dx, dy] of [[spread, 0], [-spread, 0], [0, spread], [0, -spread]]) {
+          ctx.shadowOffsetX = dx;
+          ctx.shadowOffsetY = dy;
+          ctx.drawImage(this.couchImage, x, y, w, h);
+        }
+
+        // Punch out the image's own pixels, leaving only the border ring
+        ctx.shadowColor = 'transparent';
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.drawImage(this.couchImage, x, y, w, h);
+
+        return canvas;
+      }
+
+      async init() {
+        // this.couchImage = await ImageLoader.loadImage('../images/brown_leather_couch.png');
+        this.couchImage = await ImageLoader.loadImage('../images/mid_century_modern_sofa_t.png');
+        this.floorImage = await ImageLoader.loadImage('../images/wood_floor_light_large_p.jpg');
+        this.yellowGreenPalette = await ColorPalette.createFromImage('../images/eye_closeup_green_extract.jpg');
+
+        this.canvasBorder = this.createCouchBorderCanvas(5, 'white');
+
+        // Reusable canvas for tinting the border each frame
+        this.canvasBorderTinted = document.createElement('canvas');
+        this.canvasBorderTinted.width = this.canvas.width;
+        this.canvasBorderTinted.height = this.canvas.height;
+        this.ctxBorderTinted = this.canvasBorderTinted.getContext('2d');
+
+        // Create off-screen canvas for couch with dots
+        this.canvasCouch = document.createElement('canvas');
+        // document.body.appendChild(this.canvasCouch); // debug
+        this.canvasCouch.width = this.canvas.width;
+        this.canvasCouch.height = this.canvas.height;
+        this.ctxCouch = this.canvasCouch.getContext('2d');
+        // Draw the couch image as the background
+        this.ctxCouch.drawImage(this.couchImage, this.canvas.width * 0.1, this.canvas.height * 0.2, this.canvas.width * 0.8, this.canvas.height * 0.75);
+
+        // Create off-screen canvas for background
+        this.canvasBackground = document.createElement('canvas');
+        // document.body.appendChild(this.canvasBackground); // debug
+        this.canvasBackground.width = this.canvas.width;
+        this.canvasBackground.height = this.canvas.height;
+        this.ctxBackground = this.canvasBackground.getContext('2d');
+      }
+
+      render() {
+        // Update the moving image (dots)
+        this.movingImageDots.step();
+        this.movingImagePlaid.step();
+        this.movingImagePlaid2.step();
+        this.movingImageStripes.step();
+
+        // Background layer: wallpaper
+        this.ctxBackground.globalAlpha = 1.0;
+        this.ctxBackground.globalCompositeOperation = 'source-over';
+        this.ctxBackground.fillStyle = this.ctxBackground.createPattern(this.movingImageStripes.getCanvas(), 'repeat');
+        this.ctxBackground.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Background layer: floor
+        this.ctxBackground.drawImage(this.floorImage, 0, this.floorTop, this.canvas.width, this.floorH);
+
+        // Couch layer: dots in couch
+        this.ctxCouch.globalAlpha = 0.1;
+        this.ctxCouch.globalCompositeOperation = 'source-atop';
+        // this.ctxCouch.fillStyle = this.ctxCouch.createPattern(this.movingImagePlaid.getCanvas(), 'repeat');
+        this.ctxCouch.fillStyle = this.ctxCouch.createPattern(this.movingImagePlaid2.canvas, 'repeat');
+        this.ctxCouch.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Main layer: background + couch with dots overlayed
+        // clear
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        // draw background dots
+        this.ctx.globalCompositeOperation = 'source-over';
+        this.ctx.globalAlpha = 1.0;
+        this.ctx.drawImage(this.canvasBackground, 0, 0, this.canvas.width, this.canvas.height);
+        // draw plain couch
+        this.ctx.globalAlpha = 1.0;
+        this.ctx.drawImage(this.couchImage, this.canvas.width * 0.1, this.canvas.height * 0.2, this.canvas.width * 0.8, this.canvas.height * 0.75);
+        // Set composite mode to overlay
+        this.ctx.globalCompositeOperation = 'overlay';
+        this.ctx.drawImage(this.canvasCouch, 0, 0, this.canvas.width, this.canvas.height);
+        // this.ctx.drawImage(this.canvasCouch, 0, 0, this.canvas.width, this.canvas.height);
+
+        // BORDER - draw border over couch
+        // clear the border canvas
+        this.ctxBorderTinted.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        // draw the border normally
+        this.ctxBorderTinted.globalCompositeOperation = 'source-over';
+        this.ctxBorderTinted.globalAlpha = 1.0;
+        this.ctxBorderTinted.drawImage(this.canvasBorder, 0, 0);
+        // fill in the border image with color
+        this.ctxBorderTinted.globalCompositeOperation = 'source-atop';
+        this.ctxBorderTinted.globalAlpha = 1.0;
+        this.ctxBorderTinted.fillStyle = 'green';
+        // this.ctxBorderTinted.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctxBorderTinted.drawImage(this.movingImagePlaid.getCanvas(), 0, 0, this.canvas.width, this.canvas.height);
+        this.ctxBorderTinted.globalAlpha = 1.0;
+        // draw the tinted border onto the main canvas
+        this.ctx.globalCompositeOperation = 'source-over';
+        this.ctx.drawImage(this.canvasBorderTinted, 0, 0, this.canvas.width, this.canvas.height);
+
+        // reset
+        this.ctx.globalCompositeOperation = 'source-over';
+      }
+
+      paintParticle(ctx, particle) {
+        if (!particle || !particle.pos) return;
+        const x = particle.getX();
+        const y = particle.getY();
+        const r = particle.getRadius();
+        ctx.save();
+        {
+          // Create circle clipping path
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.clip();
+          // Draw the moving image scaled to fit the circle's bounding box
+          ctx.drawImage(this.movingImageDots.getCanvas(), x - r, y - r, 2 * r, 2 * r);
+        }
+        ctx.restore();
+      }
+    }
+
+    async function loadAndRunSimulation() {
+      try {
+        const canvas = Page.createCanvas(window.innerWidth, window.innerHeight);
+
+        // Make 2 large random particles
+        const particles = [];
+        for (let i = 0; i < 2; i++) {
+          const name = `particle${i}`;
+          const posX = Math.random() * canvas.width;
+          const posY = Math.random() * canvas.height;
+          const velX = (Math.random() - 0.5) * 30; // Random velocity between -25 and 25
+          const velY = (Math.random() - 0.5) * 30;
+          const mass = Math.random() * 9 + 1; // Random mass between 1 and 10
+          const radius = Math.random() * 50 + 100; // Random radius between 10 and 50
+          const color = `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
+
+          particles.push(new Particle(
+            name,
+            new Vector2D(posX, posY), // random position
+            new Vector2D(velX, velY), // random velocity
+            new Vector2D(0, 0), // force
+            mass, // random mass
+            radius, // random radius
+          ));
+          particles[i].setColor(color); // set random color
+        }
+
+        const engine = new PhysicsEngine();
+        engine.setDimensions(canvas.width, canvas.height);
+        engine.detectCollisions = true;
+        engine.setWallTypeStr('reflecting');
+        engine.addParticles(particles);
+        engine.detectCollisions = false;
+        engine.margin = 0;
+        engine.gravY = 0;
+
+        const renderer = new RenderCouchWithDots(engine.particles, engine.springs, canvas);
+        await renderer.init();
+
+        const mouseHandler = new MouseHandler(canvas, engine, renderer);
+        mouseHandler.hideCursorAfterDelay();
+
+        const animationLoop = new AnimationLoop(() => {
+          engine.step();
+          renderer.render();
+        });
+        animationLoop.start();
+
+        Page.setupKeyEvents(canvas, animationLoop, 'perfect_couch');
+
+        console.log('Simulation started successfully!');
+      } catch (error) {
+        console.error('Failed to initialize simulation:', error);
+      }
+    }
+
+    loadAndRunSimulation();
+
+</script>
+
+</html>

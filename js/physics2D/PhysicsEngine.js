@@ -55,6 +55,9 @@ export default class PhysicsEngine {
     }
   }
 
+  getWidth() { return this.D.width; }
+  getHeight() { return this.D.height; }
+  
   setTimeStep(t) {
     this.timeStep = t; 
   }
@@ -310,11 +313,8 @@ export default class PhysicsEngine {
       // update particle positions based on time slice calc'd above
       this.updatePositions(advanceT);
 
-      // add to dt and advance simTime:
-      // if no collisions, add timestep (this should exit the loop (while dt < timestep))
-      // if collisions, add time to first collision
-      dt += advanceT; 
-      this.simTime += advanceT;
+      // add to dt; simTime is already advanced inside updatePositions
+      dt += advanceT;
 
       // process the collisions
       for (let i2 = 0; i2 < clist1.size(); i2++) {

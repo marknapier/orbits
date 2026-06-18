@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Vertical Stripes</title>
+  <style>
+    body {
+      margin: 0;
+      background: #1a1a1a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      padding: 40px;
+      box-sizing: border-box;
+    }
+
+    .label {
+      color: #555;
+      font-family: sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    #tile-canvas {
+      border: 1px solid #333;
+    }
+
+    #fill-canvas {
+      border: 1px solid #333;
+    }
+  </style>
+</head>
+
+<body>
+  <script type="module">
+    import Oscillator from '../js/app/Oscillator.js';
+
+    const COLORS = ['#b8cee0', '#f0eeea'];
+
+    // Tile dimensions — the repeating unit
+    const TILE_W = 480;
+    const TILE_H = 240;
+
+    // Large canvas that tiles the pattern
+    const FILL_W = 1440;
+    const FILL_H = 720;
+
+    const NUM_STRIPES = 8;
+    const BASE_WIDTH = TILE_W / NUM_STRIPES;
+    const AMPLITUDE = BASE_WIDTH * 0.48; // stripes can nearly double or nearly vanish
+
+    // Tile preview canvas (small, shown as pattern source)
+    const tileCanvas = document.createElement('canvas');
+    tileCanvas.id = 'tile-canvas';
+    tileCanvas.width = TILE_W;
+    tileCanvas.height = TILE_H;
+    const tileCtx = tileCanvas.getContext('2d');
+
+    const tileLabel = document.createElement('div');
+    tileLabel.className = 'label';
+    tileLabel.textContent = 'Tile source';
+
+    document.body.appendChild(tileLabel);
+    document.body.appendChild(tileCanvas);
+
+    // Large fill canvas
+    const fillCanvas = document.createElement('canvas');
+    fillCanvas.id = 'fill-canvas';
+    fillCanvas.width = FILL_W;
+    fillCanvas.height = FILL_H;
+    const fillCtx = fillCanvas.getContext('2d');
+
+    const fillLabel = document.createElement('div');
+    fillLabel.className = 'label';
+    fillLabel.textContent = 'Tiled pattern';
+
+    document.body.appendChild(fillLabel);
+    document.body.appendChild(fillCanvas);
+
+    // Each stripe gets an oscillator with a slightly different frequency and spread phase
+    // so they don't all pulse in unison
+    const oscillators = [];
+    for (let i = 0; i < NUM_STRIPES; i++) {
+      const freq = 0.05 + (i % 4) * 0.009;      // gentle spread: ~18–23 sec period
+      const phase = (i / NUM_STRIPES) * Math.PI * 2;
+      oscillators.push(new Oscillator(freq, 'sin', phase));
+    }
+
+    function drawFrame() {
+      // Raw width for each stripe based on its oscillator
+      const rawWidths = oscillators.map(osc =>
+        Math.max(2, BASE_WIDTH + osc.getValue() * AMPLITUDE)
+      );
+
+      // Normalize so stripe widths always sum to TILE_W (no gaps, no overflow)
+      const total = rawWidths.reduce((a, b) => a + b, 0);
+      const scale = TILE_W / total;
+
+      // Compute pixel-snapped positions to avoid sub-pixel gaps between stripes
+      const positions = [0];
+      let cursor = 0;
+      for (let i = 0; i < NUM_STRIPES; i++) {
+        cursor += rawWidths[i] * scale;
+        positions.push(Math.round(cursor));
+      }
+
+      // Draw stripes onto tile canvas
+      tileCtx.clearRect(0, 0, TILE_W, TILE_H);
+      for (let i = 0; i < NUM_STRIPES; i++) {
+        tileCtx.fillStyle = COLORS[i % COLORS.length];
+        tileCtx.fillRect(positions[i], 0, positions[i + 1] - positions[i], TILE_H);
+      }
+
+      // Tile the pattern across the large canvas
+      const pattern = fillCtx.createPattern(tileCanvas, 'repeat');
+      fillCtx.fillStyle = pattern;
+      fillCtx.fillRect(0, 0, FILL_W, FILL_H);
+
+      requestAnimationFrame(drawFrame);
+    }
+
+    drawFrame();
+  </script>
+</body>
+
+</html>

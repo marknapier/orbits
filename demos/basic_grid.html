@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Physics2D Grid Demo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      display: block;
+      border: 1px solid black;
+    }
+  </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+  import PhysicsEngine from '../js/physics2D/PhysicsEngine.js';
+  import Particle from '../js/physics2D/Particle.js';
+  import Spring from '../js/physics2D/Spring.js';
+  import Vector2D from '../js/physics2D/Vector2D.js';
+  import Renderer from '../js/app/RenderSimple.js';
+  import MouseHandler from '../js/app/MouseHandler.js';
+  import AnimationLoop from '../js/app/AnimationLoop.js';
+
+  function createCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'sim';
+    canvas.width = width;
+    canvas.height = height;
+    document.body.appendChild(canvas);
+    return canvas;
+  }
+
+  async function loadAndRunSimulation() {
+    try {
+      const canvas = createCanvas(800, 600);
+
+      const engine = new PhysicsEngine();
+      engine.setDimensions(canvas.width, canvas.height);
+      engine.detectCollisions = false;
+      engine.setWallTypeStr('reflecting');
+      engine.wallFriction = 20;
+
+      const COLS = 5;
+      const ROWS = 5;
+      const SPACING = 100;  // pixels between adjacent particles
+
+      // Top-left corner so the grid is centered in the canvas
+      const startX = (canvas.width  - (COLS - 1) * SPACING) / 2;
+      const startY = (canvas.height - (ROWS - 1) * SPACING) / 2;
+
+      // Create ROWS × COLS particles; index = row * COLS + col
+      const particles = [];
+      for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+          const x = startX + col * SPACING;
+          const y = startY + row * SPACING;
+          const particle = new Particle(
+            `p${row}_${col}`,
+            new Vector2D(x, y),
+            new Vector2D(0, 0),
+            new Vector2D(0, 0),
+            5,   // mass
+            10,  // radius
+          );
+          particle.setColor('rgb(0, 200, 80)');
+          particle.horiFriction = true;
+          engine.addParticle(particle);
+          particles.push(particle);
+        }
+      }
+
+      // Horizontal springs — connect each particle to its right neighbour
+      for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS - 1; col++) {
+          const a = particles[row * COLS + col];
+          const b = particles[row * COLS + col + 1];
+          engine.addSpring(new Spring(a, b, 5, 1, SPACING));
+        }
+      }
+
+      // Vertical springs — connect each particle to its lower neighbour
+      for (let row = 0; row < ROWS - 1; row++) {
+        for (let col = 0; col < COLS; col++) {
+          const a = particles[row       * COLS + col];
+          const b = particles[(row + 1) * COLS + col];
+          engine.addSpring(new Spring(a, b, 5, 1, SPACING));
+        }
+      }
+
+      // Diagonal springs — cross-brace each cell to resist shear
+      const diagLength = SPACING * Math.sqrt(2);
+      for (let row = 0; row < ROWS - 1; row++) {
+        for (let col = 0; col < COLS - 1; col++) {
+          const tl = particles[row       * COLS + col];
+          const tr = particles[row       * COLS + col + 1];
+          const bl = particles[(row + 1) * COLS + col];
+          const br = particles[(row + 1) * COLS + col + 1];
+          engine.addSpring(new Spring(tl, br, 5, 1, diagLength)); // top-left → bottom-right
+          engine.addSpring(new Spring(tr, bl, 5, 1, diagLength)); // top-right → bottom-left
+        }
+      }
+
+      // Corner-to-corner springs — brace the full extent of the grid
+      const cornerDiagLength = Math.sqrt(((COLS - 1) * SPACING) ** 2 + ((ROWS - 1) * SPACING) ** 2);
+      engine.addSpring(new Spring(particles[0], particles[ROWS * COLS - 1], 5, 1, cornerDiagLength));
+      engine.addSpring(new Spring(particles[COLS - 1], particles[(ROWS - 1) * COLS], 5, 1, cornerDiagLength));
+
+      const renderer = new Renderer(engine.particles, engine.springs, canvas);
+      const mouseHandler = new MouseHandler(canvas, engine, renderer);
+      const animationLoop = new AnimationLoop(engine, renderer);
+      animationLoop.start();
+
+      window.engine = engine;
+
+      console.log('Grid simulation started successfully!');
+    } catch (error) {
+      console.error('Failed to initialize simulation:', error);
+    }
+  }
+
+  loadAndRunSimulation();
+</script>
+</html>
