@@ -127,10 +127,12 @@ export default class Page {
   }
 
   /**
-   * Create an off-screen canvas, scaled for high-DPI displays, meant for buffering drawing operations.
-   * @param {*} width 
-   * @param {*} height 
-   * @param {*} id 
+   * Create an off-screen canvas with the given CSS/screen dimensions. 
+   * The internal pixel dimensions are scaled for high-DPI displays. 
+   * Meant for buffering drawing operations.
+   * @param {*} width - the width of the canvas as it appears on the screen in CSS pixels
+   * @param {*} height - the height of the canvas as it appears on the screen in CSS pixels
+   * @param {*} id -
    */
   static createOffscreenCanvasDPI(width, height, id = 'offscreen') {
     const canvas = document.createElement('canvas');

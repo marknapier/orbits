@@ -1,0 +1,559 @@
+<!doctype html>
+<html>
+<!-- Bubble gum pink color filling inside a dark violet border creates
+ bright pinks on dark violet goopy shapes. Light green mixes in, and
+ dark green vertical border draws with 'difference' blend mode to deepen
+ greens and accentuate violets occaisionally. -->
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cassini 2E 2 Lipstick</title>
+  <link rel="stylesheet" href="./styles/full_viewport_canvas.css">
+  <!-- <style>
+    /* for debugging layout issues */
+    body {
+      transform: none;
+      overflow: scroll;
+    }
+
+    body canvas {
+      transform: none;
+      position: relative;
+    }
+  </style> -->
+</head>
+
+<body>
+  <button class="btn-back" onclick="history.back()" aria-label="Go back">&#8249;</button>
+  <!-- Canvas will be inserted here -->
+</body>
+
+<script type="module">
+  import PhysicsEngine from './js/physics2D/PhysicsEngine.js';
+  import Vector2D from './js/physics2D/Vector2D.js';
+  import MouseHandler from './js/app/MouseHandler.js';
+  import AnimationLoop from './js/app/AnimationLoop.js';
+  import Model from './js/app/Model.js';
+  import Page from './js/app/Page.js'
+  import Random from './js/app/Random.js';
+  import Particle from './js/physics2D/Particle.js';
+  import ColorPalette from './js/app/ColorPalette.js';
+  import RenderSimple from './js/app/RenderSimple.js'
+
+  const modelJSON = {
+    "environment": {
+      "wallType": "Reflecting",
+      "wallFriction": 0.5,
+      "gravityConstant": 12.0,
+      "electricConstant": 0.0,
+      "gravityFieldX": 0.0,
+      "gravityFieldY": 0.0,
+      "electricFieldX": 0.0,
+      "electricFieldY": 0.0,
+      "magneticFieldZ": 0.0,
+      "airResistance": 0.10,
+    },
+    "particles": [
+      {
+        "particleNumber": 0,
+        "label": "one",
+        "color": "blue",
+        "initialPositionX": 1,
+        "initialPositionY": 100,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 26.0,
+        "mass": 25.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false, // change to false for more chaotic motion
+        "trace": false
+      },
+      {
+        "particleNumber": 1,
+        "label": "two",
+        "color": "green",
+        "initialPositionX": 380,
+        "initialPositionY": 180,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 6.0,
+        "mass": 30.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 2,
+        "label": "three",
+        "color": "green",
+        "initialPositionX": 600,
+        "initialPositionY": 220,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 8.0,
+        "mass": 20.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 3,
+        "label": "four",
+        "color": "magenta",
+        "initialPositionX": 700,
+        "initialPositionY": 230,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 20.0,
+        "mass": 50.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 4,
+        "label": "agitator",
+        "color": "black",
+        "initialPositionX": 600,
+        "initialPositionY": 10,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 10.0,
+        "mass": 500.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      // {
+      //   "particleNumber": 5,
+      //   "label": "tiny",
+      //   "color": "black",
+      //   "initialPositionX": 620,
+      //   "initialPositionY": 10,
+      //   "initialVelocityX": 0.0,
+      //   "initialVelocityY": 0.0,
+      //   "radius": 4.0,
+      //   "mass": 2.0,
+      //   "charge": 0.0,
+      //   "fixedXPosition": false,
+      //   "fixedYPosition": false,
+      //   "trace": true
+      // }
+    ],
+    "springs": [
+      {
+        "label": "spring2",
+        "color": "white",
+        "particle1": 0,
+        "particle2": 1,
+        "springConstant": 0.5,
+        "damping": 0.8,
+        "relaxedLength": 0
+      },
+      {
+        "label": "spring2",
+        "color": "white",
+        "particle1": 1,
+        "particle2": 2,
+        "springConstant": 0.5,
+        "damping": 0.8,
+        "relaxedLength": 0
+      },
+      {
+        "label": "spring3",
+        "color": "white",
+        "particle1": 2,
+        "particle2": 3,
+        "springConstant": 0.5,
+        "damping": 0.8,
+        "relaxedLength": 0
+      },
+      {
+        "label": "spring4", // connects agitator to tiny
+        "color": "white",
+        "particle1": 3,
+        "particle2": 4,
+        "springConstant": 5.5,
+        "damping": 0.8,
+        "relaxedLength": 0
+      },
+    ]
+  };
+
+  export default class RenderVerticals extends RenderSimple {
+    // Configurable options
+    bgColor = "rgb(60,0,0)";          // background color
+    opacity = 0.2;                      // alpha for all paint operations
+    clearBG = false;                     // if false, leaves motion trails
+    violetColors = ["rgb(2, 2, 10)", "rgb(10, 3, 20)", "rgb(15, 5, 15)", "rgb(5, 0, 9)"];
+
+    constructor(sim, canvas) {
+      super(sim.particles, null, canvas);
+      this.canvas = canvas;
+      this.ctx = canvas.getContext("2d");
+      this.particles = sim.particles;
+      this.titanBlurPalette = null; // colors will be loaded in init()
+      this.yellowGreenPalette = null;
+      this.yellowOrangePalette = null;
+      this.pinkPalette = null;
+      this.halfPI = Math.PI / 2;
+      this.quarterPI = Math.PI / 4;
+
+      // High-DPI monitors, such as Retina displays, can have 2 or 3 times the pixel density of standard displays. 
+      // To ensure our canvas looks crisp on these displays, we scale it up proportionally to the device pixel ratio. 
+      // (see Page.createCanvas()). Here we scale up the drawing context so that our drawing commands work in 
+      // the original coordinate space, but render a larger image.
+      // this.dpiRatio = window.devicePixelRatio || 1;
+      // this.ctx.scale(this.dpiRatio, this.dpiRatio); // Scale context for high-DPI displays
+
+
+
+
+      this.dpiRatio = RenderSimple.getCanvasDPIRatio(this.canvas);
+
+      //!!! get the screen to physics ratio
+      this.canvasScreenSize = RenderSimple.getCanvasScreenSize(this.canvas);
+      this.canvasScreenToSimRatioH = this.canvasScreenSize.height / sim.getHeight();
+
+      // The final amount we'll scale by, including the DPI ratio and the screen-to-physics ratio.
+      this.totalScale = this.dpiRatio * this.canvasScreenToSimRatioH;
+
+      // Make an offscreen canvas for drawing - will be copied to display canvas in parts
+      this.offscreenCanvas = Page.createOffscreenCanvasDPI(this.canvasScreenSize.width, this.canvasScreenSize.height, 'offscreen');
+      // document.body.appendChild(this.offscreenCanvas); // debug - show the offscreen canvas on the page
+
+      // this.ctx will draw to the offscreen canvas.
+      this.ctxDisplay = this.ctx; // save the on-screen context
+      this.ctx = this.offscreenCanvas.getContext('2d'); // off screen context
+
+      // Scale the offscreen context to fit the high pixel density and the screen-to-physics ratio.
+      this.ctx.scale(this.totalScale, this.totalScale);
+
+      // save some dimensions for later use
+      this.simWidth = sim.getWidth();    // physics units, need to be scaled up to fit full-sized canvas
+      this.simHeight = sim.getHeight();
+      this.canvasH = this.offscreenCanvas.height;    // actual pixels, no need to scale when using these
+      this.canvasW = this.offscreenCanvas.width;
+
+
+
+      // // canvas for drawing, will be copied to display canvas in parts
+      // this.offscreenCanvas = document.createElement('canvas');
+      // this.offscreenCanvas.width = this.canvas.width;
+      // this.offscreenCanvas.height = this.canvas.height;
+      // this.offscreenCanvas.id = 'offscreenCanvas';
+      // // document.body.appendChild(this.offscreenCanvas); // debug
+
+      // this.ctxDisplay = this.ctx; // save the on-screen context
+      // this.ctx = this.offscreenCanvas.getContext('2d'); // off screen context
+      // // this.ctx.scale(this.dpiRatio, this.dpiRatio); // Scale context for high-DPI displays, see comment in ctor
+
+    }
+
+    setParticles(particles) {
+      this.particles = particles ?? [];
+    }
+
+    async init() {
+      this.titanBlurPalette = await ColorPalette.createFromImage('./images/titan_blur_gray.jpg');
+      this.yellowGreenPalette = await ColorPalette.createFromImage('./images/yellow_green_gradient_hc.png');
+      this.yellowOrangePalette = await ColorPalette.createFromImage('./images/yellow_orange_gradient.png');
+      this.pinkPalette = await ColorPalette.createFromImage('./images/lipstick_pink_gradient_dark.png');
+    }
+
+    // ============================================================
+    // Render the physics simulation into the canvas
+    render() {
+      const ctx = this.ctx;
+      const w = this.simWidth; // may be scaled for high-DPI canvas
+      const h = this.simHeight; // may be scaled for high-DPI canvas
+
+      // Clear bg if configured to do so, with a low alpha to create motion trails
+      if (this.clearBG) {
+        ctx.save();
+        ctx.globalAlpha = 0.1;
+        ctx.fillStyle = this.bgColor;
+        ctx.fillRect(0, 0, this.simWidth, this.simHeight);
+        ctx.restore();
+      }
+
+      // Set a constant alpha composite for subsequent drawing
+      ctx.save();
+      ctx.globalAlpha = this.opacity;
+
+      const particles = this.particles;
+
+      const p0 = particles[0]; // violet 0 - 1, 0 is fixed
+      const p1 = particles[1]; // spring to 2
+      const p2 = particles[2]; // spring to 3
+      const p3 = particles[3];
+      const p4 = particles[4]; // agitator
+      // const p5 = particles[5]; // tiny
+
+      const radius1 = Particle.distance(p0, p1);
+      const radius2 = Particle.distance(p1, p2);
+      const radius3 = Particle.distance(p2, p3);
+      const radius4 = Particle.distance(p3, p0);
+
+      // ------------------------------------------------------------------------------------------------
+      // Draw a circle for each particle pair, using the distance between particles as the radius.
+      // ------------------------------------------------------------------------------------------------
+
+      // Dark violet circle p0 - p1
+      // Make a 0-1 value that represents the radius length relative to the canvas height
+      const radiusPercent = Math.max(Math.min(radius1 / this.simHeight, 1), 0.1);
+      ctx.save();
+      {
+        ctx.globalAlpha = 0.21;
+        ctx.strokeStyle = this.violetColors[(radiusPercent * 3) | 0];
+        ctx.lineWidth = 15 * radiusPercent;
+        this.drawArcPath(ctx, p0, p1);
+        ctx.fillStyle = this.pinkPalette.getNextColor();
+        // ctx.fillStyle = "rgba(255, 120, 223, 0.5)"; // light pink fill 
+        ctx.fill();
+        // ctx.strokeStyle = "rgb(16, 12, 23)"; // violet black line through p0
+        // ctx.lineWidth = 4;
+        // this.drawLineV(p0.getX(), p0.getY());
+      }
+      ctx.restore();
+
+      // draw a whitish grayish circle whose edges pass through p1 and p2
+      ctx.save();
+      {
+        ctx.globalAlpha = 0.15;
+        ctx.strokeStyle = this.titanBlurPalette.getNextColor();
+        ctx.lineWidth = 2;
+        this.drawArcPath(ctx, p2, p4);
+        // light green overlay 
+        ctx.strokeStyle ='rgba(100, 250, 100, 0.8)'; // light green with some transparency
+        ctx.lineWidth = 1;
+        this.drawArcPath(ctx, p2, p4);
+        ctx.strokeStyle = "rgb(16, 12, 23)"; // violet black line through p2
+        ctx.lineWidth = 4;
+        this.drawLineV(p2.getX(), p2.getY());
+      }
+      ctx.restore();
+
+      // // draw a ??? circle whose edges pass through p2 and p3
+      // ctx.save();
+      // {
+      //   ctx.globalAlpha = 0.2;
+      //   ctx.strokeStyle = "#FF00FF"; // magenta
+      //   ctx.lineWidth = 2;
+      //   this.drawArcPath(ctx, p2, p3);
+      //   // greenish vertical
+      //   // ctx.strokeStyle = this.yellowGreenPalette.getNextColor();
+      //   // ctx.strokeStyle = "rgb(144, 200, 151)";
+      //   ctx.strokeStyle = "rgba(237, 30, 30, 0.1)"; // bright red with low opacity
+      //   this.drawLineV(p3.getX(), p3.getY());
+      // }
+      // ctx.restore();
+
+      // // draw a teal circle whose edges pass through p2 and p3
+      // ctx.save();
+      // {
+      //   ctx.globalAlpha = 0.2;
+      //   ctx.strokeStyle = "rgb(78, 188, 155)";  // out of gamut for print: "rgb(60, 200, 160)";
+      //   ctx.lineWidth = 2;
+      //   this.drawArcPath(ctx, p1, p3);
+      // }
+      // ctx.restore();
+
+      // // light blue circle with thick border at p2
+      // const gradientPercent = Math.max(Math.min(radius3 / this.simHeight, 1), 0.1);
+      // ctx.save();
+      // {
+      //   ctx.globalAlpha = 0.2;
+      //   ctx.beginPath();
+      //   ctx.arc(p2.getX(), p2.getY(), Math.max((radius3 / 2) - 20, 0), 0, Math.PI * 2);
+      //   ctx.strokeStyle = `rgb(1, 193, 193)`;
+      //   ctx.lineWidth = 4;
+      //   ctx.stroke();
+      //   // dark point at bottom of circle
+      //   ctx.beginPath();
+      //   ctx.arc(p2.getX(), p2.getY(), Math.max((radius3 / 2) - 18, 0), 1.4, 1.7);
+      //   ctx.strokeStyle = `rgb(50, 90, 90)`;
+      //   ctx.lineWidth = 3;
+      //   ctx.stroke();
+      //   // light point at top of circle
+      //   ctx.beginPath();
+      //   ctx.arc(p2.getX(), p2.getY(), Math.max((radius3 / 2) - 18, 0), -this.halfPI, -1.4);
+      //   ctx.strokeStyle = `rgb(180, 200, 150)`;
+      //   ctx.lineWidth = 3;
+      //   ctx.stroke();
+      // }
+      // ctx.restore();
+
+      // // Orange circle around p3, and vertical line through p2
+      // ctx.save();
+      // {
+      //   ctx.globalAlpha = 0.1;
+      //   ctx.strokeStyle = this.yellowOrangePalette.getNextColor();
+      //   ctx.globalAlpha = 0.3;
+      //   ctx.lineWidth = 4;
+      //   this.drawArcPath(ctx, p2, p3);
+      //   this.drawLineV(p2.getX(), p2.getY());
+      // }
+      // ctx.restore();
+
+      // // Green line at agitator
+      // ctx.save();
+      // {
+      //   ctx.globalAlpha = 0.5;
+      //   ctx.strokeStyle = this.yellowGreenPalette.getNextColor();
+      //   ctx.lineWidth = 3;
+      //   ctx.setLineDash([250, 1]);
+      //   this.drawLineV(p4.getX(), p4.getY());
+      //   ctx.setLineDash([]);
+      // }
+      // ctx.restore();
+
+      // // draw a ??? circle whose edges pass through p2 and p3
+      // ctx.save();
+      // {
+      //   ctx.globalAlpha = 0.2;
+      //   ctx.strokeStyle = "rgb(120, 200, 40)";
+      //   ctx.lineWidth = 1;
+      //   this.drawArcPath(ctx, p4, p5);
+      // }
+      // ctx.restore();
+
+      // draw green circles at each particle
+      ctx.save();
+      {
+        ctx.fillStyle = "green";
+        ctx.globalAlpha = 0.9;
+        for (let i = 0; i < particles.length - 1; i++) { // excludes 'tiny' particle which is the last one
+          const p = particles[i];
+          ctx.beginPath();
+          ctx.ellipse(p.getX(), p.getY(), 2, 1, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+
+      // ================================================================================================
+      // Draw the offscreen canvas onto the display canvas in pieces.
+
+      const sliceWidth1 = Math.round(100 * this.totalScale);
+      const sliceWidth2 = Math.round(50 * this.totalScale);
+
+      this.ctxDisplay.globalAlpha = 1.0; // draw the offscreen canvas at full opacity
+
+      this.ctxDisplay.drawImage(this.offscreenCanvas,
+        Math.round((p0.getX()-10) * this.totalScale), 0, sliceWidth1, this.canvasH,
+        Math.round(p1.getX() * this.totalScale), 0, sliceWidth1*2, this.canvasH
+      );
+      this.ctxDisplay.globalAlpha = 1.0; // draw the offscreen canvas at full opacity
+      this.ctxDisplay.drawImage(this.offscreenCanvas,
+        Math.round((p4.getX()-10) * this.totalScale), 0, sliceWidth2, this.canvasH,
+        Math.round(p3.getX() * this.totalScale), 0, sliceWidth2, this.canvasH
+      );
+      this.ctxDisplay.globalAlpha = 0.85; // draw the offscreen canvas at full opacity
+      this.ctxDisplay.globalCompositeOperation = 'difference'; // hard-light is nice 
+      this.ctxDisplay.drawImage(this.offscreenCanvas,
+        Math.round((p4.getX()) * this.totalScale), 0, sliceWidth2, this.canvasH,
+        Math.round(p3.getX() * this.totalScale), 0, 2, this.canvasH
+      );
+      // border line 
+      this.ctxDisplay.globalAlpha = 1.0; // draw the offscreen canvas at full opacity
+      this.ctxDisplay.strokeStyle = "rgb(10, 60, 10)";
+      this.ctxDisplay.beginPath();
+      this.ctxDisplay.lineWidth = 2;
+      this.ctxDisplay.moveTo(p3.getX() * this.totalScale, 0);
+      this.ctxDisplay.lineTo(p3.getX() * this.totalScale, this.canvasH);
+      this.ctxDisplay.stroke();
+
+      this.ctxDisplay.globalCompositeOperation = 'source-over'; // reset to default
+
+      ctx.restore();
+    }
+
+    drawArcPath(ctx, p1, p2) {
+      // compute midpoint and radius from p1 and p2
+      const x1 = p1.getX(), y1 = p1.getY();
+      const x2 = p2.getX(), y2 = p2.getY();
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+      const radius = Math.hypot(x2 - x1, y2 - y1) / 2;
+      ctx.beginPath();
+      ctx.arc(mx, my, radius, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // ============================================================
+    // Draw a vertical line from top to bottom of canvas through point (x, y)
+    drawLineV(x, y) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(x, 0);
+      this.ctx.lineTo(x, this.simHeight);
+      this.ctx.stroke();
+    }
+
+    drawLineH(x, y) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(0, y);
+      this.ctx.lineTo(this.simWidth, y);
+      this.ctx.stroke();
+    }
+
+    clear() {
+      // Draw a filled rectangle that covers the entire canvas
+      this.ctx.fillStyle = "black";
+      this.ctx.fillRect(0, 0, this.simWidth, this.simHeight);
+    }
+  }
+
+  async function loadAndRunSimulation() {
+    try {
+      const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight);
+
+      const engine = new PhysicsEngine();
+      engine.setDimensions(1651, 929); //!!!  16x9 but smaller size than 1990, 1119
+      engine.detectCollisions = false;
+      engine.timeStep = 0.23;
+
+      const model = new Model();
+      model.parseConfig(modelJSON);
+      model.centerAt(engine.getWidth() / 2.2, engine.getHeight() / 2); //!!! center in the physics space, not DPI or screen
+
+      engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
+
+      const renderer = new RenderVerticals(engine, canvas);
+      await renderer.init(); // load images for colors, textures, etc.
+      renderer.bgColor = 'rgb(20, 0, 20)';
+      renderer.opacity = 0.05;
+      renderer.clearBG = false;
+      renderer.clear();
+
+      // Add a little randomness to one particle position
+      // engine.particles[3].pos = new Vector2D(300 + (Math.random() * 200), 300 + (Math.random() * 200));
+      // engine.particles[3].color = 'rgba(10, 0, 10, .6)'; // fade black
+
+      const mouseHandler = new MouseHandler(canvas, engine, renderer);
+      mouseHandler.hideCursorAfterDelay();
+
+      const animationLoop = new AnimationLoop(() => {
+        engine.step();
+        renderer.render();
+      });
+      animationLoop.start();
+
+      Page.setupKeyEvents(canvas, animationLoop, 'cassini2E_2_lipstick');
+
+      console.log('Simulation started successfully!');
+    } catch (error) {
+      console.error('Failed to initialize simulation:', error);
+    }
+  }
+
+  loadAndRunSimulation();
+
+</script>
+
+</html>

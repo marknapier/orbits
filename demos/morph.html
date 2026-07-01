@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<body style="background:#111;margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;">
+  <canvas id="morphCanvas" width="600" height="400"></canvas>
+  <div style="color:#aaa;font-family:sans-serif;margin-top:12px;font-size:14px;" id="label">Loading images...</div>
+  <script>
+    const canvas = document.getElementById('morphCanvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const W = canvas.width, H = canvas.height;
+
+    // Control point triangles — slightly offset between images to create a warp effect
+    const pointsImg1 = [
+      {x: 0,   y: 0},
+      {x: W,   y: 0},
+      {x: W/2, y: H}
+    ];
+    const pointsImg2 = [
+      {x: 20,      y: 20},
+      {x: W - 20,  y: 20},
+      {x: W/2,     y: H - 20}
+    ];
+
+    let img1Data = null, img2Data = null;
+
+    function loadImageData(src, callback) {
+      const img = new Image();
+      img.onload = () => {
+        const off = document.createElement('canvas');
+        off.width = W; off.height = H;
+        const octx = off.getContext('2d');
+        octx.drawImage(img, 0, 0, W, H);
+        callback(octx.getImageData(0, 0, W, H));
+      };
+      img.src = src;
+    }
+
+    function getAffineTransform(src, dst) {
+      const [p0, p1, p2] = src;
+      const [q0, q1, q2] = dst;
+      const den = (p1.x - p0.x) * (p2.y - p0.y) - (p2.x - p0.x) * (p1.y - p0.y);
+      if (Math.abs(den) < 1e-5) return null;
+      const a = ((q1.x - q0.x) * (p2.y - p0.y) - (q2.x - q0.x) * (p1.y - p0.y)) / den;
+      const b = ((p1.x - p0.x) * (q2.x - q0.x) - (p2.x - p0.x) * (q1.x - q0.x)) / den;
+      const c = q0.x - a * p0.x - b * p0.y;
+      const d = ((q1.y - q0.y) * (p2.y - p0.y) - (q2.y - q0.y) * (p1.y - p0.y)) / den;
+      const e = ((p1.x - p0.x) * (q2.y - q0.y) - (p2.x - p0.x) * (q1.y - q0.y)) / den;
+      const f = q0.y - d * p0.x - e * p0.y;
+      return { a, b, c, d, e, f };
+    }
+
+    function morph(t) {
+      const output = ctx.createImageData(W, H);
+
+      const pointsMorphed = pointsImg1.map((p, i) => ({
+        x: p.x + (pointsImg2[i].x - p.x) * t,
+        y: p.y + (pointsImg2[i].y - p.y) * t
+      }));
+
+      const m1 = getAffineTransform(pointsMorphed, pointsImg1);
+      const m2 = getAffineTransform(pointsMorphed, pointsImg2);
+      if (!m1 || !m2) return;
+
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          const src1X = Math.round(m1.a * x + m1.b * y + m1.c);
+          const src1Y = Math.round(m1.d * x + m1.e * y + m1.f);
+          const src2X = Math.round(m2.a * x + m2.b * y + m2.c);
+          const src2Y = Math.round(m2.d * x + m2.e * y + m2.f);
+
+          const outIdx = (y * W + x) * 4;
+
+          const s1X = Math.max(0, Math.min(W - 1, src1X));
+          const s1Y = Math.max(0, Math.min(H - 1, src1Y));
+          const s2X = Math.max(0, Math.min(W - 1, src2X));
+          const s2Y = Math.max(0, Math.min(H - 1, src2Y));
+
+          const s1Idx = (s1Y * W + s1X) * 4;
+          const s2Idx = (s2Y * W + s2X) * 4;
+
+          output.data[outIdx]     = img1Data.data[s1Idx]     * (1 - t) + img2Data.data[s2Idx]     * t;
+          output.data[outIdx + 1] = img1Data.data[s1Idx + 1] * (1 - t) + img2Data.data[s2Idx + 1] * t;
+          output.data[outIdx + 2] = img1Data.data[s1Idx + 2] * (1 - t) + img2Data.data[s2Idx + 2] * t;
+          output.data[outIdx + 3] = 255;
+        }
+      }
+      ctx.putImageData(output, 0, 0);
+
+      const label = document.getElementById('label');
+      if (t < 0.1) label.textContent = 'Brown Leather Couch';
+      else if (t > 0.9) label.textContent = 'Mid-Century Modern Sofa';
+      else label.textContent = `Morphing... ${Math.round(t * 100)}%`;
+    }
+
+    // Ping-pong animation: couch → sofa → couch → ...
+    let progress = 0;
+    let direction = 1;
+    function animate() {
+      progress += 0.004 * direction;
+      if (progress >= 1) { progress = 1; direction = -1; }
+      if (progress <= 0) { progress = 0; direction = 1; }
+      morph(progress);
+      requestAnimationFrame(animate);
+    }
+
+    loadImageData('../images/brown_leather_couch.png', d1 => {
+      img1Data = d1;
+      loadImageData('../images/mid_century_modern_sofa_t.png', d2 => {
+        img2Data = d2;
+        document.getElementById('label').textContent = 'Brown Leather Couch';
+        animate();
+      });
+    });
+  </script>
+</body>
+</html>

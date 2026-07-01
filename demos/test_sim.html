@@ -1,0 +1,331 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Physics2D Gravity Demo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      display: block;
+      border: 1px solid black
+    }
+  </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+  import PhysicsEngine from '../js/physics2D/PhysicsEngine.js';
+  import Renderer from '../js/app/RenderSimple.js';
+  import SimLoader from '../js/app/SimLoader.js';
+  import MouseHandler from '../js/app/MouseHandler.js';
+  import AnimationLoop from '../js/app/AnimationLoop.js';
+  import Model from '../js/app/Model.js';
+
+  // Quark 3 masses attached to a central mass
+  // const modelJSON = {
+  //   "environment": {
+  //     "wallType": "Absorbing",
+  //     "wallFriction": 0.5,
+  //     "gravityConstant": 10.0,
+  //     "electricConstant": 0.0,
+  //     "gravityFieldX": 0.0,
+  //     "gravityFieldY": 0.0,
+  //     "electricFieldX": 0.0,
+  //     "electricFieldY": 0.0,
+  //     "magneticFieldZ": 0.0,
+  //     "airResistance": 0.0
+  //   },
+  //   "particles": [
+  //     {
+  //       "particleNumber": 0,
+  //       "label": "Red",
+  //       "color": "red",
+  //       "initialPositionX": 245.0,
+  //       "initialPositionY": 102.0,
+  //       "initialVelocityX": 0.0,
+  //       "initialVelocityY": 0.0,
+  //       "radius": 1.5,
+  //       "mass": 100.0,
+  //       "charge": 0.0,
+  //       "fixedXPosition": false,
+  //       "fixedYPosition": false,
+  //       "trace": true
+  //     },
+  //     {
+  //       "particleNumber": 1,
+  //       "label": "Green",
+  //       "color": "green",
+  //       "initialPositionX": 411.0,
+  //       "initialPositionY": 324.0,
+  //       "initialVelocityX": 0.0,
+  //       "initialVelocityY": 0.0,
+  //       "radius": 1.0,
+  //       "mass": 100.0,
+  //       "charge": 0.0,
+  //       "fixedXPosition": false,
+  //       "fixedYPosition": false,
+  //       "trace": true
+  //     },
+  //     {
+  //       "particleNumber": 2,
+  //       "label": "Blue",
+  //       "color": "blue",
+  //       "initialPositionX": 136.0,
+  //       "initialPositionY": 326.0,
+  //       "initialVelocityX": 0.0,
+  //       "initialVelocityY": 0.0,
+  //       "radius": 1.0,
+  //       "mass": 1000.0,
+  //       "charge": 0.0,
+  //       "fixedXPosition": false,
+  //       "fixedYPosition": false,
+  //       "trace": true
+  //     },
+  //     {
+  //       "particleNumber": 3,
+  //       "label": "Center",
+  //       "color": "black",
+  //       "initialPositionX": 241.0,
+  //       "initialPositionY": 233.0,
+  //       "initialVelocityX": 0.0,
+  //       "initialVelocityY": 0.0,
+  //       "radius": 1.0,
+  //       "mass": 1000.0,
+  //       "charge": 0.0,
+  //       "fixedXPosition": false,
+  //       "fixedYPosition": false,
+  //       "trace": true
+  //     }
+  //   ],
+  //   "springs": [
+  //     {
+  //       "springNumber": 0,
+  //       "particle1": 0,
+  //       "particle2": 3,
+  //       "damping": 1.0,
+  //       "springConstant": 5.0,
+  //       "relaxedLength": 131.06105,
+  //       "amplitude": 0.0,
+  //       "frequency": 0.0,
+  //       "phase": 0.0
+  //     },
+  //     {
+  //       "springNumber": 1,
+  //       "particle1": 1,
+  //       "particle2": 3,
+  //       "damping": 1.0,
+  //       "springConstant": 5.0,
+  //       "relaxedLength": 192.82375,
+  //       "amplitude": 0.0,
+  //       "frequency": 0.0,
+  //       "phase": 0.0
+  //     },
+  //     {
+  //       "springNumber": 2,
+  //       "particle1": 2,
+  //       "particle2": 3,
+  //       "damping": 1.0,
+  //       "springConstant": 5.0,
+  //       "relaxedLength": 140.26403,
+  //       "amplitude": 0.0,
+  //       "frequency": 0.0,
+  //       "phase": 0.0
+  //     }
+  //   ]
+  // };
+
+  const modelJSON = {
+    "environment": {
+      "wallType": "Reflecting",
+      "wallFriction": 0.5,
+      "gravityConstant": 12.0,
+      "electricConstant": 0.0,
+      "gravityFieldX": 0.0,
+      "gravityFieldY": 0.0,
+      "electricFieldX": 0.0,
+      "electricFieldY": 0.0,
+      "magneticFieldZ": 0.0,
+      "airResistance": 0.10,
+    },
+    "particles": [
+      {
+        "particleNumber": 0,
+        "label": "one",
+        "color": "blue",
+        "initialPositionX": 1,
+        "initialPositionY": 100,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 26.0,
+        "mass": 25.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": true, // change to false for more chaotic motion
+        "trace": false
+      },
+      {
+        "particleNumber": 1,
+        "label": "two",
+        "color": "green",
+        "initialPositionX": 380,
+        "initialPositionY": 180,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 6.0,
+        "mass": 30.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 2,
+        "label": "three",
+        "color": "green",
+        "initialPositionX": 600,
+        "initialPositionY": 220,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 8.0,
+        "mass": 20.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 3,
+        "label": "four",
+        "color": "magenta",
+        "initialPositionX": 700,
+        "initialPositionY": 230,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 20.0,
+        "mass": 50.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 4,
+        "label": "agitator",
+        "color": "black",
+        "initialPositionX": 600,
+        "initialPositionY": 10,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 10.0,
+        "mass": 500.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      // {
+      //   "particleNumber": 5,
+      //   "label": "tiny",
+      //   "color": "black",
+      //   "initialPositionX": 620,
+      //   "initialPositionY": 10,
+      //   "initialVelocityX": 0.0,
+      //   "initialVelocityY": 0.0,
+      //   "radius": 4.0,
+      //   "mass": 2.0,
+      //   "charge": 0.0,
+      //   "fixedXPosition": false,
+      //   "fixedYPosition": false,
+      //   "trace": true
+      // }
+    ],
+    "springs": [
+      {
+        "label": "spring2",
+        "color": "white",
+        "particle1": 1,
+        "particle2": 2,
+        "springConstant": 0.5,
+        "damping": 0.8,
+        "relaxedLength": 0
+      },
+      {
+        "label": "spring3",
+        "color": "white",
+        "particle1": 2,
+        "particle2": 3,
+        "springConstant": 0.5,
+        "damping": 0.8,
+        "relaxedLength": 0
+      },
+      // {
+      //   "label": "spring4", // connects agitator to tiny
+      //   "color": "white",
+      //   "particle1": 4,
+      //   "particle2": 5,
+      //   "springConstant": 5.5,
+      //   "damping": 0.8,
+      //   "relaxedLength": 0
+      // },
+      {
+        "label": "spring4", // connects agitator to first particle in chain
+        "color": "white",
+        "particle1": 4,
+        "particle2": 1,
+        "springConstant": 5.5,
+        "damping": 0.8,
+        "relaxedLength": 0
+      },
+    ]
+  };
+
+  function createCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'sim';
+    canvas.width = width;
+    canvas.height = height;
+    document.body.appendChild(canvas);
+    return canvas;
+  }
+
+  async function loadAndRunSimulation() {
+    try {
+      const canvas = createCanvas(1200, 800);
+
+      const engine = new PhysicsEngine();
+      engine.setDimensions(canvas.width, canvas.height);
+      engine.detectCollisions = false;
+      engine.timeStep = 0.23;
+
+      const model = new Model();
+      model.parseConfig(modelJSON);
+      model.centerAt(engine.getWidth() / 2.2, engine.getHeight() / 2); //!!! center in the physics space, not DPI or screen
+
+      engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
+
+      const renderer = new Renderer(engine.particles, engine.springs, canvas);
+      const mouseHandler = new MouseHandler(canvas, engine, renderer);
+      const animationLoop = new AnimationLoop(engine, renderer);
+      animationLoop.start();
+
+      console.log('Simulation started successfully!');
+    } catch (error) {
+      console.error('Failed to initialize simulation:', error);
+    }
+  }
+
+  loadAndRunSimulation();
+</script>
+
+</html>
