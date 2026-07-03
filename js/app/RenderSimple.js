@@ -1,21 +1,67 @@
 /**
  * Base class for physics simulation renderers
+ * 
+ * Renderer draws the physics simulation onto the screen canvas. The 
+ * physics and screen spaces may be different sizes, and the canvas may be scaled 
+ * for high-DPI displays. Here's how the coordinate spaces relate to each other:
+ * 
+ *   +-----+  Physics simulation space 1440x810
+ *   | sim |
+ *   +-----+
+ *   +----------+  Canvas screen space 1629x916 (CSS pixels, mouse coordinates)
+ *   |  screen  |   
+ *   |          |
+ *   +----------+
+ *   +--------------------+  Canvas internal pixel space 3258x1832 (for screen with devicePixelRatio=2)
+ *   |                    |
+ *   |     internal       |
+ *   |                    |
+ *   +--------------------+  
+ * 
+ * In a perfect world, the sim and canvas are the same size and we're not using 
+ * a Retina (high dots-per-inch) display, so no transforms are needed.
+ * 
+ * But if the canvas is a different size than the sim, we need to scale the sim coordinates 
+ * to fit the screen space using canvasScreenToSimRatioH.
+ * 
+ * And if the canvas is scaled for high-DPI displays the internal pixel space may be twice as 
+ * large as the screen space. Then we need to scale rendering again to match the screen space
+ * to the internal pixel dimensions of the canvas using dpiRatio.
+ * 
+ * Combine these two scaling factors (sim->screen and screen->internal) to get the 
+ * total scaling factor for rendering:
+ *     this.totalScale = this.dpiRatio * this.canvasScreenToSimRatioH;
+ *     ctx.scale(this.totalScale, this.totalScale);
+ * 
+ * Subsequent drawing operations are now in the physics simulation space, and will 
+ * be scaled to fit the canvas.
+ *
+ * NOTE that drawImage() operations are not scaled by ctx.scale(). If using particle 
+ * positions (simulation space) to draw images, the particle positions need to be 
+ * multiplied by the totalScale factor in order for them to appear at the correct 
+ * size and position in the internal pixel space.
+ * 
  */
 
 export default class RenderSimple {
-  // particles: array, springs: array, target: HTMLCanvasElement
-  constructor(particles = [], springs = [], target) {
-    this.particles = particles;
-    this.springs = springs;
+  /**
+   * Constructor sets some foundational properties on the renderer instance:
+   * particles, springs, canvas, ctx, mouse position, background color (defaults to white).
+   * @param {*} sim 
+   * @param {HTMLCanvasElement} canvas 
+   */
+  constructor(sim, canvas) {
+    this.particles = sim.particles;
+    this.springs = sim.springs;
     this.mouseX = 0;
     this.mouseY = 0;
     this.bgColor = 'white';
-    this.setTarget(target);
+    this.setTarget(canvas);
   }
 
-  setTarget(target) {
-    this.canvas = target;
-    this.ctx = target.getContext('2d'); //, { colorSpace: 'display-p3' });
+  setTarget(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d'); //, { colorSpace: 'display-p3' });
   }
 
   render() {

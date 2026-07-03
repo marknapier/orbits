@@ -8,15 +8,9 @@ export default class RenderLenses extends RenderSimple {
   M = 30;
   turquoises = ['rgba(29, 110, 117, 0.03)', 'rgba(66, 146, 129, 0.03)', 'rgba(1, 131, 109, 0.03)', 'rgba(3, 167, 140, 0.03)'];
 
-  // particles: array, springs: array, target: HTMLCanvasElement or 2D context
-  constructor(particles = [], springs = [], target = null) {
-    super(particles, null, target)
-    this.particles = particles;
-    this.springs = springs;
-    this.mouseX = 0;
-    this.mouseY = 0;
+  constructor(sim, canvas) {
+    super(sim, canvas);
     this.bgColor = 'black';
-    this.setTarget(target);
     this.xOscillator = new Oscillator(0.005, 'cos');
     this.yOscillator = new Oscillator(0.005, 'sin');
     this.gradient = this.makeGradient();

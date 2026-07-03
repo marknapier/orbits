@@ -29,11 +29,8 @@
     clearBG = true;                     // if false, leaves motion trails
     violetColors = ["rgb(25, 15, 30)", "rgb(20, 10, 25)", "rgb(15, 5, 20)", "rgb(10, 0, 15)"];
 
-    constructor(particles = [], springs = null, canvas) {
-      super(particles, null, canvas);
-      this.canvas = canvas;
-      this.ctx = canvas.getContext("2d");
-      this.particles = particles;
+    constructor(sim, canvas) {
+      super(sim, canvas);
       this.woodPattern = null;
       this.bgTexture = null;
       this.xOscillator = new Oscillator(.0167, 'cos'); // .0167 => 1 minute cycle
@@ -670,8 +667,7 @@
 
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
 
-      // const renderer = new RenderSimple(engine.particles, engine.springs, canvas);
-      const renderer = new RenderDashes(engine.particles, null, canvas);
+      const renderer = new RenderDashes(engine, canvas);
       await renderer.init();
 
       // so background won't clear

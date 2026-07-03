@@ -9,9 +9,7 @@
     "electricFieldX": 0.0,
     "electricFieldY": 0.0,
     "magneticFieldZ": 0.0,
-    "airResistance": 0.10,
-    "height": 900,
-    "width": 1200
+    "airResistance": 0.10
   },
   "particles": [
     {

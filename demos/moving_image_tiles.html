@@ -26,9 +26,7 @@
 </body>
 
 <script type="module">
-  import RendererSimple from '../js/app/RenderSimple.js';
-  import AnimationLoop from '../js/app/AnimationLoop.js';
-  import MovingImageDots from '../js/app/MovingImagePlaid.js';
+  import MovingImagePlaid from '../js/app/MovingImagePlaid.js';
   import Particle from '../js/physics2D/Particle.js';
   import Vector2D from '../js/physics2D/Vector2D.js';
   import Page from '../js/app/Page.js';
@@ -42,30 +40,36 @@
     return canvas;
   }
 
-  class RenderMovingImageDots extends RendererSimple {
-    constructor(particles = [], springs = [], target, movingImageDots) {
-      super(particles, null, target);
-      this.movingImageDots = movingImageDots;
+  class RenderGridOfImages {
+    constructor(particles, canvas) {
+      this.particles = particles;
+      this.canvas = canvas;
       this.bgColor = 'rgb(253, 253, 250)';
+    }
+
+    render() {
+      const ctx = this.canvas.getContext('2d');
+      ctx.fillStyle = this.bgColor;
+      ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+      // Draw each particle's plaid image at its position
+      for (const particle of this.particles) {
+        this.paintParticle(ctx, particle);
+      }
     }
 
     paintParticle(ctx, particle) {
       if (!particle || !particle.pos) return;
       const x = particle.getX();
       const y = particle.getY();
-      // Draw the moving image scaled to fit 
-      // particle.plaidImage.step(); // Update the plaid image for this particle
-      // ctx.drawImage(particle.plaidImage.getCanvas(), x, y, 200, 200); // draw the animated image
-
       // draw the static image
       ctx.drawImage(particle.plaidImage, x, y, 200, 200);
     }
   }
 
   function makePlaidImage(width, height) {
-    const plaidImage = new MovingImageDots(width, height);
+    const plaidImage = new MovingImagePlaid(width, height);
     plaidImage.step();
-    // return plaidImage; // return the animated image
     return plaidImage.getCanvas();  // return the static canvas
   }
 
@@ -73,46 +77,33 @@
     try {
       const canvas = createCanvas(8000, 5000);
 
+      // Testing limits of large canvas rendering:
+      // Make a large grid of generated images and render into a large canvas.
+      // I'm using particles to store grid positions - they won't be animated, 
+      // just using them to hold x,y coordinates for the plaid images.
       const numPerRow = 40;
       const howMany = 1000;
-
-      // Make 2 large random particles
       const particles = [];
       for (let i = 0; i < howMany; i++) {
-        const name = `particle${i}`;
         const posX = (i % numPerRow) * 200;
         const posY = Math.floor(i / numPerRow) * 200;
-        const velX = (Math.random() - 0.5) * 30; // Random velocity between -25 and 25
-        const velY = (Math.random() - 0.5) * 30;
-        const mass = Math.random() * 9 + 1; // Random mass between 1 and 10
-        const radius = Math.random() * 50 + 100; // Random radius between 10 and 50
-        const color = `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
 
         particles.push(new Particle(
-          name,
-          new Vector2D(posX, posY), // random position
-          new Vector2D(velX, velY), // random velocity
-          new Vector2D(0, 0), // force
-          mass, // random mass
-          radius, // random radius
+          'na',
+          new Vector2D(posX, posY), // grid x,y position
+          new Vector2D(0, 0),
+          new Vector2D(0, 0),
+          0, 
+          0,
         ));
-        particles[i].setColor(color); // set random color
-        particles[i].plaidImage = makePlaidImage(200, 200); // Add a plaid image to each particle for rendering
+
+        // Add a plaid image to each particle for rendering
+        particles[i].plaidImage = makePlaidImage(200, 200);
       }
 
-      const movingImageDots = new MovingImageDots(300, 300);
-      movingImageDots.step();
-
-      const renderer = new RenderMovingImageDots(particles, null, canvas, movingImageDots);
+      const renderer = new RenderGridOfImages(particles, canvas);
       
-      // to animate the plaid pattern, repeatedly call render, which updates the moving image
-      // const animationLoop = new AnimationLoop(() => {
-      //   renderer.render();
-      // });
-      // animationLoop.start();
-      // window.LOOP = animationLoop; // Expose for debugging
-
-      // to just render the tiled pattern once without animation, call render directly
+      // Render the tiled pattern once without animation
       renderer.render();
 
       // Add keyboard shortcut to save canvas as PNG
@@ -123,7 +114,7 @@
         }
       });
 
-      console.log('String simulation started successfully!');
+      console.log('Simulation started successfully!');
     } catch (error) {
       console.error('Failed to initialize simulation:', error);
     }

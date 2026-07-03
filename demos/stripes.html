@@ -77,14 +77,14 @@
   }
 
   class RenderStripes extends RendererSimple {
-    constructor(particles = [], springs = [], target) {
-      super(particles, null, target);
+    constructor(sim, canvas) {
+      super(sim, canvas);
       this.bgColor = 'rgb(253, 253, 250)';
       // this.ctx.globalAlpha = 0.008; // nice blurry effect
       // this.ctx.globalAlpha = 0.02; // nice blurry effect with stripe alpha set to 0.5
       this.ctx.globalAlpha = 0.2; // nice blurry effect with stripe alpha set to 0.5
       // this.ctx.globalAlpha = 1.0; // opaque 
-      this.stripes = particles.map(p => new Stripe({
+      this.stripes = this.particles.map(p => new Stripe({
         widthBase: p.getRadius(),
         widthDelta: rand() * 30 + 5,
         position: p.getX(),
@@ -174,14 +174,14 @@
       engine.gravY = 0;
       engine.timeStep = 0.1;
 
-      const renderer = new RenderStripes(engine.particles, engine.springs, canvas);
+      const renderer = new RenderStripes(engine, canvas);
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
       const animationLoop = new AnimationLoop(engine, renderer);
       animationLoop.start();
 
       window.engine = engine; // Expose for debugging
 
-      console.log('String simulation started successfully!');
+      console.log('Simulation started successfully!');
     } catch (error) {
       console.error('Failed to initialize simulation:', error);
     }

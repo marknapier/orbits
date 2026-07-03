@@ -182,11 +182,8 @@
     clearBG = true;                     // if false, leaves motion trails
     violetColors = ["rgb(6, 2, 10)", "rgb(25, 10, 30)", "rgb(20, 5, 25)", "rgb(12, 0, 10)"];
 
-    constructor(particles = [], springs = null, canvas) {
-      super(particles, null, canvas);
-      this.canvas = canvas;
-      this.ctx = canvas.getContext("2d");
-      this.particles = particles;
+    constructor(sim, canvas) {
+      super(sim, canvas);
       this.yellowGreenPalette = null; // colors will be loaded in init()
 
       // High-DPI monitors, such as Retina displays, can have 2 or 3 times the pixel density of standard displays. 
@@ -455,11 +452,7 @@
 
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
 
-      // for debug
-      // const renderer = new RenderSimple(engine.particles, engine.springs, canvas);
-      // renderer.clear();
-
-      const renderer = new RenderVerticals(engine.particles, null, canvas);
+      const renderer = new RenderVerticals(engine, canvas);
       await renderer.init(); // load images for colors, textures, etc.
       renderer.bgColor = 'rgb(20, 0, 20)';
       renderer.opacity = 0.05;

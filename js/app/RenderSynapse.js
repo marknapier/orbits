@@ -3,15 +3,9 @@ import RenderSimple from './RenderSimple.js'
 export default class RenderSynapse extends RenderSimple {
   M = 10;
 
-  // particles: array, springs: array, target: HTMLCanvasElement or 2D context
-  constructor(particles = [], springs = [], target = null) {
-    super(particles, null, target)
-    this.particles = particles;
-    this.springs = springs;
-    this.mouseX = 0;
-    this.mouseY = 0;
+  constructor(sim, canvas) {
+    super(sim, canvas);
     this.bgColor = 'black';
-    this.setTarget(target);
   }
 
   render() {

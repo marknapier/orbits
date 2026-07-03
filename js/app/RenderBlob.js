@@ -38,11 +38,11 @@ export default class RenderBlob extends RenderSimple {
    * @param {CanvasRenderingContext2D} [opts.ctx]
    * @param {Array<any>} [opts.particles]
    */
-  constructor(canvas, springs = null, particles = []) {
-    super(particles, null, canvas)
+  constructor(sim, canvas) {
+    super(sim, canvas);
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
-    this.particles = particles;
+    this.particles = sim.particles;
 
     // Blob instance: set number of steps to curve, more steps = smoother curve but more CPU
     this.BB = new Blob(20);

@@ -150,12 +150,12 @@
       engine.detectCollisions = false;
       engine.timeStep *= Page.scaleFactor; // scale time step to keep velocity in proportion to canvas size
 
-      // const renderer = new RenderLenses(engine.particles, engine.springs, canvas);
-      // const renderer = new RenderLensesHelloYellow(engine.particles, engine.springs, canvas);
-      // const renderer = new RenderLensesNoVioletFill(engine.particles, engine.springs, canvas);
-      // const renderer = new RenderLensesBlueGreenWithGuides(engine.particles, engine.springs, canvas);
-      // const renderer = new RenderLensesBlueGreenWithGuidesOnlyArcs(engine.particles, engine.springs, canvas);
-      const renderer = new RenderLensesGreenArcs(engine.particles, engine.springs, canvas);
+      // const renderer = new RenderLenses(engine, canvas);
+      // const renderer = new RenderLensesHelloYellow(engine, canvas);
+      // const renderer = new RenderLensesNoVioletFill(engine, canvas);
+      // const renderer = new RenderLensesBlueGreenWithGuides(engine, canvas);
+      // const renderer = new RenderLensesBlueGreenWithGuidesOnlyArcs(engine, canvas);
+      const renderer = new RenderLensesGreenArcs(engine, canvas);
       await renderer.init(Page.scaleFactor);
       renderer.clear();
 

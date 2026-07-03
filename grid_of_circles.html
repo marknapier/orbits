@@ -49,8 +49,8 @@
    * Draw circles, show the intersection points and crescent shapes.
    */
   class RenderCircles extends RenderSimple {
-    constructor(particles = [], springs = [], target, radiusW = 10, radiusH = 10) {
-      super(particles, null, target);
+    constructor(sim, target, radiusW = 10, radiusH = 10) {
+      super(sim, target);
       this.radiusW = radiusW;
       this.radiusH = radiusH;
       this.clearBG = false;
@@ -283,12 +283,12 @@
       engine.addParticle(agitator2);
 
       // renderer and animation loop
-      const renderer = new RenderCircles(engine.particles, engine.springs, canvas, springLengthX / 2.1, springLengthY / 2.1);
+      const renderer = new RenderCircles(engine, canvas, springLengthX / 2.1, springLengthY / 2.1);
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
       const animationLoop = new AnimationLoop(engine, renderer);
       animationLoop.start();
 
-      console.log('String simulation started successfully!');
+      console.log('Simulation started successfully!');
     } catch (error) {
       console.error('Failed to initialize simulation:', error);
     }

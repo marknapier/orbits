@@ -145,7 +145,7 @@
       engine.detectCollisions = false;
       engine.timeStep *= Page.scaleFactor; // scale time step to keep velocity in proportion to canvas size
 
-      const renderer = new RenderLensesOrig(engine.particles, engine.springs, canvas);
+      const renderer = new RenderLensesOrig(engine, canvas);
       await renderer.init(Page.scaleFactor);
       renderer.clear();
 

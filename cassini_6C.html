@@ -196,11 +196,8 @@
     violetColors = ["rgb(6, 2, 10)", "rgb(25, 10, 30)", "rgb(20, 5, 25)", "rgb(12, 0, 10)"];
     orangeColors = ["rgb(250, 110, 0)", "rgb(245, 115, 0)", "rgb(255, 110, 10)", "rgb(240, 108, 8)", "rgb(230, 100, 10)", "rgb(240, 100, 5)", "rgb(235, 85, 0)", "rgb(255, 105, 80)",];
 
-    constructor(particles = [], springs = null, canvas) {
-      super(particles, null, canvas);
-      this.canvas = canvas;
-      this.ctx = canvas.getContext("2d");
-      this.particles = particles;
+    constructor(sim, canvas) {
+      super(sim, canvas);
       this.titanBlurPalette = null; // colors will be loaded in init()
       this.pinkSkinPalette = null; // colors will be loaded in init()
       this.fleshtonesPalette = null; // colors will be loaded in init()
@@ -486,7 +483,7 @@
 
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
 
-      const renderer = new RenderVerticals(engine.particles, null, canvas);
+      const renderer = new RenderVerticals(engine, canvas);
       await renderer.init(); // load images for colors, textures, etc.
       renderer.bgColor = 'rgb(20, 0, 20)';
       renderer.opacity = 0.05;

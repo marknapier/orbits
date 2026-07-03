@@ -86,8 +86,8 @@
 
 
     class RenderCouchWithDots extends RenderSimple {
-      constructor(particles = [], springs = [], target) {
-        super(particles, null, target);
+      constructor(sim, canvas) {
+        super(sim, canvas);
         this.bgColor = 'rgb(250, 250, 250)';
         this.movingImageDots = new MovingImageDots(700, 700);
         this.movingImagePlaid = new MovingImagePlaid(700, 700);
@@ -272,7 +272,7 @@
         engine.margin = 0;
         engine.gravY = 0;
 
-        const renderer = new RenderCouchWithDots(engine.particles, engine.springs, canvas);
+        const renderer = new RenderCouchWithDots(engine, canvas);
         await renderer.init();
 
         const mouseHandler = new MouseHandler(canvas, engine, renderer);

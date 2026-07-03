@@ -154,7 +154,7 @@
         blob.addKnot({ x: particle.pos.x, y: particle.pos.y });
       }
 
-      const renderer = new Renderer(engine.particles, engine.springs, canvas);
+      const renderer = new Renderer(engine, canvas);
       
       // Wrap the renderer's render method to also draw the blob
       const originalRender = renderer.render.bind(renderer);
@@ -175,7 +175,7 @@
 
       window.engine = engine; // Expose for debugging
 
-      console.log('String simulation started successfully!');
+      console.log('Simulation started successfully!');
     } catch (error) {
       console.error('Failed to initialize simulation:', error);
     }

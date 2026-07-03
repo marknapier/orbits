@@ -45,11 +45,11 @@
   }
 
   class RenderPlaid {
-    constructor(target) {
-      this.canvas = target;
-      this.ctx = target.getContext('2d');
-      this.width = target.width;
-      this.height = target.height;
+    constructor(canvas) {
+      this.canvas = canvas;
+      this.ctx = canvas.getContext('2d');
+      this.width = canvas.width;
+      this.height = canvas.height;
 
       const stripeConfig = [
         { // background stripe is full width, and has no oscWidth so it always fills full width
@@ -169,7 +169,7 @@
       });
       animationLoop.start();
 
-      console.log('String simulation started successfully!');
+      console.log('Simulation started successfully!');
     } catch (error) {
       console.error('Failed to initialize simulation:', error);
     }

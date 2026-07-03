@@ -195,7 +195,7 @@ canvas. Blurred neutral aqua tones and dark red-violet.
     orangeColors = ["rgb(250, 110, 0)", "rgb(245, 115, 0)", "rgb(255, 110, 10)", "rgb(240, 108, 8)", "rgb(230, 100, 10)", "rgb(240, 100, 5)", "rgb(235, 85, 0)", "rgb(255, 105, 80)",];
 
     constructor(sim, canvas) {
-      super(sim.particles, null, canvas);
+      super(sim, canvas);
       this.yellowGreenPalette = null; // colors will be loaded in init()
 
       // High-DPI monitors, such as Retina displays, can have 2 or 3 times the pixel density of standard displays. 

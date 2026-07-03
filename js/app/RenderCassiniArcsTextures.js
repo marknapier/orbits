@@ -10,11 +10,8 @@ export default class RenderCassiniArcsTextures extends RenderSimple {
   clearBG = true;                     // if false, leaves motion trails
   violetColors = ["rgb(25, 15, 30)", "rgb(20, 10, 25)", "rgb(15, 5, 20)", "rgb(10, 0, 15)"];
 
-  constructor(particles = [], springs = null, canvas) {
-    super(particles, null, canvas);
-    this.canvas = canvas;
-    this.ctx = canvas.getContext("2d");
-    this.particles = particles;
+  constructor(sim, canvas) {
+    super(sim, canvas);
     this.yellowGreenPalette = null; // colors will be loaded in init()
     this.woodPattern = null;
     this.bgTexture = null;

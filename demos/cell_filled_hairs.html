@@ -272,8 +272,8 @@
 
 
   class RenderSmiley extends RenderSimple {
-    constructor(particles = [], springs = [], target, wheel1, smileyface, hand) {
-      super(particles, null, target);
+    constructor(sim, canvas, wheel1, smileyface, hand) {
+      super(sim, canvas);
       this.wheel1 = wheel1;
       this.smileyface = smileyface;
       this.hand = hand;
@@ -341,7 +341,7 @@
       const smileyface = await ImageLoader.loadImage('../images/smiley_noborder.png');
       const gloveHand = await ImageLoader.loadImage('../images/mickey_mouse_glove.gif');
 
-      const renderer = new RenderSmiley(engine.particles, engine.springs, canvas, wheel1, smileyface, gloveHand);
+      const renderer = new RenderSmiley(engine, canvas, wheel1, smileyface, gloveHand);
 
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
       const animationLoop = new AnimationLoop(() => {
@@ -352,7 +352,7 @@
       });
       animationLoop.start();
 
-      console.log('String simulation started successfully!');
+      console.log('Simulation started successfully!');
     } catch (error) {
       console.error('Failed to initialize simulation:', error);
     }

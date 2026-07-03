@@ -257,12 +257,12 @@
       engine.detectCollisions = false;
 
       // main drawing canvas
-      const renderer = new RenderSynapse(engine.particles, engine.springs, canvas );
+      const renderer = new RenderSynapse(engine, canvas );
       renderer.clear();
 
       // overlay canvas, on top of main drawing
       const canvas2 = Page.createCanvas(canvas.width, canvas.height, 'sim2')
-      const renderer2 = new RenderSynapseOverlay(engine.particles, engine.springs, canvas2 );
+      const renderer2 = new RenderSynapseOverlay(engine, canvas2 );
 
       // mouse listens for events on the top canvas
       const mouseHandler = new MouseHandler(canvas2, engine, renderer2);

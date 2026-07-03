@@ -42,8 +42,8 @@
   }
 
   class RenderPlaid extends RendererSimple {
-    constructor(particles = [], springs = [], target) {
-      super(particles, null, target);
+    constructor(sim, canvas) {
+      super(sim, canvas);
       this.bgColor = 'rgb(253, 253, 250)';
       this.ctx.globalAlpha = 0.4;
     }
@@ -108,14 +108,14 @@
       engine.addParticles(particles);
       engine.gravY = 0;
 
-      const renderer = new RenderPlaid(engine.particles, engine.springs, canvas);
+      const renderer = new RenderPlaid(engine, canvas);
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
       const animationLoop = new AnimationLoop(engine, renderer);
       animationLoop.start();
 
       window.engine = engine; // Expose for debugging
 
-      console.log('String simulation started successfully!');
+      console.log('Simulation started successfully!');
     } catch (error) {
       console.error('Failed to initialize simulation:', error);
     }

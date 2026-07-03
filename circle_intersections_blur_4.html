@@ -47,14 +47,13 @@
   }
 
   class RenderIntersections extends RenderSimple {
-    constructor(particles = [], springs = [], target, movingImageDots) {
-      super(particles, null, target);
-      this.movingImageDots = movingImageDots;
+    constructor(sim, canvas) {
+      super(sim, canvas);
       this.bgColor = 'white';
       // not visible, used as source material for final canvas
       this.offCanvas = document.createElement('canvas');
-      this.offCanvas.width = target.width;
-      this.offCanvas.height = target.height;
+      this.offCanvas.width = canvas.width;
+      this.offCanvas.height = canvas.height;
       this.offCtx = this.offCanvas.getContext('2d');
       // document.body.appendChild(this.offCanvas); // for debugging
       // clear to white one time at the start
@@ -299,7 +298,7 @@
       engine.gravY = 0;
       engine.timeStep = .05;
 
-      const renderer = new RenderIntersections(engine.particles, engine.springs, canvas);
+      const renderer = new RenderIntersections(engine, canvas);
       await renderer.init();
 
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
@@ -311,7 +310,7 @@
 
       window.engine = engine; // Expose for debugging
 
-      console.log('String simulation started successfully!');
+      console.log('Simulation started successfully!');
     } catch (error) {
       console.error('Failed to initialize simulation:', error);
     }

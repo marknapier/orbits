@@ -198,12 +198,8 @@ when working with an offscreen canvas. See comments in constructor(), init(), an
     violetColors = ["color(display-p3 0.020 0.004 0.048)", "color(display-p3 0.086 0.028 0.135)", "color(display-p3 0.066 0.012 0.112)", "color(display-p3 0.040 0 0.048)"];
     orangeColors = ["color(display-p3 1.0 0.39 0)", "color(display-p3 1.0 0.41 0)", "color(display-p3 1.0 0.39 0.01)", "color(display-p3 0.98 0.37 0.01)", "color(display-p3 0.95 0.34 0.01)", "color(display-p3 0.98 0.34 0)", "color(display-p3 0.97 0.28 0)", "color(display-p3 1.0 0.36 0.26)",];
 
-    constructor(particles = [], springs = null, canvas) {
-      super(particles, null, canvas); // sets this.canvas and this.ctx
-      this.canvas = canvas;
-      // this.ctx = canvas.getContext("2d");
-      this.ctx = canvas.getContext("2d", { colorSpace: "display-p3" });
-      this.particles = particles;
+    constructor(sim, canvas) {
+      super(sim, canvas);
       this.titanBlurPalette = null; // colors will be loaded in init()
       this.fleshtonesPalette = null; // colors will be loaded in init()
       this.woodPanel = null; // image will be loaded in init()
@@ -493,7 +489,7 @@ when working with an offscreen canvas. See comments in constructor(), init(), an
 
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
 
-      const renderer = new RenderVerticals(engine.particles, null, canvas);
+      const renderer = new RenderVerticals(engine, canvas);
       await renderer.init(); // load images for colors, textures, etc.
       renderer.bgColor = 'color(display-p3 0.09 0 0.11)';
       renderer.opacity = 0.05;

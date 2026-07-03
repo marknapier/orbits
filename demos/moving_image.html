@@ -44,8 +44,8 @@
   }
 
   class RenderMovingImageDots extends RendererSimple {
-    constructor(particles = [], springs = [], target, movingImageDots) {
-      super(particles, null, target);
+    constructor(sim, canvas, movingImageDots) {
+      super(sim, canvas);
       this.movingImageDots = movingImageDots;
       this.bgColor = 'rgb(253, 253, 250)';
     }
@@ -107,7 +107,7 @@
       const movingImageDots = new MovingImageDots(800, 800);
       movingImageDots.step();
 
-      const renderer = new RenderMovingImageDots(engine.particles, engine.springs, canvas, movingImageDots);
+      const renderer = new RenderMovingImageDots(engine, canvas, movingImageDots);
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
       const animationLoop = new AnimationLoop(() => {
         engine.step();
@@ -116,7 +116,7 @@
       });
       animationLoop.start();
 
-      console.log('String simulation started successfully!');
+      console.log('Simulation started successfully!');
     } catch (error) {
       console.error('Failed to initialize simulation:', error);
     }

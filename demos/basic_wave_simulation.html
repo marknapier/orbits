@@ -124,7 +124,7 @@
       agitator2.setColor('rgb(0, 0, 255)'); // green
       engine.addParticle(agitator2);
 
-      const renderer = new RenderCurves(engine.particles, engine.springs, canvas);
+      const renderer = new RenderCurves(engine, canvas);
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
       const animationLoop = new AnimationLoop(() => {
         // the points that make up the wave, not including the two agitators
@@ -134,7 +134,7 @@
       });
       animationLoop.start();
 
-      console.log('String simulation started successfully!');
+      console.log('Simulation started successfully!');
     } catch (error) {
       console.error('Failed to initialize simulation:', error);
     }

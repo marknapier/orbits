@@ -32,7 +32,7 @@ export default class PendulumSimulation {
     this.createParticles();
     
     // Create renderer
-    this.renderer = new Renderer(this.engine.particles, this.engine.springs, this.canvas);
+    this.renderer = new Renderer(this.engine, this.canvas);
     
     // Create mouse handler
     this.mouseHandler = new MouseHandler(this.canvas, this.engine, this.renderer);

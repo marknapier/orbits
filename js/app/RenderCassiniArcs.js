@@ -10,10 +10,7 @@ export default class RenderCassiniArcs extends RenderSimple {
   violetColors = ["rgb(25, 15,40)", "rgb(20, 10, 35)", "rgb(15, 5, 30)", "rgb(10, 0, 25)"];
 
   constructor(sim, canvas) {
-    super(sim.particles, sim.springs, canvas);
-    this.canvas = canvas;
-    this.ctx = canvas.getContext("2d");
-    this.particles = sim.particles;
+    super(sim, canvas);
     this.yellowGreenPalette = null; // colors will be loaded in init()
 
     //!!! The renderer needs to know the dimensions of the physics simulation space, which may be different from the canvas size.

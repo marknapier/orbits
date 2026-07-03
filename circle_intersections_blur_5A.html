@@ -19,7 +19,6 @@ the simulation at the same speed as circle intersections 4 -->
   import RenderSimple from '../js/app/RenderSimple.js';
   import MouseHandler from '../js/app/MouseHandler.js';
   import AnimationLoop from '../js/app/AnimationLoop.js';
-  import MovingImageDots from '../js/app/MovingImageDots.js';
   import Particle from '../js/physics2D/Particle.js';
   import Vector2D from '../js/physics2D/Vector2D.js';
   import Circles from '../js/app/Circles.js';
@@ -27,14 +26,13 @@ the simulation at the same speed as circle intersections 4 -->
   import Page from '../js/app/Page.js';
 
   class RenderIntersections extends RenderSimple {
-    constructor(particles = [], springs = [], target, movingImageDots) {
-      super(particles, null, target);
-      this.movingImageDots = movingImageDots;
+    constructor(sim, canvas) {
+      super(sim, canvas);
       this.bgColor = 'white';
       // not visible, used as source material for final canvas
       this.offCanvas = document.createElement('canvas');
-      this.offCanvas.width = target.width;
-      this.offCanvas.height = target.height;
+      this.offCanvas.width = canvas.width;
+      this.offCanvas.height = canvas.height;
       this.offCtx = this.offCanvas.getContext('2d');
       // clear to white one time at the start
       this.clear();
@@ -300,7 +298,7 @@ the simulation at the same speed as circle intersections 4 -->
       // that creates visual interest.
       engine.timeStep = .05; // slower
 
-      const renderer = new RenderIntersections(engine.particles, engine.springs, canvas);
+      const renderer = new RenderIntersections(engine, canvas);
       await renderer.init();
 
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
@@ -313,7 +311,7 @@ the simulation at the same speed as circle intersections 4 -->
       // setup screen capture and pause keys, also stop/start sin curve generators
       Page.setupKeyEvents(canvas, animationLoop, 'circle_intersections_blur_5');
 
-      console.log('String simulation started successfully!');
+      console.log('Simulation started successfully!');
     } catch (error) {
       console.error('Failed to initialize simulation:', error);
     }

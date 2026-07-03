@@ -196,10 +196,7 @@
     violetColors = ["rgb(2, 2, 10)", "rgb(10, 3, 20)", "rgb(15, 5, 15)", "rgb(5, 0, 9)"];
 
     constructor(sim, canvas) {
-      super(sim.particles, null, canvas);
-      this.canvas = canvas;
-      this.ctx = canvas.getContext("2d");
-      this.particles = sim.particles;
+      super(sim, canvas);
       this.titanBlurPalette = null; // colors will be loaded in init()
       this.yellowGreenPalette = null;
       this.yellowOrangePalette = null;

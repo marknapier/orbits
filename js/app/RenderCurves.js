@@ -1,15 +1,9 @@
 import RenderSimple from './RenderSimple.js'
 
 export default class RenderCurves extends RenderSimple {
-  // particles: array, springs: array, target: HTMLCanvasElement or 2D context
-  constructor(particles = [], springs = [], target = null) {
-    super(particles, null, target)
-    this.particles = particles;
-    this.springs = springs;
-    this.mouseX = 0;
-    this.mouseY = 0;
+  constructor(sim, canvas) {
+    super(sim, canvas);
     this.bgColor = 'rgba(255, 245, 230, 0.1)';
-    this.setTarget(target);
   }
 
   render(curveParticles = []) {

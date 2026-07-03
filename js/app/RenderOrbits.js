@@ -1,6 +1,7 @@
 import Particle from '../physics2D/Particle.js';
+import RenderSimple from './RenderSimple.js';
 
-export default class RenderOrbits {
+export default class RenderOrbits extends RenderSimple {
   // Configurable options
   bgColor = "rgb(60,0,0)";          // background color
   lineWidth = 10;                     // outline thickness offset
@@ -9,10 +10,8 @@ export default class RenderOrbits {
   yellowColors = ["rgb(255, 255, 0)", "rgb(240, 240, 10)", "rgb(210, 210, 50)", "rgb(250, 250, 100)"];
   violetColors = ["rgb(25, 15, 30)", "rgb(20, 10, 25)", "rgb(15, 5, 20)", "rgb(10, 0, 15)"];
 
-  constructor(particles = [], springs = null, canvas) {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext("2d");
-    this.particles = particles;
+  constructor(sim, canvas) {
+    super(sim, canvas);
   }
 
   setParticles(particles) {

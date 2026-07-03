@@ -50,7 +50,7 @@
       const loader = new SimLoader(engine);
       await loader.loadSimulation('../scripts/four_dots.json');
 
-      const renderer = new Renderer(engine.particles, engine.springs, canvas);
+      const renderer = new Renderer(engine, canvas);
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
       const animationLoop = new AnimationLoop(engine, renderer);
       animationLoop.start();

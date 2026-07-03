@@ -82,8 +82,8 @@
   }
 
   class ScaledRenderer extends Renderer {
-    constructor(particles, springs, canvas, scale) {
-      super(particles, springs, canvas);
+    constructor(sim, canvas, scale) {
+      super(sim, canvas);
       this.scale = scale;
     }
     render() {
@@ -95,7 +95,6 @@
   }
 
   function buildSim(physicsWidth, physicsHeight, canvasId, canvasScale = 1) {
-    // const canvas = createCanvas(physicsWidth * canvasScale, physicsHeight * canvasScale, canvasId);
     const canvas = createCanvasDPI(physicsWidth * canvasScale, physicsHeight * canvasScale, canvasId);
 
     const particles = [];
@@ -117,7 +116,7 @@
     engine.gravY = 0;
     engine.timeStep = .0166;
 
-    const renderer = new ScaledRenderer(engine.particles, engine.springs, canvas, canvasScale * window.devicePixelRatio);
+    const renderer = new ScaledRenderer(engine, canvas, canvasScale * window.devicePixelRatio);
     const animationLoop = new AnimationLoop(() => {
       engine.step();
       renderer.render();

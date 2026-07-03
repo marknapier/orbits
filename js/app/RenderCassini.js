@@ -10,11 +10,11 @@ export default class RenderCassini extends RenderSimple {
   yellowColors = ["rgb(255, 255, 0)", "rgb(240, 240, 10)", "rgb(210, 210, 50)", "rgb(250, 250, 100)"];
   violetColors = ["rgb(25, 15, 30)", "rgb(20, 10, 25)", "rgb(15, 5, 20)", "rgb(10, 0, 15)"];
 
-  constructor(particles = [], springs = [], canvas) {
-    super(particles, null, canvas);
+  constructor(sim, canvas) {
+    super(sim, canvas);
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
-    this.particles = particles;
+    this.particles = sim.particles;
     this.texturePattern = this.makeTexurePattern();
   }
 

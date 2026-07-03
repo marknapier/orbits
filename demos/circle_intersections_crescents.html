@@ -30,7 +30,6 @@
   import RenderSimple from '../js/app/RenderSimple.js';
   import MouseHandler from '../js/app/MouseHandler.js';
   import AnimationLoop from '../js/app/AnimationLoop.js';
-  import MovingImageDots from '../js/app/MovingImageDots.js';
   import Particle from '../js/physics2D/Particle.js';
   import Spring from '../js/physics2D/Spring.js';
   import Vector2D from '../js/physics2D/Vector2D.js';
@@ -47,9 +46,8 @@
   }
 
   class RenderIntersections extends RenderSimple {
-    constructor(particles = [], springs = [], target, movingImageDots) {
-      super(particles, null, target);
-      this.movingImageDots = movingImageDots;
+    constructor(sim, canvas) {
+      super(sim, canvas);
       this.bgColor = 'rgb(253, 253, 250)';
     }
 
@@ -258,7 +256,7 @@
       engine.timeStep = .05;
       engine.gravConst = 10;
 
-      const renderer = new RenderIntersections(engine.particles, engine.springs, canvas);
+      const renderer = new RenderIntersections(engine, canvas);
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
       const animationLoop = new AnimationLoop(() => {
         // Update oscillating radii for the first two particles
@@ -273,7 +271,7 @@
 
       window.engine = engine; // Expose for debugging
 
-      console.log('String simulation started successfully!');
+      console.log('Simulation started successfully!');
     } catch (error) {
       console.error('Failed to initialize simulation:', error);
     }

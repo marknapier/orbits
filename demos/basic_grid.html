@@ -116,7 +116,7 @@
       engine.addSpring(new Spring(particles[0], particles[ROWS * COLS - 1], 5, 1, cornerDiagLength));
       engine.addSpring(new Spring(particles[COLS - 1], particles[(ROWS - 1) * COLS], 5, 1, cornerDiagLength));
 
-      const renderer = new Renderer(engine.particles, engine.springs, canvas);
+      const renderer = new Renderer(engine, canvas);
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
       const animationLoop = new AnimationLoop(engine, renderer);
       animationLoop.start();

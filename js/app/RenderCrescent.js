@@ -1,15 +1,8 @@
 import RenderSimple from './RenderSimple.js'
 
 export default class RenderCrescent extends RenderSimple {
-  // particles: array, springs: array, target: HTMLCanvasElement or 2D context
-  constructor(particles = [], springs = [], target = null) {
-    super(particles, null, target)
-    this.particles = particles;
-    this.springs = springs;
-    this.mouseX = 0;
-    this.mouseY = 0;
-    this.bgColor = 'white';
-    this.setTarget(target);
+  constructor(sim, canvas) {
+    super(sim, canvas);
   }
 
   render() {

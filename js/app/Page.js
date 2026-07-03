@@ -67,7 +67,7 @@ export default class Page {
     const canvasWidth = width / height >= aspectRatio ? Math.floor(height * aspectRatio) : width;
     const canvasHeight = width / height >= aspectRatio ? height : Math.floor(width / aspectRatio);
     console.log(`Requested canvas dimensions: ${width}x${height}`);
-    console.log(`aspectRatio: ${aspectRatio}, calculated screen dimensions: ${canvasWidth}x${canvasHeight}`);
+    console.log(`Calculated screen dimensions: ${canvasWidth}x${canvasHeight}, aspectRatio: ${aspectRatio}`);
 
     if (!scaleForDPI) {
       this.dpiRatio = 1; // override DPI scaling if not desired
@@ -87,7 +87,7 @@ export default class Page {
 
     document.body.appendChild(canvas);
     Page.scaleFactor = Math.min(canvas.height, canvas.width) / 1080;
-    console.log(`Canvas created with dimensions ${canvas.width}x${canvas.height}, scaleFactor ${Page.scaleFactor.toFixed(2)}`);
+    console.log(`Canvas created with internal dimensions ${canvas.width}x${canvas.height}, scaleFactor ${Page.scaleFactor.toFixed(2)}`);
     return canvas;
   }
 

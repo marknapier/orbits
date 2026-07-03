@@ -255,7 +255,7 @@
         'rgba(120, 160, 255, 0.03)',  // line2 ∩ line3
       ];
 
-      const renderer = new RenderCurves(engine.particles, engine.springs, canvas);
+      const renderer = new RenderCurves(engine, canvas);
       const ctx = canvas.getContext('2d');
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
       const animationLoop = new AnimationLoop(() => {
@@ -289,7 +289,7 @@
       });
       animationLoop.start();
 
-      console.log('String simulation started successfully!');
+      console.log('Simulation started successfully!');
     } catch (error) {
       console.error('Failed to initialize simulation:', error);
     }

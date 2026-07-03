@@ -25,8 +25,6 @@ export default class MouseHandler {
     this.sim = sim;
     this.renderer = renderer || null; // Use provided renderer if available
     this.activeCursor = 'crosshair';
-
-    //!!!
     // The canvas size on screen (in CSS pixels) may differ from the actual canvas size in pixels if we are scaling for high-DPI displays. 
     // For mouse position handling, we need the screen size of the canvas.
     this.canvasScreenWidth = this.getCanvasScreenSize(canvas).width;
@@ -72,12 +70,6 @@ export default class MouseHandler {
 
   mouseDown(e) {
     const pos = this.getMousePos(e);
-    console.log('Mouse down at:', pos, this.sim.particles);
-/*
-    scaleFactorX = 1.0854  should be 1.2072 
-    mouseX 1187  simx 1288 (not detected as near particle, but should be near p1)
-    mouseX 1321  simx 1433 (detected as near particle, but mouse is way off from scaled p1 position)
-*/
     this.sim.mousePressed(pos.simX, pos.simY);
   }
 

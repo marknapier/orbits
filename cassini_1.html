@@ -123,7 +123,7 @@
 
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
 
-      const renderer = new RenderCassini(engine.particles, null, canvas );
+      const renderer = new RenderCassini(engine, canvas );
       const RB = renderer;
       RB.bgColor = 'rgb(20, 20, 20)';
       RB.opacity = 0.08;

@@ -75,14 +75,14 @@
       engine.addParticles(particles);
       engine.gravY = 0;
 
-      const renderer = new Renderer(engine.particles, engine.springs, canvas);
+      const renderer = new Renderer(engine, canvas);
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
       const animationLoop = new AnimationLoop(engine, renderer);
       animationLoop.start();
 
       window.engine = engine; // Expose for debugging
 
-      console.log('String simulation started successfully!');
+      console.log('Simulation started successfully!');
     } catch (error) {
       console.error('Failed to initialize simulation:', error);
     }
