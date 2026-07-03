@@ -6,15 +6,16 @@ export default class Page {
     this.canvasScreenWidth = 800; // the dimensions of the canvas element as it appears on the screen - may be smaller than the actual size for high-DPI displays
     this.canvasScreenHeight = 600;
 
-    // High-DPI monitors, such as Retina displays, can have 2 or 3 times the pixel density of standard displays. 
-    // To ensure our canvas looks crisp on these displays, we scale up the canvas dimensions proportionally 
-    // to the device pixel ratio, creating a larger image. The CSS width and height are set to the original 
-    // dimensions to maintain the intended size on the page. 
-    // Rendering needs to be scaled accordingly as well to draw into the larger canvas e.g.
-    // ctx.scale(Page.dpiRatio, Page.dpiRatio);
+    // High-DPI monitors, such as Retina displays, can have 2 or 3 times the pixel density 
+    // of standard displays. To ensure our canvas looks crisp on these displays, we can 
+    // scale up the canvas internal pixel dimensions proportionally to the device pixel ratio, 
+    // creating a larger image. The CSS width and height are set to the original requested
+    // screen dimensions to maintain the intended size on the page. 
+    // Rendering needs to be scaled accordingly as well to draw into the larger canvas.
+    // See notes in RenderSimple.js for more details on scaling the rendering context.
     this.dpiRatio = window.devicePixelRatio || 1;
     this.scaleFactor = 1; // how large the artwork appears onscreen relative to its original size of 1080px - Can be used to scale line widths proportionally to canvas sizes
-    console.log('Device Pixel Ratio:', this.dpiRatio);
+    console.log('window.devicePixelRatio:', this.dpiRatio);
   }
 
   /**
@@ -29,7 +30,6 @@ export default class Page {
    * @param {*} height 
    * @param {*} id - The ID to assign to the created canvas (optional, default is 'sim')
    * @returns HTMLCanvasElement
-
    */
   static createCanvas(width, height, id = 'sim') {
     const aspectRatio = 16 / 10;

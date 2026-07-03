@@ -110,16 +110,16 @@
 
   async function loadAndRunSimulation() {
     try {
-      const canvas = createCanvas(window.innerWidth, window.innerHeight);
+      const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight, 'sim', false);
 
       const engine = new PhysicsEngine();
-      engine.setDimensions(canvas.width, canvas.height);
+      engine.setDimensions(1504, 846);
       engine.detectCollisions = false;
-      engine.timeStep *= (Page.scaleFactor || 1); // scale time step to keep velocity in proportion to canvas size
 
+      //!!! center the model in the physics space, not the canvas internal pixel or screen space 
       const model = new Model();
       model.parseConfig(modelJSON);
-      model.centerAt(canvas.width / 2.2, canvas.height/2);
+      model.centerAt(engine.getWidth() / 2.2, engine.getHeight()/2);
 
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
 

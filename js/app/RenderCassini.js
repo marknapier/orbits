@@ -12,10 +12,8 @@ export default class RenderCassini extends RenderSimple {
 
   constructor(sim, canvas) {
     super(sim, canvas);
-    this.canvas = canvas;
-    this.ctx = canvas.getContext("2d");
-    this.particles = sim.particles;
     this.texturePattern = this.makeTexurePattern();
+    this.ctx.scale(this.totalScale, this.totalScale);
   }
 
   setParticles(particles) {

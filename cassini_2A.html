@@ -161,21 +161,21 @@
       super(sim, canvas);
       this.yellowGreenPalette = null; // colors will be loaded in init()
 
-      this.width = sim.getWidth();
-      this.height = sim.getHeight();
-      //!!!
-      // scale up if the canvas was created at high resolution for high DPI screens
-      // AND scale from physics space to screen space.
-      this.dpiRatio = RenderSimple.getCanvasDPIRatio(this.canvas);
+      // this.width = sim.getWidth();
+      // this.height = sim.getHeight();
+      // //!!!
+      // // scale up if the canvas was created at high resolution for high DPI screens
+      // // AND scale from physics space to screen space.
+      // this.dpiRatio = RenderSimple.getCanvasDPIRatio(this.canvas);
 
-      //!!! get the screen to physics ratio
-      this.canvasScreenSize = RenderSimple.getCanvasScreenSize(this.canvas);
-      this.canvasScreenToSimRatioH = this.canvasScreenSize.height / sim.getHeight();
-      // this.canvasScreenToSimRatioW = this.canvasScreenSize.width / sim.getWidth();
+      // //!!! get the screen to physics ratio
+      // this.canvasScreenSize = RenderSimple.getCanvasScreenSize(this.canvas);
+      // this.canvasScreenToSimRatioH = this.canvasScreenSize.height / sim.getHeight();
+      // // this.canvasScreenToSimRatioW = this.canvasScreenSize.width / sim.getWidth();
 
-      console.log('Canvas DPI ratio:', this.dpiRatio);
-      console.log('Screen to physics ratio:', this.canvasScreenToSimRatioH, this.canvasScreenToSimRatioW);
-      this.ctx.scale(this.dpiRatio * this.canvasScreenToSimRatioH, this.dpiRatio * this.canvasScreenToSimRatioH);
+      // console.log('Canvas DPI ratio:', this.dpiRatio);
+      // console.log('Screen to physics ratio:', this.canvasScreenToSimRatioH, this.canvasScreenToSimRatioW);
+      this.ctx.scale(this.totalScale, this.totalScale);
     }
 
     setParticles(particles) {

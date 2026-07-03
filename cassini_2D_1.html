@@ -198,18 +198,6 @@
       // this.dpiRatio = window.devicePixelRatio || 1;
       // this.ctx.scale(this.dpiRatio, this.dpiRatio); // Scale context for high-DPI displays
 
-
-
-
-      this.dpiRatio = RenderSimple.getCanvasDPIRatio(this.canvas);
-
-      //!!! get the screen to physics ratio
-      this.canvasScreenSize = RenderSimple.getCanvasScreenSize(this.canvas);
-      this.canvasScreenToSimRatioH = this.canvasScreenSize.height / sim.getHeight();
-
-      // The final amount we'll scale by, including the DPI ratio and the screen-to-physics ratio.
-      this.totalScale = this.dpiRatio * this.canvasScreenToSimRatioH;
-
       // Make an offscreen canvas for drawing - will be copied to display canvas in parts
       this.offscreenCanvas = Page.createOffscreenCanvasDPI(this.canvasScreenSize.width, this.canvasScreenSize.height, 'offscreen');
 

@@ -198,18 +198,6 @@ canvas. Blurred neutral aqua tones and dark red-violet.
       super(sim, canvas);
       this.yellowGreenPalette = null; // colors will be loaded in init()
 
-      // High-DPI monitors, such as Retina displays, can have 2 or 3 times the pixel density of standard displays. 
-      // To ensure our canvas looks crisp on these displays, we scale it up proportionally to the device pixel ratio. 
-      // (see Page.createCanvas()). 
-      this.dpiRatio = RenderSimple.getCanvasDPIRatio(this.canvas);
-
-      //!!! get the screen to physics ratio
-      this.canvasScreenSize = RenderSimple.getCanvasScreenSize(this.canvas);
-      this.canvasScreenToSimRatioH = this.canvasScreenSize.height / sim.getHeight();
-
-      // The final amount we'll scale by, including the DPI ratio and the screen-to-physics ratio.
-      this.totalScale = this.dpiRatio * this.canvasScreenToSimRatioH;
-
       // Make an offscreen canvas for drawing - will be copied to display canvas in parts
       this.offscreenCanvas = Page.createOffscreenCanvasDPI(this.canvasScreenSize.width, this.canvasScreenSize.height, 'offscreen');
 

@@ -40,17 +40,17 @@
  * positions (simulation space) to draw images, the particle positions need to be 
  * multiplied by the totalScale factor in order for them to appear at the correct 
  * size and position in the internal pixel space.
- * 
  */
 
 export default class RenderSimple {
   /**
    * Constructor sets some foundational properties on the renderer instance:
-   * particles, springs, canvas, ctx, mouse position, background color (defaults to white).
+   * sim, particles, springs, canvas, ctx, mouse position, background color (defaults to white).
    * @param {*} sim 
    * @param {HTMLCanvasElement} canvas 
    */
   constructor(sim, canvas) {
+    this.sim = sim;
     this.particles = sim.particles;
     this.springs = sim.springs;
     this.mouseX = 0;
@@ -62,6 +62,29 @@ export default class RenderSimple {
   setTarget(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d'); //, { colorSpace: 'display-p3' });
+
+    //!!! The renderer needs to know the dimensions of the physics simulation space, 
+    // which may be different from the canvas size.
+    this.width = this.sim.getWidth();
+    this.height = this.sim.getHeight();
+
+    //!!! dpiRatio will be > 1 if the canvas was created at high resolution for high DPI screens
+    this.dpiRatio = RenderSimple.getCanvasDPIRatio(this.canvas);
+
+    //!!! calculate the screen to physics ratio
+    // I assume the canvas and sim are in the same aspect ratio, so just using height as a proxy for width.
+    this.canvasScreenSize = RenderSimple.getCanvasScreenSize(this.canvas);
+    this.canvasScreenToSimRatioH = this.canvasScreenSize.height / this.sim.getHeight();
+
+    //!!! Set the total scaling factor for rendering, which combines the screen to physics ratio and the DPI ratio.
+    this.totalScale = this.dpiRatio * this.canvasScreenToSimRatioH;
+    
+    //!!! Scale the context by both the DPI ratio and the screen to physics ratio.
+    // Don't scale here, because renderers may want to scale the context differently.
+    // this.ctx.scale(this.totalScale, this.totalScale);
+
+    console.log('Canvas DPI ratio:', this.dpiRatio);
+    console.log('Screen to physics ratio:', this.canvasScreenToSimRatioH);
   }
 
   render() {
@@ -139,7 +162,7 @@ export default class RenderSimple {
   static getCanvasDPIRatio(canvas) {
     const style = window.getComputedStyle(canvas);
     const screenHeight = parseInt(style.height, 10); // just using height as a proxy
-    return canvas.height / screenHeight;
+    return Math.round(canvas.height / screenHeight);
   }
 
   /**

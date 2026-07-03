@@ -10,25 +10,19 @@ export default class RenderCassiniArcs extends RenderSimple {
   violetColors = ["rgb(25, 15,40)", "rgb(20, 10, 35)", "rgb(15, 5, 30)", "rgb(10, 0, 25)"];
 
   constructor(sim, canvas) {
+    // super automagically calculates this.totalScale to scale canvas 
+    // in proportion to physics sim and DPI canvases as needed.
     super(sim, canvas);
     this.yellowGreenPalette = null; // colors will be loaded in init()
 
-    //!!! The renderer needs to know the dimensions of the physics simulation space, which may be different from the canvas size.
-    this.width = sim.getWidth();
-    this.height = sim.getHeight();
-
-    //!!! dpiRatio will be > 1 if the canvas was created at high resolution for high DPI screens
-    this.dpiRatio = RenderSimple.getCanvasDPIRatio(this.canvas);
-
-    //!!! get the screen to physics ratio
-    this.canvasScreenSize = RenderSimple.getCanvasScreenSize(this.canvas);
-    this.canvasScreenToSimRatioH = this.canvasScreenSize.height / sim.getHeight();
+    // High-DPI monitors, such as Retina displays, can have 2 or 3 times the pixel 
+    // density of standard displays. To ensure our canvas looks crisp on these 
+    // displays, we scale it up proportionally to the device pixel ratio. 
+    // (see Page.createCanvas() and notes in RenderSimple). Here we scale up
+    // the drawing context so that our drawing commands work in 
 
     //!!! Scale the context by both the DPI ratio and the screen to physics ratio.
-    this.ctx.scale(this.dpiRatio * this.canvasScreenToSimRatioH, this.dpiRatio * this.canvasScreenToSimRatioH);
-
-    console.log('Canvas DPI ratio:', this.dpiRatio);
-    console.log('Screen to physics ratio:', this.canvasScreenToSimRatioH, this.canvasScreenToSimRatioW);
+    this.ctx.scale(this.totalScale, this.totalScale);
   }
 
   async init() {
@@ -39,8 +33,6 @@ export default class RenderCassiniArcs extends RenderSimple {
   // Render the physics simulation into the canvas
   render() {
     const ctx = this.ctx;
-    const w = this.width;
-    const h = this.height;
 
     // Set a constant alpha composite for subsequent drawing
     ctx.save();
