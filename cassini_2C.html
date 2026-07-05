@@ -157,6 +157,9 @@
     constructor(sim, canvas) {
       super(sim, canvas);
       this.yellowGreenPalette = null; // colors will be loaded in init()
+
+      // Scale the context to match physics sim dimensions, and high-DPI displays.
+      this.ctx.scale(this.totalScale, this.totalScale);
     }
 
     setParticles(particles) {
@@ -392,16 +395,16 @@
 
   async function loadAndRunSimulation() {
     try {
-      const canvas = Page.createCanvas(window.innerWidth, window.innerHeight);
+      const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight);
 
       const engine = new PhysicsEngine();
-      engine.setDimensions(canvas.width, canvas.height);
+      engine.setDimensions(1440, 810);
       engine.detectCollisions = false;
-      engine.timeStep *= Page.scaleFactor; // scale time step to keep velocity in proportion to canvas size
+      engine.timeStep = 0.18;
 
       const model = new Model();
       model.parseConfig(modelJSON);
-      model.centerAt(canvas.width / 2.2, canvas.height / 2);
+      model.centerAt(engine.getWidth() / 2.2, engine.getHeight() / 2);
 
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
 

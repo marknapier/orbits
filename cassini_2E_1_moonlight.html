@@ -203,13 +203,6 @@
       this.halfPI = Math.PI / 2;
       this.quarterPI = Math.PI / 4;
 
-      // High-DPI monitors, such as Retina displays, can have 2 or 3 times the pixel density of standard displays. 
-      // To ensure our canvas looks crisp on these displays, we scale it up proportionally to the device pixel ratio. 
-      // (see Page.createCanvas()). Here we scale up the drawing context so that our drawing commands work in 
-      // the original coordinate space, but render a larger image.
-      // this.dpiRatio = window.devicePixelRatio || 1;
-      // this.ctx.scale(this.dpiRatio, this.dpiRatio); // Scale context for high-DPI displays
-
       // Make an offscreen canvas for drawing - will be copied to display canvas in parts
       this.offscreenCanvas = Page.createOffscreenCanvasDPI(this.canvasScreenSize.width, this.canvasScreenSize.height, 'offscreen');
       // document.body.appendChild(this.offscreenCanvas); // debug - show the offscreen canvas on the page

@@ -14,6 +14,9 @@ export default class RenderCassini2 extends RenderSimple {
     this.yellowGreenPalette = null; // colors will be loaded in init()
     this.grayPalette = null; // colors will be loaded in init()
     this.yellowBlurPalette = null; // colors will be loaded in init()
+
+    // Scale the context to match physics sim dimensions, and high-DPI displays.
+    this.ctx.scale(this.totalScale, this.totalScale);
   }
 
   setParticles(particles) {
@@ -31,15 +34,13 @@ export default class RenderCassini2 extends RenderSimple {
   // Render the physics simulation into the canvas
   render() {
     const ctx = this.ctx;
-    const w = this.canvas.width;
-    const h = this.canvas.height;
 
     // Clear bg if configured to do so, with a low alpha to create motion trails
     if (this.clearBG) {
       ctx.save();
       ctx.globalAlpha = 0.1;
       ctx.fillStyle = this.bgColor;
-      ctx.fillRect(0, 0, w, h);
+      ctx.fillRect(0, 0, this.width, this.height);
       ctx.restore();
     }
 
@@ -65,7 +66,7 @@ export default class RenderCassini2 extends RenderSimple {
 
     // Dark gray circle around p0
     // Make a 0-1 value that represents the radius length relative to the canvas height
-    const radiusPercent = Math.max(Math.min(radius1 / this.canvas.height, 1), 0.1);
+    const radiusPercent = Math.max(Math.min(radius1 / this.sim.getHeight(), 1), 0.1);
     ctx.save();
     {
       ctx.strokeStyle = this.grayPalette.getNextColor();
@@ -76,8 +77,6 @@ export default class RenderCassini2 extends RenderSimple {
       ctx.stroke();
     }
     ctx.restore();
-
-
 
     // draw a yellow circle whose edges pass through p1 and p2
     // const yellowColor = 'rgb(80,80,150)'; //this.yellowGreenPalette.getNextColor();
@@ -99,19 +98,10 @@ export default class RenderCassini2 extends RenderSimple {
     }
     ctx.restore();
 
-
-
     // light blue circle with thick border at p2
-    const gradientPercent = Math.max(Math.min(radius3 / this.canvas.height, 1), 0.1);
     ctx.save();
     {
       ctx.beginPath();
-      // if (gradientPercent < .4) {
-      //   ctx.arc(p2.getX(), p2.getY(), radius3/2, 0, Math.PI * 2);
-      //   ctx.fillStyle =  `rgb(1, 193, 193)`; 
-      //   ctx.fill();
-      // }
-      // else {
       // switch to a non-filled circle with a wide border, 
       // subtract 1/2 of border width to keep the same overall radius
       ctx.arc(p2.getX(), p2.getY(), Math.max((radius3 / 2) - 20, 0), 0, Math.PI * 2);
@@ -120,10 +110,9 @@ export default class RenderCassini2 extends RenderSimple {
       ctx.lineWidth = 10;
       ctx.stroke();
       // ctx.fill()
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#FDB813';
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = '#FDB813';
 
-      // }
       // extra nuance on the edge
       ctx.beginPath();
       ctx.arc(p2.getX(), p2.getY(), Math.max((radius3 / 2) - 2, 1), Math.PI / 2, 3 * Math.PI / 2, false);
@@ -178,13 +167,13 @@ export default class RenderCassini2 extends RenderSimple {
   drawLineV(x, y) {
     this.ctx.beginPath();
     this.ctx.moveTo(x, 0);
-    this.ctx.lineTo(x, this.canvas.height);
+    this.ctx.lineTo(x, this.height);
   }
 
   drawLineH(x, y) {
     this.ctx.beginPath();
     this.ctx.moveTo(0, y);
-    this.ctx.lineTo(this.canvas.width, y);
+    this.ctx.lineTo(this.width, y);
   }
 
   // ============================================================
@@ -232,6 +221,6 @@ export default class RenderCassini2 extends RenderSimple {
   clear() {
     // Draw a filled rectangle that covers the entire canvas
     this.ctx.fillStyle = "black";
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.fillRect(0, 0, this.width, this.height);
   }
 }

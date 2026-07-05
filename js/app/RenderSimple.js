@@ -1,7 +1,7 @@
 /**
  * Base class for physics simulation renderers
  * 
- * Renderer draws the physics simulation onto the screen canvas. The 
+ * The Renderer draws the physics simulation onto the screen canvas. The 
  * physics and screen spaces may be different sizes, and the canvas may be scaled 
  * for high-DPI displays. Here's how the coordinate spaces relate to each other:
  * 
@@ -34,8 +34,16 @@
  *     ctx.scale(this.totalScale, this.totalScale);
  * 
  * Subsequent drawing operations are now in the physics simulation space, and will 
- * be scaled to fit the canvas.
+ * be scaled to fit the canvas. Particle positions, sizes, widths of lines, etc. should 
+ * all be expressed relative to the physics simulation dimensions (aka the "engine" 
+ * dimensions). The renderer will scale them to fit the canvas. Avoid the mistake of 
+ * drawing using canvas dimensions e.g. canvas.width or canvas.height. If the canvas
+ * is larger or smaller than the physics simulation, the drawing will be distorted.
  *
+ * Physics simulation dimensions are hard coded fixed values, at 16x9 ratios. This 
+ * keeps the simulation behavior consistent at any canvas size and pixel density. The
+ * canvas should also have a 16x9 aspect ratio to match the sim.
+ * 
  * NOTE that drawImage() operations are not scaled by ctx.scale(). If using particle 
  * positions (simulation space) to draw images, the particle positions need to be 
  * multiplied by the totalScale factor in order for them to appear at the correct 
@@ -155,7 +163,7 @@ export default class RenderSimple {
    * Returns the ratio of the actual pixel dimensions of the canvas / CSS pixel dimensions of the canvas onscreen. 
    * For a regular canvas this will be 1, but for a canvas that is scaled up for high DPI screens, 
    * this will be > 1 (e.g. 2 for typical Retina displays).
-   * @see Page.createCanvasDPI for how to create a canvas that is scaled for high DPI screens.
+   * @see Page.createCanvas16x9 for how to create a canvas that is scaled for high DPI screens.
    * @param {*} canvas 
    * @returns the scale factor the canvas
    */

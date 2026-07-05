@@ -161,20 +161,6 @@
       super(sim, canvas);
       this.yellowGreenPalette = null; // colors will be loaded in init()
 
-      // this.width = sim.getWidth();
-      // this.height = sim.getHeight();
-      // //!!!
-      // // scale up if the canvas was created at high resolution for high DPI screens
-      // // AND scale from physics space to screen space.
-      // this.dpiRatio = RenderSimple.getCanvasDPIRatio(this.canvas);
-
-      // //!!! get the screen to physics ratio
-      // this.canvasScreenSize = RenderSimple.getCanvasScreenSize(this.canvas);
-      // this.canvasScreenToSimRatioH = this.canvasScreenSize.height / sim.getHeight();
-      // // this.canvasScreenToSimRatioW = this.canvasScreenSize.width / sim.getWidth();
-
-      // console.log('Canvas DPI ratio:', this.dpiRatio);
-      // console.log('Screen to physics ratio:', this.canvasScreenToSimRatioH, this.canvasScreenToSimRatioW);
       this.ctx.scale(this.totalScale, this.totalScale);
     }
 
@@ -414,7 +400,7 @@
       const engine = new PhysicsEngine();
       engine.setDimensions(1920, 1080); //!!!  fixed size with ratio 16x9
       engine.detectCollisions = false;
-      engine.timeStep *= Page.scaleFactor; // scale time step to keep velocity in proportion to canvas size
+      engine.timeStep = 0.18;
 
       const model = new Model();
       model.parseConfig(modelJSON);

@@ -36,8 +36,13 @@
       this.xOscillator = new Oscillator(.0167, 'cos'); // .0167 => 1 minute cycle
       this.yOscillator = new Oscillator(.0167, 'sin');
       this.seconds = new Oscillator(1, 'sin');
-      this.halfWidth = this.canvas.width / 2;
-      this.halfHeight = this.canvas.height / 2;
+      this.halfWidth = Math.round(this.width / 2);
+      this.halfHeight = Math.round(this.height / 2);
+      this.five = Math.round(this.width * 0.003125); // 5 pixels for 1600 width
+      this.twentyFive = this.five * 5; // 25 pixels for 1600 width
+
+      // Scale the context to match physics sim dimensions, and high-DPI displays.
+      this.ctx.scale(this.totalScale, this.totalScale);
     }
 
     setParticles(particles) {
@@ -47,7 +52,8 @@
     async init() {
       try {
         this.bgTexture = await ImageLoader.loadImage('./images/wood_panelling_light_s.jpg');
-        this.ctx.drawImage(this.bgTexture, 0, 0, this.canvas.width, this.canvas.height);
+        // stretch the background texture to fill the canvas
+        this.ctx.drawImage(this.bgTexture, 0, 0, Math.floor(this.width * this.totalScale), Math.floor(this.height * this.totalScale));
         this.woodPattern = this.ctx.createPattern(this.bgTexture, 'repeat');
       } catch (error) {
         console.error(error.message);
@@ -56,8 +62,8 @@
 
     render() {
       const ctx = this.ctx;
-      const w = this.canvas.width;
-      const h = this.canvas.height;
+      const w = this.width;
+      const h = this.height;
 
       const ex = this.halfWidth + (this.xOscillator.getValue() * this.halfWidth);
       const ey = this.halfHeight + (this.yOscillator.getValue() * this.halfHeight);
@@ -91,14 +97,11 @@
           else {
             ctx.strokeStyle = 'rgba(80, 237, 255, 0.4)';
           }
-          ctx.lineWidth = 5;
+          ctx.lineWidth = this.five;
           ctx.setLineDash([dashsize, 101 - dashsize]);
           this.drawArcPath(ctx, p0, p1); // circle
           ctx.stroke();
-
-          // this.drawEllipseAroundPoints(this.ctx, p0.getX(), p0.getY(), p1.getX(), p1.getY(), 0.9, 50);
-
-          ctx.lineWidth = 25;
+          ctx.lineWidth = this.twentyFive;
           ctx.setLineDash([dashsize / 10, 5]);
           // this.drawLineV(ex, 0);
         }
@@ -149,14 +152,14 @@
     drawLineV(x, y) {
       this.ctx.beginPath();
       this.ctx.moveTo(x, 0);
-      this.ctx.lineTo(x, this.canvas.height);
+      this.ctx.lineTo(x, this.height);
       this.ctx.stroke();
     }
 
     drawLineH(x, y) {
       this.ctx.beginPath();
       this.ctx.moveTo(0, y);
-      this.ctx.lineTo(this.canvas.width, y);
+      this.ctx.lineTo(this.width, y);
       this.ctx.stroke();
     }
 
@@ -181,7 +184,7 @@
     clear() {
       // Draw a filled rectangle that covers the entire canvas
       this.ctx.fillStyle = "black";
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.fillRect(0, 0, this.width, this.height);
     }
   }
 
@@ -654,16 +657,16 @@
 
   async function loadAndRunSimulation() {
     try {
-      const canvas = Page.createCanvas(window.innerWidth, window.innerHeight, 'sim');
+      const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight, 'sim');
 
       const engine = new PhysicsEngine();
-      engine.setDimensions(canvas.width, canvas.height);
+      engine.setDimensions(1600, 900);
       engine.detectCollisions = false;
       engine.timeStep = 0.1;
 
       const model = new Model();
       model.parseConfig(modelJSON);
-      model.centerAt(canvas.width / 2.2, canvas.height / 2);
+      model.centerAt(engine.getWidth() / 2.2, engine.getHeight() / 2);
 
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
 

@@ -4,7 +4,9 @@
 <head>
   <meta charset="utf-8" />
   <title>HoJos2A SantaFe</title>
-  <link rel="stylesheet" href="./styles/full_viewport_canvas.css">
+  <!-- <link rel="stylesheet" href="./styles/full_viewport_canvas.css"> -->
+  <link rel="stylesheet" href="styles/main.css">
+
 </head>
 
 <body>
@@ -38,10 +40,25 @@
       this.bgTexture = null;
       this.flowerImage = null;
       this.flowerPattern = null;
-    }
+      // pre-calculate offsets into the canvas internal pixel space for drawing image slices.
+      // These operate on the canvas internal pixel space so do not need to be scaled by totalScale.
+      this.pixels2 = Math.round(this.canvas.width * 0.00125);
+      this.pixels40 = Math.round(this.canvas.width * 0.025);
+      this.pixels50 = Math.round(this.canvas.width * 0.03125);
+      this.pixels100 = Math.round(this.canvas.width * 0.0625);
+      this.pixelsFourFifths = Math.round(this.canvas.width * 0.875);
+      this.pixelsHalf = Math.round(this.canvas.width * 0.5);
 
-    setParticles(particles) {
-      this.particles = particles ?? [];
+      // canvas for drawing, will be copied to display canvas in parts
+      // don't use DPI scaling because it breaks the drawImage() calls and I can't figure out why.
+      this.offscreenCanvas = Page.createOffscreenCanvasDPI(this.canvasScreenSize.width, this.canvasScreenSize.height, 'offscreen');
+      // document.body.appendChild(this.offscreenCanvas);
+
+      this.ctxDisplay = this.ctx; // save the on-screen context
+      this.ctx = this.offscreenCanvas.getContext('2d'); // off screen context
+
+      // Scale the context to match physics sim dimensions, and high-DPI displays.
+      this.ctx.scale(this.totalScale, this.totalScale);
     }
 
     async init() {
@@ -53,14 +70,7 @@
         this.flowerImage = await ImageLoader.loadImage('./images/flower_pattern_t.png');
         this.woodPattern = this.ctx.createPattern(this.bgTexture, 'repeat');
         this.flowerPattern = this.ctx.createPattern(this.flowerImage, 'repeat');
-        // canvas for drawing, will be copied to display canvas in parts
-        this.offscreenCanvas = document.createElement('canvas');
-        this.offscreenCanvas.width = this.canvas.width;
-        this.offscreenCanvas.height = this.canvas.height;
-        // document.body.appendChild(this.offscreenCanvas);
-
-        this.ctxDisplay = this.ctx; // save the on-screen context
-        this.ctx = this.offscreenCanvas.getContext('2d'); // off screen context
+        // draw the background texture into the offscreen canvas, fullsize
         this.ctxDisplay.drawImage(this.bgTexture, 0, 0, this.canvas.width, this.canvas.height);
       } catch (error) {
         console.error(error.message);
@@ -71,8 +81,8 @@
     // Render the physics simulation into the canvas
     render() {
       const ctx = this.ctx;
-      const w = this.canvas.width;
-      const h = this.canvas.height;
+      const w = this.width;
+      const h = this.height;
       let flowerP = null;
       const particles = this.particles;
 
@@ -86,6 +96,12 @@
       const radius3 = Particle.distance(p2, p3);
       const radius4 = Particle.distance(p3, p0);
 
+      // ------------------------------------------------------------------------------------------------
+      // These drawing operations render from the physics sim coordinate space into the offscreen canvas.
+      // The offscreen canvas has been scaled in the constructor so the physics coordinates will
+      // be scaled up (or down) to the canvas size.
+      // ------------------------------------------------------------------------------------------------
+
       if (this.clearBG) {
         ctx.save();
         ctx.globalAlpha = 0.1;
@@ -97,10 +113,6 @@
       ctx.save();
       {
         ctx.globalAlpha = this.opacity;
-
-        // ------------------------------------------------------------------------------------------------
-        // Draw a circle for each particle pair, using the distance between particles as the radius.
-        // ------------------------------------------------------------------------------------------------
 
         // Circle between p0 and p1, with a wood pattern stroke
         // Make a 0-1 value that represents the radius length relative to the canvas height
@@ -167,7 +179,7 @@
           //
           ctx.strokeStyle = 'rgba(40, 10, 60, .5)';
           ctx.lineWidth = 2;
-          this.drawLineV(p2.getX()+2, p2.getY());
+          this.drawLineV(p2.getX() + 2, p2.getY());
 
         }
         ctx.restore();
@@ -199,62 +211,55 @@
       }
       ctx.restore();
 
-      // Draw the offscreen canvas onto the display canvas (ctxDisplay) in sections
+      // ------------------------------------------------------------------------------------------------
+      // The following operations draw from the offscreen canvas into the display canvas, which 
+      // is not scaled, and has an exact 1:1 proportion to the offscreen canvas. We can draw  
+      // directly using canvas internal coordinates without scaling. Only particles (physics coords) 
+      // need to be scaled by this.totalScale.
+      // ------------------------------------------------------------------------------------------------
       if (true) {
-        // this.ctxDisplay.drawImage(
-        //   this.offscreenCanvas,
-        //   500, 0, 100, this.canvas.height, // from
-        //   0, 0, 100, this.canvas.height  // to
-        // );
         this.ctxDisplay.drawImage(
           this.offscreenCanvas,
-          p1.getX(), 0, 50, this.canvas.height, // from
-          p2.getX(), 0, 50, this.canvas.height  // to
+          p1.getX() * this.totalScale, 0, this.pixels50, this.canvas.height, // from
+          p2.getX() * this.totalScale, 0, this.pixels50, this.canvas.height  // to
         );
         this.ctxDisplay.drawImage(
           this.offscreenCanvas,
-          p2.getX(), 0, 40, this.canvas.height, // from
-          p3.getX(), 0, 40, this.canvas.height  // to
-        );
-        // this.ctxDisplay.drawImage(
-        //   this.offscreenCanvas,
-        //   0, 0, 200, this.canvas.height, // from
-        //   400, 0, 200, this.canvas.height  // to
-        // );
-        // this.ctxDisplay.drawImage(
-        //   this.offscreenCanvas,
-        //   500, 0, 100, this.canvas.height, // from
-        //   700, 0, 100, this.canvas.height  // to
-        // );
-        this.ctxDisplay.drawImage(
-          this.offscreenCanvas,
-          p3.getX(), 0, 100, this.canvas.height, // from
-          p1.getX(), 0, 100, this.canvas.height  // to
+          p2.getX() * this.totalScale, 0, this.pixels40, this.canvas.height, // from
+          p3.getX() * this.totalScale, 0, this.pixels40, this.canvas.height  // to
         );
         this.ctxDisplay.drawImage(
           this.offscreenCanvas,
-          flowerP.getX(), 0, 100, this.canvas.height, // from
-          flowerP.getX(), 0, 100, this.canvas.height  // to
+          p3.getX() * this.totalScale, 0, this.pixels100, this.canvas.height, // from
+          p1.getX() * this.totalScale, 0, this.pixels100, this.canvas.height  // to
+        );
+        this.ctxDisplay.drawImage(
+          this.offscreenCanvas,
+          flowerP.getX() * this.totalScale, 0, this.pixels100, this.canvas.height, // from
+          flowerP.getX() * this.totalScale, 0, this.pixels100, this.canvas.height  // to
         );
 
         // right side 20% sidebar
         // draw dividing line
-        this.ctxDisplay.lineWidth = 2;
+        // This draws into the display canvas, which is not scaled, and has an exact 1:1
+        // proportion to the offscreen canvas. We can draw directly using canvas internal
+        // coordinates without scaling.
+        this.ctxDisplay.lineWidth = this.pixels2;
         this.ctxDisplay.strokeStyle = 'rgb(212, 198, 93)';
         this.ctxDisplay.beginPath();
-        this.ctxDisplay.moveTo((this.canvas.width * 0.8) - 2, 0);
-        this.ctxDisplay.lineTo((this.canvas.width * 0.8) - 2, this.canvas.height);
+        this.ctxDisplay.moveTo((this.pixelsFourFifths) - 2, 0);
+        this.ctxDisplay.lineTo((this.pixelsFourFifths) - 2, this.canvas.height);
         this.ctxDisplay.stroke();
         this.ctxDisplay.beginPath();
         this.ctxDisplay.strokeStyle = 'rgb(108, 95, 0)';
-        this.ctxDisplay.moveTo((this.canvas.width * 0.8), 0);
-        this.ctxDisplay.lineTo((this.canvas.width * 0.8), this.canvas.height);
+        this.ctxDisplay.moveTo((this.pixelsFourFifths), 0);
+        this.ctxDisplay.lineTo((this.pixelsFourFifths), this.canvas.height);
         this.ctxDisplay.stroke();
         // copy a horizontal slice of offscreen canvas, rotated to vertical
         this.ctxDisplay.save();
         {
-          const targetX = this.canvas.width * 0.8;
-          const targetY = this.canvas.height * 0.5;
+          const targetX = this.pixelsFourFifths;
+          const targetY = this.pixelsHalf;
           const fragmentWidth = this.canvas.width - targetX;
           const fragmentHeight = this.canvas.height;
           // Move the canvas origin to the center of the image fragment
@@ -265,36 +270,38 @@
           // Draw the image, adjusting its position to center it on the new origin
           this.ctxDisplay.drawImage(
             this.offscreenCanvas,
-            200, 100, fragmentHeight, 5, // from // fragmentWidth
-            -fragmentHeight / 2, -fragmentWidth / 2, fragmentHeight, fragmentWidth  // to
+            this.pixels100 * 2, this.pixels100, fragmentHeight, 5, // from
+            -(fragmentHeight / 2), -(fragmentWidth / 2),
+            fragmentHeight, fragmentWidth  // to
           );
         }
         this.ctxDisplay.restore();
 
         // lower area
         // draw a dividing line
+        const lowerAreaHeight = this.canvas.height * 0.85;
         this.ctxDisplay.beginPath();
-        this.ctxDisplay.lineWidth = 2;
+        this.ctxDisplay.lineWidth = this.pixels2;
         this.ctxDisplay.strokeStyle = 'rgba(120, 120, 80, 1.0)'
-        this.ctxDisplay.moveTo(0, (this.canvas.height * 0.85) - 2);
-        this.ctxDisplay.lineTo(this.canvas.width * 0.8, (this.canvas.height * 0.85) - 2);
+        this.ctxDisplay.moveTo(0, lowerAreaHeight - this.pixels2);
+        this.ctxDisplay.lineTo(this.pixelsFourFifths, lowerAreaHeight - this.pixels2);
         this.ctxDisplay.stroke();
         this.ctxDisplay.beginPath();
         this.ctxDisplay.strokeStyle = 'rgba(60, 60, 90, 1.0)'
-        this.ctxDisplay.moveTo(0, this.canvas.height * 0.85);
-        this.ctxDisplay.lineTo(this.canvas.width * 0.8, this.canvas.height * 0.85);
+        this.ctxDisplay.moveTo(0, lowerAreaHeight);
+        this.ctxDisplay.lineTo(this.pixelsFourFifths, lowerAreaHeight);
         this.ctxDisplay.stroke();
         // draw the top of the offscreen canvas into the bottom of the display
         this.ctxDisplay.globalCompositeOperation = 'source-over';
         this.ctxDisplay.drawImage(
           this.offscreenCanvas,
-          0, 0, this.canvas.width * 1.0, this.canvas.height * 0.15, // from
-          0, this.canvas.height * 0.85, this.canvas.width * 0.8, this.canvas.height * 0.15  // to
+          0, 0, this.canvas.width, this.canvas.height * 0.15, // from
+          0, lowerAreaHeight, this.pixelsFourFifths, this.canvas.height * 0.15  // to
         );
         this.ctxDisplay.globalCompositeOperation = 'difference';
         this.ctxDisplay.fillStyle = 'rgba(255, 255, 255, .9)';
         this.ctxDisplay.fillRect(
-          0, this.canvas.height * 0.85, this.canvas.width * 0.8, this.canvas.height * 0.15
+          0, lowerAreaHeight, this.pixelsFourFifths, this.canvas.height * 0.15
         );
         this.ctxDisplay.globalCompositeOperation = 'source-over';
       }
@@ -313,21 +320,21 @@
     drawLineV(x, y) {
       this.ctx.beginPath();
       this.ctx.moveTo(x, 0);
-      this.ctx.lineTo(x, this.canvas.height);
+      this.ctx.lineTo(x, this.height);
       this.ctx.stroke();
     }
 
     drawLineH(x, y) {
       this.ctx.beginPath();
       this.ctx.moveTo(0, y);
-      this.ctx.lineTo(this.canvas.width, y);
+      this.ctx.lineTo(this.width, y);
       this.ctx.stroke();
     }
 
     clear() {
       // Draw a filled rectangle that covers the entire canvas
       this.ctx.fillStyle = "black";
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.fillRect(0, 0, this.width, this.height);
     }
   }
 
@@ -799,16 +806,17 @@
 
   async function loadAndRunSimulation() {
     try {
-      const canvas = Page.createCanvas(window.innerWidth, window.innerHeight, 'sim');
+      // Runs slow when using DPI scaling. Pass false for the DPI flag on slower systems.
+      const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight);
 
       const engine = new PhysicsEngine();
-      engine.setDimensions(canvas.width, canvas.height);
+      engine.setDimensions(1600, 900); // 16x9 ratio that matches the canvas size of the original version of this artwork.
       engine.detectCollisions = false;
-      engine.timeStep = .2;
+      engine.timeStep = 0.2;
 
       const model = new Model();
       model.parseConfig(modelJSON);
-      model.centerAt(canvas.width / 2.2, canvas.height / 2);
+      model.centerAt(engine.getWidth() / 2.2, engine.getHeight() / 2);
 
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
 

@@ -131,32 +131,34 @@
 
   async function loadAndRunSimulation() {
     try {
-      const canvas = Page.createCanvas(window.innerWidth, window.innerHeight, 'sim');
+      // This piece can get sluggish at high DPI settings, because it draws large circles (large arcs at 2x dpi slow down)
+      Page.setHighDPIRendering(false);
+
+      const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight, 'sim');
+
+      const engine = new PhysicsEngine();
+      engine.setDimensions(1920, 1080);
+      engine.detectCollisions = false;
+      engine.timeStep = 0.18;
 
       const model = new Model();
       model.parseConfig(modelJSON);
-      model.scalePositions(Page.scaleFactor); // scale first, then center
-      model.centerAt(canvas.width / 2, canvas.height / 3);
+      model.centerAt(engine.getWidth() / 2, engine.getHeight() / 3);
 
       const model2 = new Model();
       model2.parseConfig(modelJSON);
-      model2.scalePositions(Page.scaleFactor); // scale first, then center
-      model2.centerAt(canvas.width / 1.5, canvas.height / 1.5);
+      model2.centerAt(engine.getWidth() / 1.5, engine.getHeight() / 1.5);
       model2.particles[1].setFixedX(false);
 
-      const engine = new PhysicsEngine();
-      engine.setDimensions(canvas.width, canvas.height);
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
       engine.addModel(model2.getParticles(), model2.getSprings(), model2.getEnvironment());
-      engine.detectCollisions = false;
-      engine.timeStep *= Page.scaleFactor; // scale time step to keep velocity in proportion to canvas size
 
       const renderer = new RenderLenses(engine, canvas);
       // const renderer = new RenderLensesHelloYellow(engine, canvas);
       // const renderer = new RenderLensesBlueGreenWithGuides(engine, canvas);
       // const renderer = new RenderLensesBlueGreenWithGuidesOnlyArcs(engine, canvas);
       // const renderer = new RenderLensesGreenArcs(engine, canvas);
-      await renderer.init(Page.scaleFactor);
+      await renderer.init();
       renderer.clear();
 
       // mouse listens for events on the top canvas

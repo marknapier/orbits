@@ -110,7 +110,10 @@
 
   async function loadAndRunSimulation() {
     try {
-      const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight, 'sim', false);
+      // This piece can get sluggish at high DPI settings, because it draws large circles (large arcs at 2x dpi slow down)
+      Page.setHighDPIRendering(false);
+
+      const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight);
 
       const engine = new PhysicsEngine();
       engine.setDimensions(1504, 846);

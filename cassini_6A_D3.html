@@ -207,16 +207,20 @@ when working with an offscreen canvas. See comments in constructor(), init(), an
       this.wallpaper = null; // image will be loaded in init()
       this.wallpaperPattern = null; // pattern will be created in init()
 
-      // High-DPI monitors, such as Retina displays, can have 2 or 3 times the pixel density of standard displays. 
-      // To ensure our canvas looks crisp on these displays, we scale it up proportionally to the device pixel ratio. 
-      // (see Page.createCanvasDPI()). 
-      // 
-      // This gets tricky when using an offscreen canvas to render. We'll scale up the drawing 
-      // context of the offscreen canvas, so that our drawing commands work in 
-      // the screen coordinate space, but render to the larger coordinate space of the hi-res canvas.
-      // We don't need to scale up the on-screen canvas, since we'll draw pixels from the offscreen
-      // canvas onto the on-screen canvas at the same resolution.
-      this.dpiRatio = Page.dpiRatio;
+      // Make an offscreen canvas for drawing - will be copied to display canvas in parts
+      this.offscreenCanvas = Page.createOffscreenCanvasDPI(this.canvasScreenSize.width, this.canvasScreenSize.height, 'offscreen');
+
+      // this.ctx will draw to the offscreen canvas.
+      this.ctxDisplay = this.ctx; // save the on-screen context
+      this.ctx = this.offscreenCanvas.getContext('2d'); // off screen context
+
+      // Scale the offscreen context to fit the high pixel density and the screen-to-physics ratio.
+      this.ctx.scale(this.totalScale, this.totalScale);
+
+      // NOTE: Scale up the offscreen canvas, but not the display canvas.
+      // Drawing from the offscreen to the display using drawImage() should be
+      //  a 1:1 operation. If we scale up display it will scale an already 
+      // scaled-up image, which will double in size. 
     }
 
     setParticles(particles) {
@@ -230,31 +234,13 @@ when working with an offscreen canvas. See comments in constructor(), init(), an
       this.wallpaper = await Page.loadImage('./images/victorian_red_velvet_wallpaper.jpg');
       this.woodPanelPattern = this.ctx.createPattern(this.woodPanel, 'repeat');
       this.wallpaperPattern = this.ctx.createPattern(this.wallpaper, 'repeat');
-
-      this.ctxDisplay = this.ctx; // save the on-screen context
-      // NOTE: don't scale up the display context for DPI displays. If we do, then when we draw
-      // from the offscreen canvas (which is high resolution to account for high DPI displays), 
-      // we'll be scaling up an already scaled-up image, which will double in size. 
-
-      // =============================================================================
-      // Create an off-screen canvas for drawing, which will be copied to the display canvas in pieces.
-      // This canvas will have larger pixel dimensions for high-DPI displays, see comment in constructor.
-      // We'll scale up the drawing context to fit the increased pixel dimensions of the canvas.
-      // NOTE: the physics engine runs in the screen coordinate space, so the particle positions 
-      // must be scaled up to match the larger scale of the drawing context.
-
-      this.offscreenCanvas = Page.createOffscreenCanvasDPI(Page.canvasScreenWidth, Page.canvasScreenHeight, 'offscreen');
-      this.ctx = this.offscreenCanvas.getContext('2d', { colorSpace: 'display-p3' }); // we'll draw to the off screen context
-      this.ctx.scale(this.dpiRatio, this.dpiRatio); // Scale drawing to match the larger pixel dimensions for high-DPI displays, see comment in ctor()
-
-      // document.body.appendChild(this.offscreenCanvas); // to debug
     }
 
     // ============================================================
     // Render the physics simulation into the canvas
     render() {
       const ctx = this.ctx;
-      const w = this.canvas.width;
+      const w = this.canvas.width; // sim dimensions
       const h = this.canvas.height;
 
       // Clear bg if configured to do so, with a low alpha to create motion trails
@@ -290,7 +276,7 @@ when working with an offscreen canvas. See comments in constructor(), init(), an
 
       // Dark violet circle p0 - p1
       // Make a 0-1 value that represents the radius length relative to the canvas height
-      const radiusPercent = Math.max(Math.min(radius1 / Page.canvasScreenHeight, 1), 0.1);
+      const radiusPercent = Math.max(Math.min(radius1 / this.height, 1), 0.1);
       ctx.save();
       {
         ctx.globalAlpha = 0.2;
@@ -348,7 +334,7 @@ when working with an offscreen canvas. See comments in constructor(), init(), an
       ctx.restore();
 
       // light blue circle with thick border at p2
-      const gradientPercent = Math.max(Math.min(radius3 / Page.canvasScreenHeight, 1), 0.1);
+      const gradientPercent = Math.max(Math.min(radius3 / this.height, 1), 0.1);
       ctx.save();
       {
         ctx.globalAlpha = 0.2;
@@ -414,31 +400,31 @@ when working with an offscreen canvas. See comments in constructor(), init(), an
 
       // =============================================================
       // Draw vertical slices of the offscreen canvas onto the display canvas.
-      //
-      // NOTE: the physics engine runs in the screen coordinate space, but the actual canvas pixel
-      // dimensions can be larger for high-DPI displays. We need to use dpiRatio to scale up particle 
-      // coordinates to match the larger scale of the drawing context. See comments in ctor() and init().
-
-      const sliceWidth1 = 5 * this.dpiRatio;
-      const sliceWidth2 = 20 * this.dpiRatio;
+      // Transform particle position (simulation space) to canvas internal pixel positions.
+      const p0Position = Math.round(p0.getX() * this.totalScale);
+      const p1Position = Math.round(p1.getX() * this.totalScale);
+      const p2Position = Math.round(p2.getX() * this.totalScale);
+      const p3Position = Math.round(p3.getX() * this.totalScale);
+      const sliceWidth1 = Math.round(5 * this.totalScale);
+      const sliceWidth2 = Math.round(20 * this.totalScale);
 
       // draw normally with some alpha for blending
       this.ctxDisplay.globalAlpha = 0.2;
       this.ctxDisplay.drawImage(this.offscreenCanvas,
-        p1.getX() * this.dpiRatio, 0, sliceWidth1, h,
-        p2.getX() * this.dpiRatio, 0, sliceWidth1, h
+        p1Position, 0, sliceWidth1, h,
+        p2Position, 0, sliceWidth1, h
       );
       this.ctxDisplay.drawImage(this.offscreenCanvas,
-        p3.getX() * this.dpiRatio, 0, sliceWidth2, h,
-        p0.getX() * this.dpiRatio, 0, sliceWidth2, h
+        p3Position, 0, sliceWidth2, h,
+        p0Position, 0, sliceWidth2, h
       );
 
       // draw with effect
       this.ctxDisplay.globalAlpha = 0.3;
       this.ctxDisplay.globalCompositeOperation = 'hard-light';
       this.ctxDisplay.drawImage(this.offscreenCanvas,
-        p2.getX() * this.dpiRatio, 0, sliceWidth1, h,
-        p3.getX() * this.dpiRatio, 0, sliceWidth1, h
+        p2Position, 0, sliceWidth1, h,
+        p3Position, 0, sliceWidth1, h
       );
 
       this.ctxDisplay.globalCompositeOperation = 'source-over'; // reset to default
@@ -463,29 +449,29 @@ when working with an offscreen canvas. See comments in constructor(), init(), an
     drawLineV(x, y) {
       this.ctx.beginPath();
       this.ctx.moveTo(x, 0);
-      this.ctx.lineTo(x, Page.canvasScreenHeight);
+      this.ctx.lineTo(x, this.height);
       this.ctx.stroke();
     }
 
     clear() {
       // Draw a filled rectangle that covers the entire canvas
       this.ctx.fillStyle = "black";
-      this.ctx.fillRect(0, 0, Page.canvasScreenWidth, Page.canvasScreenHeight);
+      this.ctx.fillRect(0, 0, this.width, this.height);
     }
   }
 
   async function loadAndRunSimulation() {
     try {
-      const canvas = Page.createCanvasDPI(window.innerWidth, window.innerHeight);
+      const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight);
 
       const engine = new PhysicsEngine();
-      engine.setDimensions(Page.canvasScreenWidth, Page.canvasScreenHeight);
+      engine.setDimensions(1600, 900);
       engine.detectCollisions = false;
-      engine.timeStep *= Page.scaleFactor; // scale time step to keep velocity in proportion to canvas size
+      engine.timeStep = 0.18;
 
       const model = new Model();
       model.parseConfig(modelJSON);
-      model.centerAt(Page.canvasScreenWidth / 2.2, Page.canvasScreenHeight / 2);
+      model.centerAt(engine.getWidth() / 2.2, engine.getHeight() / 2);
 
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
 

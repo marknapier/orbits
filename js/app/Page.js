@@ -5,6 +5,7 @@ export default class Page {
     this.resumeFunction = null; // if provided, will be called when pause key is hit again
     this.canvasScreenWidth = 800; // the dimensions of the canvas element as it appears on the screen - may be smaller than the actual size for high-DPI displays
     this.canvasScreenHeight = 600;
+    this.useHighDPIRendering = true; // if true, scale the canvas for high-DPI displays (default is true)
 
     // High-DPI monitors, such as Retina displays, can have 2 or 3 times the pixel density 
     // of standard displays. To ensure our canvas looks crisp on these displays, we can 
@@ -14,18 +15,12 @@ export default class Page {
     // Rendering needs to be scaled accordingly as well to draw into the larger canvas.
     // See notes in RenderSimple.js for more details on scaling the rendering context.
     this.dpiRatio = window.devicePixelRatio || 1;
-    this.scaleFactor = 1; // how large the artwork appears onscreen relative to its original size of 1080px - Can be used to scale line widths proportionally to canvas sizes
     console.log('window.devicePixelRatio:', this.dpiRatio);
   }
 
   /**
    * Create a canvas with the given dimensions, appended to the document body. 
    * Clamp the width to 16x9 ratio if possible (otherwise go fullscreen). 
-   * Sets the scaleFactor property based on the height of the canvas, 
-   * treating 1080px as the base height for scaling (so a 1920x1080 canvas would have scaleFactor of 1, 
-   * a 3456x2234 canvas would have scaleFactor of 2.07, etc).
-   * NOTE: the scaleFactor applies to the visual appearance of the canvas onscreen, e.g. its CSS
-   * style dimentions, but the actual internal dimensions of the canvas may be larger for high-DPI displays.
    * @param {*} width 
    * @param {*} height 
    * @param {*} id - The ID to assign to the created canvas (optional, default is 'sim')
@@ -41,53 +36,48 @@ export default class Page {
     this.canvasScreenWidth = canvas.width = Math.min(width, height * aspectRatio);
     this.canvasScreenHeight = canvas.height = height;
     document.body.appendChild(canvas);
-    this.scaleFactor = Math.min(canvas.height, canvas.width) / 1080; // base height of 1600px for scaling
-    console.log(`Canvas created with dimensions ${canvas.width}x${canvas.height}, scaleFactor ${Page.scaleFactor.toFixed(2)}`);
+    console.log(`Canvas created with dimensions ${canvas.width}x${canvas.height}`);
     return canvas;
   }
 
   /**
    * Create a canvas with the given dimensions, appended to the document body. 
+   * Scale the internal pixel dimensions of the canvas for high-DPI displays by default.
    * Always clamp the width to 16x9 ratio. Leave extra space on the sides or top/bottom as needed.
-   * Sets the scaleFactor property based on the height of the canvas, 
-   * treating 1080px as the base height for scaling (so a 1920x1080 canvas would have scaleFactor of 1, 
-   * a 3456x2234 canvas would have scaleFactor of 2.07, etc).
-   * NOTE: the scaleFactor applies to the visual appearance of the canvas onscreen, e.g. its CSS
-   * style dimentions, but the actual internal dimensions of the canvas may be larger for high-DPI displays.
+   * 
+   * 16x9 ratios that are whole numbers: 
+   *   1024x 576, 1280x720, 1440x810, 1536x864, 1600x900, 1920x1080, 
+   *   2560x1440, 3200x1800, 3840x2160, 5120x2880, 7680x4320
+   *
    * @param {*} width 
    * @param {*} height 
    * @param {*} id - The ID to assign to the created canvas (optional, default is 'sim')
-   * @param {*} scaleForDPI - Whether to scale the canvas for high-DPI displays (optional, default is true)
    * @returns HTMLCanvasElement
    */
-  static createCanvas16x9(width, height, id = 'sim', scaleForDPI = true) {
+  static createCanvas16x9(width, height, id = 'sim') {
     const aspectRatio = 16 / 9;
+    const DPI = this.useHighDPIRendering ? this.dpiRatio : 1;
     const canvas = document.createElement('canvas');
-    canvas.id = id || 'sim';
     const canvasWidth = width / height >= aspectRatio ? Math.floor(height * aspectRatio) : width;
     const canvasHeight = width / height >= aspectRatio ? height : Math.floor(width / aspectRatio);
-    console.log(`Requested canvas dimensions: ${width}x${height}`);
-    console.log(`Calculated screen dimensions: ${canvasWidth}x${canvasHeight}, aspectRatio: ${aspectRatio}`);
-
-    if (!scaleForDPI) {
-      this.dpiRatio = 1; // override DPI scaling if not desired
-    }
+    console.log(`Requested canvas dimensions: ${width}x${height}, 16x9 dimensions: ${canvasWidth}x${canvasHeight}, aspectRatio: ${aspectRatio}`);
 
     // the size of the canvas on screen in CSS pixels.
     this.canvasScreenWidth = canvasWidth;
     this.canvasScreenHeight = canvasHeight;
 
     // Scale up the internal dimensions of the canvas by the device pixel ratio 
-    canvas.width = this.canvasScreenWidth * this.dpiRatio;
-    canvas.height = this.canvasScreenHeight * this.dpiRatio;
+    canvas.width = this.canvasScreenWidth * DPI;
+    canvas.height = this.canvasScreenHeight * DPI;
 
     // Set the CSS dimensions of the canvas to the original width and height to maintain the intended size on the page
     canvas.style.width = this.canvasScreenWidth + 'px';
     canvas.style.height = this.canvasScreenHeight + 'px';
 
+    canvas.id = id || 'sim';
     document.body.appendChild(canvas);
-    Page.scaleFactor = Math.min(canvas.height, canvas.width) / 1080;
-    console.log(`Canvas created with internal dimensions ${canvas.width}x${canvas.height}, scaleFactor ${Page.scaleFactor.toFixed(2)}`);
+
+    console.log(`Canvas created with internal dimensions ${canvas.width}x${canvas.height}`);
     return canvas;
   }
 
@@ -115,31 +105,27 @@ export default class Page {
     // Append canvas to body element in the DOM
     document.body.appendChild(canvas);
 
-    // These pieces have been created on a screen height of 1080px. To adapt to larger screen 
-    // sizes in the future, we set a scale factor based on the smaller dimension of the canvas, 
-    // treating 1080px as the base for scaling. This scale factor can be used to scale line widths 
-    // and physics parameters proportionally to the canvas size, so that the artwork maintains a 
-    // similar look and feel across different screen sizes.
-    Page.scaleFactor = Math.min(this.canvasScreenHeight, this.canvasScreenWidth) / 1080;
-    console.log(`Canvas created with dimensions ${canvas.width}x${canvas.height}, scaleFactor ${Page.scaleFactor.toFixed(2)}`);
+    console.log(`Canvas created with dimensions ${canvas.width}x${canvas.height}`);
 
     return canvas;
   }
 
   /**
    * Create an off-screen canvas with the given CSS/screen dimensions. 
-   * The internal pixel dimensions are scaled for high-DPI displays. 
+   * The internal pixel dimensions are scaled for high-DPI displays by default. 
    * Meant for buffering drawing operations.
    * @param {*} width - the width of the canvas as it appears on the screen in CSS pixels
    * @param {*} height - the height of the canvas as it appears on the screen in CSS pixels
-   * @param {*} id -
+   * @param {*} id - the ID to assign to the created canvas (optional, default is 'offscreen')
+   * @returns HTMLCanvasElement
    */
   static createOffscreenCanvasDPI(width, height, id = 'offscreen') {
     const canvas = document.createElement('canvas');
+    const DPI = this.useHighDPIRendering ? this.dpiRatio : 1;
 
     // Scale up the internal dimensions of the canvas by the device pixel ratio 
-    canvas.width = width * this.dpiRatio;
-    canvas.height = height * this.dpiRatio;
+    canvas.width = width * DPI;
+    canvas.height = height * DPI;
 
     // Set the CSS dimensions of the canvas to the original width and height to maintain the intended size on the page
     canvas.style.width = width + 'px';
@@ -253,5 +239,9 @@ export default class Page {
       img.onerror = (e) => reject(new Error(`Page failed to load: ${srcURL}`));
       img.src = srcURL;
     });
+  }
+
+  static setHighDPIRendering(yesOrNo) {
+    this.useHighDPIRendering = yesOrNo ?? false;
   }
 }

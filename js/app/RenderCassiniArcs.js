@@ -18,10 +18,8 @@ export default class RenderCassiniArcs extends RenderSimple {
     // High-DPI monitors, such as Retina displays, can have 2 or 3 times the pixel 
     // density of standard displays. To ensure our canvas looks crisp on these 
     // displays, we scale it up proportionally to the device pixel ratio. 
-    // (see Page.createCanvas() and notes in RenderSimple). Here we scale up
-    // the drawing context so that our drawing commands work in 
-
-    //!!! Scale the context by both the DPI ratio and the screen to physics ratio.
+    // (see notes in RenderSimple). this.totalScale includes the scale
+    // factor for high-DPI and the simulation->screen transformations.
     this.ctx.scale(this.totalScale, this.totalScale);
   }
 

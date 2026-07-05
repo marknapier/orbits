@@ -18,17 +18,20 @@ export default class RenderLenses extends RenderSimple {
     this.grayPalette = null;
     this.redButton = null;
     this.scaleFactor = 1;
-    this.W = this.canvas.width;
-    this.H = this.canvas.height;
+    this.W = this.width;  // physics simulation width
+    this.H = this.height;
     this.halfW = this.W / 2;
     this.halfH = this.H / 2;
     this.giant = this.particles.find(p => p.label === 'giant');
+
+    // Scale the context to match physics sim dimensions, and high-DPI displays.
+    this.ctx.scale(this.totalScale, this.totalScale);
   }
 
-  async init(scale = 1) {
+  async init() {
     try {
       // adjust sizes based on screen size
-      this.scaleFactor = scale;
+      this.scaleFactor = 1;
       this.M *= this.scaleFactor;
       
       this.grayPalette = await ColorPalette.createFromImage('./images/gray_ridges.png');
@@ -257,7 +260,7 @@ export default class RenderLenses extends RenderSimple {
   clear() {
     // Draw a filled rectangle that covers the entire canvas
     this.ctx.fillStyle = this.bgColor;
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.fillRect(0, 0, this.width, this.height);
   }
 
   getCircleIntersections(x1, y1, r1, x2, y2, r2) {

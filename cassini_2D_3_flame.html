@@ -187,41 +187,32 @@
       super(sim, canvas);
       this.yellowGreenPalette = null; // colors will be loaded in init()
 
-      // High-DPI monitors, such as Retina displays, can have 2 or 3 times the pixel density of standard displays. 
-      // To ensure our canvas looks crisp on these displays, we scale it up proportionally to the device pixel ratio. 
-      // (see Page.createCanvas()). Here we scale up the drawing context so that our drawing commands work in 
-      // the original coordinate space, but render a larger image.
-      this.dpiRatio = window.devicePixelRatio || 1;
-      this.ctx.scale(this.dpiRatio, this.dpiRatio); // Scale context for high-DPI displays
-    }
+      // Make an offscreen canvas for drawing - will be copied to display canvas in parts
+      this.offscreenCanvas = Page.createOffscreenCanvasDPI(this.canvasScreenSize.width, this.canvasScreenSize.height, 'offscreen');
+      // document.body.appendChild(this.offscreenCanvas);
 
-    setParticles(particles) {
-      this.particles = particles ?? [];
+      // this.ctx will draw to the offscreen canvas.
+      this.ctxDisplay = this.ctx; // save the on-screen context
+      this.ctx = this.offscreenCanvas.getContext('2d'); // off screen context
+
+      // Scale the offscreen context to fit the high pixel density and the screen-to-physics ratio.
+      this.ctx.scale(this.totalScale, this.totalScale);
+
+      // draw into the display canvas at full opacity
+      this.ctxDisplay.globalAlpha = 1.0;
     }
 
     async init() {
       // this.yellowGreenPalette = await ColorPalette.createFromImage('./images/eye_closeup_green_extract.jpg');
       this.yellowGreenPalette = await ColorPalette.createFromImage('./images/titan_blur.jpg');
-      window.yellowGreenPalette = this.yellowGreenPalette;
-
-      // canvas for drawing, will be copied to display canvas in parts
-      this.offscreenCanvas = document.createElement('canvas');
-      this.offscreenCanvas.width = this.canvas.width;
-      this.offscreenCanvas.height = this.canvas.height;
-      this.offscreenCanvas.id = 'offscreenCanvas';
-      // document.body.appendChild(this.offscreenCanvas); // debug
-
-      this.ctxDisplay = this.ctx; // save the on-screen context
-      this.ctx = this.offscreenCanvas.getContext('2d'); // off screen context
-      // this.ctx.scale(this.dpiRatio, this.dpiRatio); // Scale context for high-DPI displays, see comment in ctor
     }
 
     // ============================================================
     // Render the physics simulation into the canvas
     render() {
       const ctx = this.ctx;
-      const w = Page.canvasScreenWidth;
-      const h = Page.canvasScreenHeight;
+      const w = this.width; // physics sim dimensions
+      const h = this.height;
 
       // Clear bg if configured to do so, with a low alpha to create motion trails
       if (this.clearBG) {
@@ -256,7 +247,7 @@
 
       // Dark violet circle p0 - p1
       // Make a 0-1 value that represents the radius length relative to the canvas height
-      const radiusPercent = Math.max(Math.min(radius1 / Page.canvasScreenHeight, 1), 0.1);
+      const radiusPercent = Math.max(Math.min(radius1 / this.canvas.height, 1), 0.1);
       ctx.save();
       {
         ctx.globalAlpha = 0.2;
@@ -309,7 +300,7 @@
       ctx.restore();
 
       // light blue circle with thick border at p2
-      const gradientPercent = Math.max(Math.min(radius3 / Page.canvasScreenHeight, 1), 0.1);
+      const gradientPercent = Math.max(Math.min(radius3 / this.canvas.height, 1), 0.1);
       ctx.save();
       {
         ctx.globalAlpha = 0.2;
@@ -371,35 +362,39 @@
 
       // =============================================================
       // Draw the offscreen canvas onto the display canvas in pieces.
-      // First draw the left half of the offscreen canvas from x=0 up to the x position of p0, then draw the right half from p0's x to the end of the canvas.
-      const sliceWidth1 = Math.abs(p2.getX() - p1.getX()) || 20; // avoid zero width
-      const sliceWidth2 = Math.abs(p3.getX() - p2.getX()) || 20; // avoid zero width
+      // Remember that particle positions need to be scaled to match the canvas
+      // internal pixel dimensions.
+      const p1Position = Math.round(p1.getX() * this.totalScale);
+      const p2Position = Math.round(p2.getX() * this.totalScale);
+      const p3Position = Math.round(p3.getX() * this.totalScale);
+      const sliceWidth1 = Math.abs(p2Position - p1Position) || 20; // avoid zero width
+      const sliceWidth2 = Math.abs(p3Position - p2Position) || 20; // avoid zero width
 
       // draw normally with some alpha for blending
       this.ctxDisplay.globalAlpha = 0.1;
       this.ctxDisplay.drawImage(this.offscreenCanvas,
-        p1.getX(), 0, sliceWidth1, h,
-        p1.getX() - sliceWidth1, 0, sliceWidth1, h
+        p1Position, 0, sliceWidth1, this.canvas.height,
+        p1Position - sliceWidth1, 0, sliceWidth1, this.canvas.height
       );
       this.ctxDisplay.drawImage(this.offscreenCanvas,
-        p2.getX(), 0, sliceWidth2, h,
-        p1.getX(), 0, sliceWidth2, h
+        p2Position, 0, sliceWidth2, this.canvas.height,
+        p1Position, 0, sliceWidth2, this.canvas.height
       );
 
       // draw with effect
       this.ctxDisplay.globalAlpha = 0.05;
       this.ctxDisplay.globalCompositeOperation = 'hard-light';
       this.ctxDisplay.drawImage(this.offscreenCanvas,
-        p1.getX(), 0, sliceWidth1, h,
-        p1.getX() - sliceWidth1, 0, sliceWidth1, h
+        p1Position, 0, sliceWidth1, this.canvas.height,
+        p1Position - sliceWidth1, 0, sliceWidth1, this.canvas.height
       );
 
       // draw with effect
       this.ctxDisplay.globalAlpha = 0.1;
       this.ctxDisplay.globalCompositeOperation = 'overlay';
       this.ctxDisplay.drawImage(this.offscreenCanvas,
-        p2.getX(), 0, sliceWidth2, h,
-        p1.getX(), 0, sliceWidth2, h
+        p2Position, 0, sliceWidth2, this.canvas.height,
+        p1Position, 0, sliceWidth2, this.canvas.height
       );
 
       this.ctxDisplay.globalCompositeOperation = 'source-over'; // reset to default
@@ -424,36 +419,36 @@
     drawLineV(x, y) {
       this.ctx.beginPath();
       this.ctx.moveTo(x, 0);
-      this.ctx.lineTo(x, Page.canvasScreenHeight);
+      this.ctx.lineTo(x, this.height);
       this.ctx.stroke();
     }
 
     drawLineH(x, y) {
       this.ctx.beginPath();
       this.ctx.moveTo(0, y);
-      this.ctx.lineTo(Page.canvasScreenWidth, y);
+      this.ctx.lineTo(this.width, y);
       this.ctx.stroke();
     }
 
     clear() {
       // Draw a filled rectangle that covers the entire canvas
       this.ctx.fillStyle = "black";
-      this.ctx.fillRect(0, 0, Page.canvasScreenWidth, Page.canvasScreenHeight);
+      this.ctx.fillRect(0, 0, this.width, this.height);
     }
   }
 
   async function loadAndRunSimulation() {
     try {
-      const canvas = Page.createCanvasDPI(window.innerWidth, window.innerHeight);
+      const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight);
 
       const engine = new PhysicsEngine();
-      engine.setDimensions(Page.canvasScreenWidth, Page.canvasScreenHeight);
+      engine.setDimensions(1600, 900);
       engine.detectCollisions = false;
-      engine.timeStep *= Page.scaleFactor; // scale time step to keep velocity in proportion to canvas size
+      engine.timeStep = 0.18;
 
       const model = new Model();
       model.parseConfig(modelJSON);
-      model.centerAt(Page.canvasScreenWidth / 2.2, Page.canvasScreenHeight / 2);
+      model.centerAt(engine.getWidth() / 2.2, engine.getHeight() / 2);
 
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
 

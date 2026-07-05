@@ -37,10 +37,27 @@
       this.bgTexture = null;
       this.flowerImage = null;
       this.flowerPattern = null;
-    }
+      // pre-calculate offsets into the canvas internal pixel space for drawing images slices.
+      // These operate on the canvas internal pixel spaceso do not need to be scaled by totalScale.
+      this.offset6 = Math.round(this.canvas.width * 0.6);
+      this.sliceWidthThin = Math.round(this.canvas.width * 0.12);
+      this.offsetHalf = Math.round(this.canvas.width * 0.5);
+      this.sliceWidthQuarter = Math.round(this.canvas.width * 0.25);
+      this.offsetFourFifths = Math.round(this.canvas.width * 0.875);
+      // Not used?
+      this.twopixels = Math.round((this.width * 0.0025) * this.totalScale);    // 2 pixels
+      this.fivepixels = Math.round((this.width * 0.00625) * this.totalScale);  // 5 pixels
+      this.eightpixels = Math.round((this.width * 0.01) * this.totalScale);    // 8 pixels
 
-    setParticles(particles) {
-      this.particles = particles ?? [];
+      // canvas for drawing, will be copied to display canvas in parts
+      this.offscreenCanvas = Page.createOffscreenCanvasDPI(this.canvasScreenSize.width, this.canvasScreenSize.height, 'offscreen');
+      // document.body.appendChild(this.offscreenCanvas);
+
+      this.ctxDisplay = this.ctx; // save the on-screen context
+      this.ctx = this.offscreenCanvas.getContext('2d'); // we'll draw into offscreen context
+
+      // Scale the context to match physics sim dimensions, and high-DPI displays.
+      this.ctx.scale(this.totalScale, this.totalScale);
     }
 
     async init() {
@@ -52,14 +69,7 @@
         this.flowerImage = await ImageLoader.loadImage('./images/flower_pattern_t.png');
         this.woodPattern = this.ctx.createPattern(this.bgTexture, 'repeat');
         this.flowerPattern = this.ctx.createPattern(this.flowerImage, 'repeat');
-        // canvas for drawing, will be copied to display canvas in parts
-        this.offscreenCanvas = document.createElement('canvas');
-        this.offscreenCanvas.width = this.canvas.width;
-        this.offscreenCanvas.height = this.canvas.height;
-        document.body.appendChild(this.offscreenCanvas);
-
-        this.ctxDisplay = this.ctx; // save the on-screen context
-        this.ctx = this.offscreenCanvas.getContext('2d'); // off screen context
+        // draw the background texture into the offscreen canvas, fullsize
         this.ctxDisplay.drawImage(this.bgTexture, 0, 0, this.canvas.width, this.canvas.height);
       } catch (error) {
         console.error(error.message);
@@ -70,8 +80,8 @@
     // Render the physics simulation into the canvas
     render() {
       const ctx = this.ctx;
-      const w = this.canvas.width;
-      const h = this.canvas.height;
+      const w = this.width;
+      const h = this.height;
       let flowerP = null;
 
       // Clear bg if configured to do so, with a low alpha to create motion trails
@@ -202,31 +212,35 @@
       }
       ctx.restore();
 
+      // This draws from the offscreen canvas into the display canvas, which is not scaled, 
+      // and has an exact 1:1 proportion to the offscreen canvas. We can draw directly using 
+      // canvas internal coordinates without scaling. Only particles (physics coords) need 
+      // to be scaled by totalScale.
       if (true) {
         this.ctxDisplay.drawImage(
           this.offscreenCanvas,
-          500, 0, 100, this.canvas.height, // from
-          0, 0, 100, this.canvas.height  // to
+          this.offset6, 0, this.sliceWidthThin, this.canvas.height, // from
+          0, 0, this.sliceWidthThin, this.canvas.height  // to
         );
         this.ctxDisplay.drawImage(
           this.offscreenCanvas,
-          700, 0, 200, this.canvas.height, // from
-          200, 0, 200, this.canvas.height  // to
+          this.offsetFourFifths, 0, this.sliceWidthQuarter, this.canvas.height, // from
+          this.sliceWidthQuarter, 0, this.sliceWidthQuarter, this.canvas.height  // to
         );
         this.ctxDisplay.drawImage(
           this.offscreenCanvas,
-          0, 0, 200, this.canvas.height, // from
-          400, 0, 200, this.canvas.height  // to
+          0, 0, this.sliceWidthQuarter, this.canvas.height, // from
+          this.offsetHalf, 0, this.sliceWidthQuarter, this.canvas.height  // to
         );
         this.ctxDisplay.drawImage(
           this.offscreenCanvas,
-          500, 0, 100, this.canvas.height, // from
-          700, 0, 100, this.canvas.height  // to
+          this.offset6, 0, this.sliceWidthThin, this.canvas.height, // from
+          0, 0, this.sliceWidthThin, this.canvas.height  // to
         );
         this.ctxDisplay.drawImage(
           this.offscreenCanvas,
-          flowerP.getX(), 0, 100, this.canvas.height, // from
-          flowerP.getX(), 0, 100, this.canvas.height  // to
+          flowerP.getX() * this.totalScale, 0, this.sliceWidthThin, this.canvas.height, // from
+          flowerP.getX() * this.totalScale, 0, this.sliceWidthThin, this.canvas.height  // to
         );
       }
     }
@@ -244,21 +258,21 @@
     drawLineV(x, y) {
       this.ctx.beginPath();
       this.ctx.moveTo(x, 0);
-      this.ctx.lineTo(x, this.canvas.height);
+      this.ctx.lineTo(x, this.height);
       this.ctx.stroke();
     }
 
     drawLineH(x, y) {
       this.ctx.beginPath();
       this.ctx.moveTo(0, y);
-      this.ctx.lineTo(this.canvas.width, y);
+      this.ctx.lineTo(this.width, y);
       this.ctx.stroke();
     }
 
     clear() {
       // Draw a filled rectangle that covers the entire canvas
       this.ctx.fillStyle = "black";
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.fillRect(0, 0, this.width, this.height);
     }
   }
 
@@ -730,16 +744,15 @@
 
   async function loadAndRunSimulation() {
     try {
-      // const canvas = Page.createCanvas(1200, 800);
-      const canvas = Page.createCanvas(window.innerWidth, window.innerHeight, 'sim');
+      const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight, 'sim');
 
       const engine = new PhysicsEngine();
-      engine.setDimensions(canvas.width, canvas.height);
+      engine.setDimensions(1600, 900);
       engine.detectCollisions = false;
 
       const model = new Model();
       model.parseConfig(modelJSON);
-      model.centerAt(canvas.width / 2.2, canvas.height / 2);
+      model.centerAt(engine.getWidth() / 2.2, engine.getHeight() / 2);
 
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
 

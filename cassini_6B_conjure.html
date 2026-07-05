@@ -391,12 +391,15 @@ canvas. Blurred neutral aqua tones and dark red-violet.
 
       // =============================================================
       // Draw the offscreen canvas onto the display canvas in pieces.
-      // First draw the left half of the offscreen canvas from x=0 up to the x position of p0, then draw the right half from p0's x to the end of the canvas.
-      // NOTE: Have to use this.totalScale to scale the source and dest coordinates here to 
-      // adapt to high-DPI displays, because the drawImage method works with the actual pixel dimensions of the canvas, 
-      // it is not covered by the ctx.scale() call we made earlier.
+      //
+      // NOTE: Have to use this.totalScale to scale the source and dest coordinates 
+      // here to adapt to high-DPI displays. When using the 5- or 9-argument version 
+      // of drawImage(), the destination width and height are raw CSS pixels, 
+      // effectively canceling out the ctx.scale() operation done in the constructor().
+      //
       // NOTE: draw images at integer positions so the canvas won't interpolate partial
-      // pixels. This should improve performance.
+      // pixels. This should improve performance, and make edges sharper.
+      //
       const sliceWidth1 = Math.round(10 * this.totalScale);
       const sliceWidth2 = Math.round(((Math.abs(p2.getX() - p3.getX()) / 4) || 2) * this.totalScale);
 
@@ -463,7 +466,7 @@ canvas. Blurred neutral aqua tones and dark red-violet.
 
   async function loadAndRunSimulation() {
     try {
-      const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight, 'sim', true); //!!!
+      const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight);
 
       const engine = new PhysicsEngine();
       engine.setDimensions(1920, 1080); //!!!  fixed size with ratio 16x9

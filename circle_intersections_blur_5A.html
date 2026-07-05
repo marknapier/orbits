@@ -5,6 +5,7 @@ At larger size, the velocity feels hectic, as the shapes are larger and more vis
 but if I slow down the simulation then the transluscent shapes tend to "burn in" and the colors
 lose some of the overlapping effects that make them visually appealing. For this version I run
 the simulation at the same speed as circle intersections 4 -->
+
 <head>
   <meta charset="utf-8" />
   <title>Circle Intersections 5A</title>
@@ -29,22 +30,32 @@ the simulation at the same speed as circle intersections 4 -->
     constructor(sim, canvas) {
       super(sim, canvas);
       this.bgColor = 'white';
-      // not visible, used as source material for final canvas
-      this.offCanvas = document.createElement('canvas');
-      this.offCanvas.width = canvas.width;
-      this.offCanvas.height = canvas.height;
+
+      // Make an offscreen canvas for drawing - will be copied to display canvas in parts
+      // Offscreen canvas will be scaled to match the physics sim dimensions, and high-DPI displays.
+      this.offCanvas = Page.createOffscreenCanvasDPI(this.canvasScreenSize.width, this.canvasScreenSize.height, 'offscreen');
       this.offCtx = this.offCanvas.getContext('2d');
+      // Scale the offscreen context to match physics sim dimensions, and high-DPI displays.
+      this.offCtx.scale(this.totalScale, this.totalScale);
       // clear to white one time at the start
       this.clear();
-      // pre-calculate these constants used for dimentions and positions, relative to an 800x600 canvas; they'll scale up on larger canvases
-      this.onehundred = this.canvas.width * 0.125;    // 100 pixels
-      this.twohundred = this.canvas.width * 0.25;     // 200 pixels
-      this.threehundred = this.canvas.width * 0.375;  // 300 pixels
-      this.fivehundred = this.canvas.width * 0.625;   // 500 pixels
-      this.sevenhundred = this.canvas.width * 0.875;  // 700 pixels
-      this.twopixels = this.canvas.width * 0.0025;    // 2 pixels
-      this.fivepixels = this.canvas.width * 0.00625;  // 5 pixels
-      this.eightpixels = this.canvas.width * 0.01;    // 8 pixels
+
+      // pre-calculate these constants used for dimensions and positions, relative to an 
+      // 800px wide canvas; they'll scale up on larger canvases.
+      // NOTE: these are used in the canvas compositing step for drawImage operations. They
+      // can be calculated using the canvas internal pixel dimensions (this.canvas.width) 
+      // and then don't need to be scaled.
+      this.onehundred = Math.round((this.canvas.width * 0.125));    // 100 pixels
+      this.twohundred = Math.round((this.canvas.width * 0.25));     // 200 pixels
+      this.threehundred = Math.round((this.canvas.width * 0.375));  // 300 pixels
+      this.fivehundred = Math.round((this.canvas.width * 0.625));   // 500 pixels
+      this.sevenhundred = Math.round((this.canvas.width * 0.875));  // 700 pixels
+
+      // Physics space, use this.width. These are used for drawing in the scaled offscreen 
+      // canvas, so don't need to be scaled here.
+      this.twopixels = Math.round((this.width * 0.0025));    // 2 pixels in an 800px wide sim
+      this.fivepixels = Math.round((this.width * 0.00625));  // 5 pixels
+      this.eightpixels = Math.round((this.width * 0.01));    // 8 pixels
     }
 
     async init() {
@@ -53,7 +64,7 @@ the simulation at the same speed as circle intersections 4 -->
     }
 
     render() {
-      this.offCtx.globalAlpha = 0.035; // low alpha for blurring effect
+      this.offCtx.globalAlpha = 0.6; // low alpha 0.035 for blurring effect
       this.paintIntersections();
       this.paintArcMadeByLine();
       for (const particle of this.particles) {
@@ -149,36 +160,45 @@ the simulation at the same speed as circle intersections 4 -->
 
       ctx.save();
       {
-        // paint a thin outside circle for this particle
-        ctx.beginPath();
-        ctx.strokeStyle = particle.getColor();
-        ctx.lineWidth = this.twopixels; // 2 pixels for an 800 pixel wide canvas
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.stroke();
-
         // special handling for some particles, based on label
         if (particle.label === 'line1') {
           ctx.globalAlpha = 0.035; // low alpha for blurring effect
           ctx.globalCompositeOperation = 'multiply';
-          this.drawLineV(particle.getX(), particle.getY());
+          this.drawLineV(x, y);
           ctx.globalCompositeOperation = 'source-over';
         }
         else if (particle.label === 'line2') {
           ctx.lineWidth = this.fivepixels; // 5 pixels for an 800 pixel wide canvas
           ctx.globalAlpha = 0.5;  // higher contrast for the eraser line, so that it creates more visible edge
           ctx.strokeStyle = this.noisePattern;
-          this.drawLineV(particle.getX(), particle.getY());
+          this.drawLineV(x, y);
         }
         else if (particle.label === 'small') {
-          ctx.save();
-          {
-            ctx.globalAlpha = 1.0;
-            ctx.fillStyle = 'rgba(20, 10, 0, .1)'; // dark almost black
-            ctx.beginPath();
-            ctx.arc(x, y, particle.getRadius(), 0, Math.PI * 2);
-            ctx.fill();
-          }
-          ctx.restore();
+          // paint a thin outside circle
+          ctx.beginPath();
+          ctx.strokeStyle = particle.getColor();
+          ctx.lineWidth = this.twopixels; // 2 pixels for an 800 pixel wide canvas
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.stroke();
+          // fill circle
+          ctx.globalAlpha = 1.0;
+          ctx.fillStyle = 'rgba(20, 10, 0, .1)'; // dark almost black
+          ctx.fill();
+        }
+        else if (particle.label === 'pink') {
+          ctx.beginPath();
+          ctx.strokeStyle = particle.getColor();
+          ctx.lineWidth = this.twopixels * 10; // 2 pixels for an 800 pixel wide canvas
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        else {
+          // paint a thin outside circle
+          ctx.beginPath();
+          ctx.strokeStyle = particle.getColor();
+          ctx.lineWidth = this.twopixels; // 2 pixels for an 800 pixel wide canvas
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.stroke();
         }
       }
       ctx.restore();
@@ -224,20 +244,35 @@ the simulation at the same speed as circle intersections 4 -->
     drawLineV(ctx, x, y) {
       this.offCtx.beginPath();
       this.offCtx.moveTo(x, 0);
-      this.offCtx.lineTo(x, this.canvas.height);
+      this.offCtx.lineTo(x, this.height);
       this.offCtx.stroke();
     }
 
     clear() {
       this.offCtx.fillStyle = this.bgColor;
       this.offCtx.globalAlpha = 1.0;
-      this.offCtx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.offCtx.fillRect(0, 0, this.width, this.height);
     }
   }
 
   async function loadAndRunSimulation() {
     try {
-      const canvas = Page.createCanvas(window.innerWidth, window.innerHeight, 'sim');
+      // This piece can get sluggish at high DPI settings, because it draws large circles (large arcs at 2x dpi slow down)
+      Page.setHighDPIRendering(false);
+
+      const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight, 'sim');
+
+      const engine = new PhysicsEngine();
+      engine.setDimensions(1920, 1080);
+      engine.setWallTypeStr('reflecting');
+      engine.detectCollisions = false;
+      engine.margin = engine.getWidth() * 0.1875; // 150 pixels for a 800 pixel wide canvas
+      engine.gravY = 0;
+      // Smaller timestep means that particles will move in smaller increments. Since this renderer
+      // use alpha blending to create a blur effect, smaller increments will make the blur "burn in"
+      // more quickly, creating denser color, but also reducing some of the layering of translucent colors 
+      // that creates visual interest.
+      engine.timeStep = .01; // slower
 
       // Make 5 random particles
       // pixel dimensions are relative to an 800x600 canvas; they'll scale up on larger canvases
@@ -261,13 +296,14 @@ the simulation at the same speed as circle intersections 4 -->
         ));
       }
 
-      const ten = 0.0125 * canvas.width; // 10 pixels for a 800 pixel wide canvas
-      const two = 0.0025 * canvas.width; // 2 pixels for a 800 pixel wide canvas
+      const ten = 0.0125 * engine.getWidth(); // 10 pixels for a 800 pixel wide canvas
+      const two = 0.0025 * engine.getWidth(); // 2 pixels for a 800 pixel wide canvas
 
       // large circle
       particles[0].setColor('rgb(127, 211, 220)'); // light blue
       // large circle
-      particles[1].setColor('rgb(255, 182, 193)'); // light pink
+      particles[1].setColor('rgba(255, 182, 193, 0.25)'); // light pink
+      particles[1].setLabel('pink');
       // vertical line
       particles[2].setColor('rgb(198, 78, 144)'); // light magenta for line
       particles[2].setRadius(two); // 2 pixels for a 800 pixel wide canvas
@@ -284,19 +320,7 @@ the simulation at the same speed as circle intersections 4 -->
       particles[4].setVel(new Vector2D(Math.random() * (ten / 2), 0));
       particles[4].setLabel('small');
 
-      const engine = new PhysicsEngine();
-      engine.setDimensions(canvas.width, canvas.height);
-      engine.detectCollisions = true;
-      engine.setWallTypeStr('reflecting');
       engine.addParticles(particles);
-      engine.detectCollisions = false;
-      engine.margin = canvas.width * 0.1875; // 150 pixels for a 800 pixel wide canvas
-      engine.gravY = 0;
-      // Smaller timestep means that particles will move in smaller increments. Since this renderer
-      // use alpha blending to create a blur effect, smaller increments will make the blur "burn in"
-      // more quickly, creating denser color, but also reducing some of the layering of translucent colors 
-      // that creates visual interest.
-      engine.timeStep = .05; // slower
 
       const renderer = new RenderIntersections(engine, canvas);
       await renderer.init();

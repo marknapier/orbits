@@ -201,11 +201,6 @@ are then drawn onto the display canvas, one with normal opacity and one with a h
       this.halfPI = Math.PI / 2;
       this.quarterPI = Math.PI / 4;
 
-      // High-DPI monitors, such as Retina displays, can have 2 or 3 times the pixel density of standard displays. 
-      // To ensure our canvas looks crisp on these displays, we scale it up proportionally to the device pixel ratio. 
-      // (see Page.createCanvas()). Here we scale up the drawing context so that our drawing commands work in 
-      // the original coordinate space, but render a larger image.
-
       // Make an offscreen canvas for drawing - will be copied to display canvas in parts
       this.offscreenCanvas = Page.createOffscreenCanvasDPI(this.canvasScreenSize.width, this.canvasScreenSize.height, 'offscreen');
       if (false) {
@@ -276,7 +271,7 @@ are then drawn onto the display canvas, one with normal opacity and one with a h
 
       // Dark violet circle p0 - p1
       // Make a 0-1 value that represents the radius length relative to the canvas height
-      const radiusPercent = Math.max(Math.min(radius1 / Page.canvasScreenHeight, 1), 0.1);
+      const radiusPercent = Math.max(Math.min(radius1 / this.canvas.height, 1), 0.1);
       ctx.save();
       {
         ctx.globalAlpha = 0.1;
@@ -435,7 +430,7 @@ are then drawn onto the display canvas, one with normal opacity and one with a h
 
   async function loadAndRunSimulation() {
     try {
-      const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight, 'sim', true);
+      const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight);
 
       const engine = new PhysicsEngine();
       engine.setDimensions(1651, 929); //!!!  16x9 but smaller size than 1990, 1119

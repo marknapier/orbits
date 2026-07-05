@@ -157,29 +157,29 @@
 
   async function loadAndRunSimulation() {
     try {
-      // main drawing canvas
-      const canvas = Page.createCanvas(window.innerWidth, window.innerHeight, 'sim');
+      // This piece can get sluggish at high DPI settings, because it draws large circles (large arcs at 2x dpi slow down)
+      Page.setHighDPIRendering(false);
+
+      const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight, 'sim');
+
+      const engine = new PhysicsEngine();
+      engine.setDimensions(1920, 1080);
+      engine.detectCollisions = false;
+      engine.timeStep = 0.18;
 
       const model = new Model();
       model.parseConfig(modelJSON);
-      model.scalePositions(Page.scaleFactor); // scale first, then center
-      model.centerAt(canvas.width / 3, canvas.height / 2);
+      model.centerAt(engine.getWidth() / 3, engine.getHeight() / 2);
 
-      const engine = new PhysicsEngine();
-      engine.setDimensions(canvas.width, canvas.height);
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
-      engine.detectCollisions = false;
-      engine.timeStep *= Page.scaleFactor; // scale time step to keep velocity in proportion to canvas size
 
       const renderer = new RenderLens(engine, canvas);
-      await renderer.init(Page.scaleFactor);
+      await renderer.init();
       renderer.clear();
 
-      // mouse listens for events on the top canvas
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
       mouseHandler.hideCursorAfterDelay();
 
-      // animation loop calls update function that draws both canvases
       const animationLoop = new AnimationLoop(() => {
         engine.step();
         renderer.render();

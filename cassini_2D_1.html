@@ -191,13 +191,6 @@
       this.halfPI = Math.PI / 2;
       this.quarterPI = Math.PI / 4;
 
-      // High-DPI monitors, such as Retina displays, can have 2 or 3 times the pixel density of standard displays. 
-      // To ensure our canvas looks crisp on these displays, we scale it up proportionally to the device pixel ratio. 
-      // (see Page.createCanvas()). Here we scale up the drawing context so that our drawing commands work in 
-      // the original coordinate space, but render a larger image.
-      // this.dpiRatio = window.devicePixelRatio || 1;
-      // this.ctx.scale(this.dpiRatio, this.dpiRatio); // Scale context for high-DPI displays
-
       // Make an offscreen canvas for drawing - will be copied to display canvas in parts
       this.offscreenCanvas = Page.createOffscreenCanvasDPI(this.canvasScreenSize.width, this.canvasScreenSize.height, 'offscreen');
 
@@ -211,22 +204,6 @@
       // save some dimensions for later use
       this.simWidth = sim.getWidth();    // physics units, need to be scaled up to fit full-sized canvas
       this.simHeight = sim.getHeight();
-      this.canvasH = this.offscreenCanvas.height;    // actual pixels, no need to scale when using these
-      this.canvasW = this.offscreenCanvas.width;
-
-
-
-      // // canvas for drawing, will be copied to display canvas in parts
-      // this.offscreenCanvas = document.createElement('canvas');
-      // this.offscreenCanvas.width = this.canvas.width;
-      // this.offscreenCanvas.height = this.canvas.height;
-      // this.offscreenCanvas.id = 'offscreenCanvas';
-      // // document.body.appendChild(this.offscreenCanvas); // debug
-
-      // this.ctxDisplay = this.ctx; // save the on-screen context
-      // this.ctx = this.offscreenCanvas.getContext('2d'); // off screen context
-      // // this.ctx.scale(this.dpiRatio, this.dpiRatio); // Scale context for high-DPI displays, see comment in ctor
-
     }
 
     setParticles(particles) {
@@ -244,8 +221,6 @@
     // Render the physics simulation into the canvas
     render() {
       const ctx = this.ctx;
-      const w = this.simWidth; // may be scaled for high-DPI canvas
-      const h = this.simHeight; // may be scaled for high-DPI canvas
 
       // Clear bg if configured to do so, with a low alpha to create motion trails
       if (this.clearBG) {
@@ -280,7 +255,7 @@
 
       // Dark violet circle p0 - p1
       // Make a 0-1 value that represents the radius length relative to the canvas height
-      const radiusPercent = Math.max(Math.min(radius1 / Page.canvasScreenHeight, 1), 0.1);
+      const radiusPercent = Math.max(Math.min(radius1 / this.simHeight, 1), 0.1);
       ctx.save();
       {
         ctx.globalAlpha = 0.2;
@@ -335,7 +310,7 @@
       ctx.restore();
 
       // light blue circle with thick border at p2
-      const gradientPercent = Math.max(Math.min(radius3 / Page.canvasScreenHeight, 1), 0.1);
+      const gradientPercent = Math.max(Math.min(radius3 / this.simHeight, 1), 0.1);
       ctx.save();
       {
         ctx.globalAlpha = 0.2;
@@ -414,8 +389,8 @@
       
       this.ctxDisplay.globalAlpha = 1.0; // draw the offscreen canvas at full opacity
       this.ctxDisplay.drawImage(this.offscreenCanvas,
-        Math.round(p1.getX() * this.totalScale), 0, sliceWidth1, this.canvasH,
-        Math.round(p2.getX() * this.totalScale), 0, sliceWidth1, this.canvasH
+        Math.round(p1.getX() * this.totalScale), 0, sliceWidth1, this.canvas.height,
+        Math.round(p2.getX() * this.totalScale), 0, sliceWidth1, this.canvas.height
       );
       ctx.restore();
     }
@@ -493,7 +468,7 @@
     clear() {
       // Draw a filled rectangle that covers the entire canvas
       this.ctx.fillStyle = "black";
-      this.ctx.fillRect(0, 0, Page.canvasScreenWidth, Page.canvasScreenHeight);
+      this.ctx.fillRect(0, 0, this.width, this.height);
     }
   }
 
@@ -502,7 +477,7 @@
       const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight);
 
       const engine = new PhysicsEngine();
-      engine.setDimensions(1651, 929); //!!!  16x9 but smaller size than 1990, 1119
+      engine.setDimensions(1600, 900); //!!!  16x9 but smaller size than 1990
       engine.detectCollisions = false;
       engine.timeStep = 0.23;
 

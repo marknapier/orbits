@@ -131,24 +131,25 @@
   async function loadAndRunSimulation() {
     try {
       // main drawing canvas
-      const canvas = Page.createCanvas(window.innerWidth, window.innerHeight, 'sim');
+      const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight, 'sim');
+
+      const engine = new PhysicsEngine();
+      engine.setDimensions(1920, 1080);
+      engine.detectCollisions = false;
+      engine.timeStep = 0.18;
 
       const model = new Model();
       model.parseConfig(modelJSON);
-      model.centerAt(canvas.width * 0.5, canvas.height * 0.33);
+      model.centerAt(engine.getWidth() / 0.5, engine.getHeight() / 0.33);
 
       const model2 = new Model();
       model2.parseConfig(modelJSON);
-      model2.centerAt(canvas.width * 0.5, canvas.height * 0.66);
+      model2.centerAt(engine.getWidth() * 0.5, engine.getHeight() * 0.66);
       // let the giant planet in the second model move in the Y direction
       (model2.particles.find(p => p.label === 'giant')).setFixedX(false);
 
-      const engine = new PhysicsEngine();
-      engine.setDimensions(canvas.width, canvas.height);
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
       engine.addModel(model2.getParticles(), model2.getSprings(), model2.getEnvironment());
-      engine.detectCollisions = false;
-      engine.timeStep *= Page.scaleFactor; // scale time step to keep velocity in proportion to canvas size
 
       // const renderer = new RenderLenses(engine, canvas);
       // const renderer = new RenderLensesHelloYellow(engine, canvas);
@@ -156,7 +157,7 @@
       // const renderer = new RenderLensesBlueGreenWithGuides(engine, canvas);
       // const renderer = new RenderLensesBlueGreenWithGuidesOnlyArcs(engine, canvas);
       const renderer = new RenderLensesGreenArcs(engine, canvas);
-      await renderer.init(Page.scaleFactor);
+      await renderer.init();
       renderer.clear();
 
       // mouse listens for events on the top canvas
