@@ -8,20 +8,9 @@ are then drawn onto the display canvas, one with normal opacity and one with a h
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cassini 2E 1 Moon 2</title>
-  <link rel="stylesheet" href="./styles/full_viewport_canvas.css">
-  <style>
-    /* for debugging layout issues */
-    body {
-      transform: none;
-      overflow: scroll;
-    }
-
-    body canvas {
-      transform: none;
-      position: relative;
-    }
-  </style>
+  <title>Cassini 2E 1 Moon 1</title>
+  <!-- <link rel="stylesheet" href="./styles/full_viewport_canvas.css"> -->
+  <link rel="stylesheet" href="./styles/main.css">
 </head>
 
 <body>
@@ -67,7 +56,7 @@ are then drawn onto the display canvas, one with normal opacity and one with a h
         "mass": 50.0,
         "charge": 0.0,
         "fixedXPosition": false,
-        "fixedYPosition": true, // change to false for more chaotic motion
+        "fixedYPosition": false, // change to false for more chaotic motion
         "trace": false
       },
       {
@@ -97,7 +86,7 @@ are then drawn onto the display canvas, one with normal opacity and one with a h
         "mass": 20.0,
         "charge": 0.0,
         "fixedXPosition": false,
-        "fixedYPosition": true,
+        "fixedYPosition": false,
         "trace": true
       },
       {
@@ -159,30 +148,30 @@ are then drawn onto the display canvas, one with normal opacity and one with a h
       {
         "label": "spring3",
         "color": "white",
-        "particle1": 1,
+        "particle1": 2,
         "particle2": 3,
         "springConstant": 0.5,
         "damping": 0.8,
         "relaxedLength": 0
       },
-      {
-        "label": "spring4", // connects agitator to tiny
-        "color": "white",
-        "particle1": 1,
-        "particle2": 4,
-        "springConstant": 5.5,
-        "damping": 0.8,
-        "relaxedLength": 0
-      },
       // {
-      //   "label": "spring4", // connects agitator to first particle in chain
+      //   "label": "spring4", // connects agitator to tiny
       //   "color": "white",
       //   "particle1": 4,
-      //   "particle2": 1,
+      //   "particle2": 5,
       //   "springConstant": 5.5,
       //   "damping": 0.8,
       //   "relaxedLength": 0
       // },
+      {
+        "label": "spring4", // connects agitator to first particle in chain
+        "color": "white",
+        "particle1": 4,
+        "particle2": 1,
+        "springConstant": 5.5,
+        "damping": 0.8,
+        "relaxedLength": 0
+      },
     ]
   };
 
@@ -203,7 +192,7 @@ are then drawn onto the display canvas, one with normal opacity and one with a h
 
       // Make an offscreen canvas for drawing - will be copied to display canvas in parts
       this.offscreenCanvas = Page.createOffscreenCanvasDPI(this.canvasScreenSize.width, this.canvasScreenSize.height, 'offscreen');
-      if (false) {
+      if (true) {
         document.body.appendChild(this.offscreenCanvas); // debug - show the offscreen canvas on the page
       }
 
@@ -261,7 +250,10 @@ are then drawn onto the display canvas, one with normal opacity and one with a h
       // const p5 = particles[5]; // tiny
 
       const radius1 = Particle.distance(p0, p1);
-      const radius2 = Particle.distance(p2, p4);
+      const radius2 = Particle.distance(p1, p2);
+      const radius3 = Particle.distance(p2, p3);
+      const radius4 = Particle.distance(p3, p0);
+
       // ------------------------------------------------------------------------------------------------
       // Draw a circle for each particle pair, using the distance between particles as the radius.
       // ------------------------------------------------------------------------------------------------
@@ -271,38 +263,49 @@ are then drawn onto the display canvas, one with normal opacity and one with a h
       const radiusPercent = Math.max(Math.min(radius1 / this.canvas.height, 1), 0.1);
       ctx.save();
       {
-        ctx.globalAlpha = 0.1;
-        ctx.strokeStyle = this.violetColors[(radiusPercent * 3) | 0];
-        ctx.lineWidth = 15 * radiusPercent;
-        this.drawArcPath(ctx, p0, p1);
-
-        // black line through p0
-        ctx.strokeStyle = "rgb(0, 0, 0)";
-        ctx.globalAlpha = 0.25;
+        ctx.globalAlpha = 0.3;
+        ctx.strokeStyle = "black";//this.violetColors[(radiusPercent * 3) | 0];
+        ctx.lineWidth = 10; // * radiusPercent;
+        // this.drawArcPath(ctx, p0, p3);
+        this.drawEllipseAroundPoints(
+          p0.getX(), p0.getY(),
+          p3.getX(), p3.getY(),
+          radius4/this.height, 20);
+        
+        ctx.globalAlpha = 0.2;
+        ctx.strokeStyle = "rgb(16, 12, 23)"; // violet black line through p0
         ctx.lineWidth = 4;
-        this.drawLineV(p3.getX(), p3.getY());
+        // this.drawLineV(p0.getX(), p0.getY());
       }
       ctx.restore();
+
+
+      ctx.save();
+      {
+        ctx.globalAlpha = 0.05;
+        ctx.strokeStyle = "pink";//this.violetColors[(radiusPercent * 3) | 0];
+        ctx.lineWidth = 2; // * radiusPercent;
+        this.drawEllipseAroundPoints(
+          p1.getX(), p1.getY(),
+          p4.getX(), p4.getY(),
+          radius2/this.height, 30);
+      }
+      ctx.restore();
+
 
       // draw a whitish grayish circle whose edges pass through p1 and p2
       ctx.save();
       {
-        ctx.globalAlpha = 0.1;
+        ctx.globalAlpha = 0.15;
         ctx.strokeStyle = this.titanBlurPalette.getNextColor();
         // ctx.strokeStyle = this.yellowOrangePalette.getNextColor();
         ctx.lineWidth = 1;
-        this.whiteCircleStats = this.drawArcCentered(ctx, p2, p4);
-
-        // add some pink
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = "rgba(255, 200, 230, 0.25)";
-        this.drawArcCentered(ctx, p2, p4);
-
-        // white vertical
-        ctx.strokeStyle = 'orange'; // "rgb(255, 255, 255)";
-        ctx.lineWidth = 4;
-        ctx.globalCompositeOperation = 'difference'; // hard-light is nice
-        this.drawLineV(p2.getX(), p2.getY());
+        this.drawArcPath(ctx, p0, p4);
+        ctx.strokeStyle = 'rgb(255, 250, 240)';
+        this.drawArcPath(ctx, p2, p3);
+        // ctx.strokeStyle = "rgb(16, 12, 23)"; // violet black line through p2
+        // ctx.lineWidth = 4;
+        // this.drawLineV(p2.getX(), p2.getY());
       }
       ctx.restore();
 
@@ -314,7 +317,7 @@ are then drawn onto the display canvas, one with normal opacity and one with a h
         for (let i = 0; i < particles.length - 1; i++) { // excludes 'tiny' particle which is the last one
           const p = particles[i];
           ctx.beginPath();
-          ctx.ellipse(p.getX(), p.getY(), 4, 2, 0, 0, Math.PI * 2);
+          ctx.ellipse(p.getX(), p.getY(), 2, 1, 0, 0, Math.PI * 2);
           ctx.fill();
         }
       }
@@ -324,7 +327,7 @@ are then drawn onto the display canvas, one with normal opacity and one with a h
       if (false) {
         ctx.save();
         {
-          ctx.globalAlpha = 0.2;
+          ctx.globalAlpha = 0.3;
           for (let i = 0; i < particles.length; i++) {
             const p = particles[i];
             ctx.fillStyle = p.getColor();
@@ -342,31 +345,48 @@ are then drawn onto the display canvas, one with normal opacity and one with a h
 
       // ================================================================================================
       // Draw the offscreen canvas onto the display canvas in pieces.
-      // Remember to scale up the particle positions since drawImage is not
-      // affected by the earlier ctx.scale() that we applied to the offscreen context.
 
-      const sliceWidth1 = Math.round(this.whiteCircleStats.radius / 2 * this.totalScale); // 500
-      const sliceWidth2 = Math.round(this.whiteCircleStats.radius / 4 * this.totalScale); // 200
+      const wid = 40; //Math.abs(p1.getX() - p4.getX());
+      const sliceWidth1 = Math.round(wid * this.totalScale); //Math.round((wid / 2) * this.totalScale); // 500
+      const sliceWidth2 = Math.round((wid/4) * this.totalScale); //Math.round((wid / 2) * this.totalScale); // 200
+      const avgX = Math.round(((p1.getX() + p2.getX() + p3.getX()) / 3) * this.totalScale)
 
       // draw normally 
-      this.ctxDisplay.globalAlpha = 1.0; // draw the offscreen canvas at full opacity
+      this.ctxDisplay.globalAlpha = .5; // draw the offscreen canvas at full opacity
       this.ctxDisplay.drawImage(this.offscreenCanvas,
-        Math.round((this.whiteCircleStats.mx - this.whiteCircleStats.radius) * this.totalScale), 0, sliceWidth1, this.canvasH,
-        Math.round((p2.getX() - this.whiteCircleStats.radius) * this.totalScale), 0, sliceWidth1, this.canvasH
+        Math.round(p1.getX() * this.totalScale), 0, sliceWidth1, this.canvasH,
+        Math.round(avgX * this.totalScale), 0, sliceWidth1, this.canvasH
       );
-      // draw high contrast
-      this.ctxDisplay.globalAlpha = 0.06; // draw the offscreen canvas at full opacity
-      this.ctxDisplay.globalCompositeOperation = 'difference'; // hard-light is nice
+      // this.ctxDisplay.globalAlpha = .05; // draw the offscreen canvas at full opacity
+      // this.ctxDisplay.drawImage(this.offscreenCanvas,
+      //   Math.round(p3.getX() * this.totalScale), 0, sliceWidth2, this.canvasH,
+      //   Math.round(p2.getX() * this.totalScale), 0, sliceWidth2, this.canvasH
+      // );
+      // this.ctxDisplay.globalAlpha = .05; // draw the offscreen canvas at full opacity
+      // this.ctxDisplay.drawImage(this.offscreenCanvas,
+      //   Math.round((p2.getX()) * this.totalScale), 0, sliceWidth1/2, this.canvasH,
+      //   Math.round(p0.getX() * this.totalScale), 0, sliceWidth1/2, this.canvasH
+      // );
+      // draw with effect
+      this.ctxDisplay.globalAlpha = 0.1; // draw the offscreen canvas at full opacity
+      this.ctxDisplay.globalCompositeOperation = 'soft-light'; // hard-light is nice
       this.ctxDisplay.drawImage(this.offscreenCanvas,
-        Math.round((this.whiteCircleStats.mx) * this.totalScale), 0, sliceWidth2, this.canvasH,
-        Math.round((p4.getX()) * this.totalScale), 0, sliceWidth2, this.canvasH
+        Math.round((p4.getX()) * this.totalScale), 0, sliceWidth2, this.canvasH,
+        Math.round((p2.getX()) * this.totalScale), 0, sliceWidth2/4, this.canvasH
       );
+
+      this.ctxDisplay.globalAlpha = 0.85;
+      this.ctxDisplay.strokeStyle = 'red';
+      this.ctxDisplay.lineWidth = 2;
+      this.ctxDisplay.beginPath();
+      this.ctxDisplay.moveTo(avgX, 0);
+      this.ctxDisplay.lineTo(avgX, this.canvasH);
+      this.ctxDisplay.stroke();
 
       this.ctxDisplay.globalCompositeOperation = 'source-over'; // reset to default
 
       // DEBUG: draw slices into separate canvases appended to document
-      if (false)
-      {
+      if (false) {
         let row = document.getElementById('debug-slice-row');
         if (!row) {
           row = document.createElement('div');
@@ -375,8 +395,8 @@ are then drawn onto the display canvas, one with normal opacity and one with a h
           document.body.appendChild(row);
         }
         const debugSlices = [
-          { id: 'debug-slice1', label: 'slice1', sx: Math.round(p4.getX() * this.totalScale), sw: sliceWidth1 },
-          { id: 'debug-slice2', label: 'slice2', sx: Math.round(p2.getX() * this.totalScale), sw: sliceWidth2 },
+          { id: 'debug-slice1', label: 'slice1', sx: Math.round(p2.getX() * this.totalScale), sw: sliceWidth1 },
+          { id: 'debug-slice2', label: 'slice2', sx: Math.round(p1.getX() * this.totalScale), sw: sliceWidth2 },
         ];
         for (const { id, label, sx, sw } of debugSlices) {
           let wrapper = document.getElementById(id + '-wrapper');
@@ -412,19 +432,28 @@ are then drawn onto the display canvas, one with normal opacity and one with a h
       ctx.beginPath();
       ctx.arc(mx, my, radius, 0, Math.PI * 2);
       ctx.stroke();
-      return { mx, my, radius };
+
     }
 
-    drawArcCentered(ctx, p1, p2) {
-      // compute midpoint and radius from p1 and p2
-      const x1 = p1.getX(), y1 = p1.getY();
-      const x2 = p2.getX(), y2 = p2.getY();
-      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
-      const radius = Math.hypot(x2 - x1, y2 - y1) / 2;
+
+    drawEllipseAroundPoints(x1, y1, x2, y2, minorRatio = 0.6, padding = 20) {
+      const centerX = (x1 + x2) / 2;
+      const centerY = (y1 + y2) / 2;
+
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      const a = distance / 2 + padding;
+      const b = a * minorRatio;
+      const rotation = Math.atan2(dy, dx);
+
+      const ctx = this.ctx;
+
+      // Draw ellipse
       ctx.beginPath();
-      ctx.arc(x1, y1, radius, 0, Math.PI * 2);
+      ctx.ellipse(centerX, centerY, a, b, rotation, 0, Math.PI * 2);
       ctx.stroke();
-      return { mx, my, radius };
     }
 
     // ============================================================
@@ -485,7 +514,7 @@ are then drawn onto the display canvas, one with normal opacity and one with a h
       });
       animationLoop.start();
 
-      Page.setupKeyEvents(canvas, animationLoop, 'cassini_2E_1_moon_3_ramjet');
+      Page.setupKeyEvents(canvas, animationLoop, 'cassini_2E_1_moon_1');
 
       console.log('Simulation started successfully!');
     } catch (error) {

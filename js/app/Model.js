@@ -102,9 +102,9 @@ export default class ModelLoader {
       );
       
       spring.setHarmonic(
-        springConfig.amplitude,
-        springConfig.frequency,
-        springConfig.phase
+        springConfig.harmonicAmplitude,
+        springConfig.harmonicFrequency,
+        springConfig.harmonicPhase
       );
       this.springs.push(spring);
     }

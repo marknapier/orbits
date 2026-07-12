@@ -5,7 +5,7 @@ export default class Page {
     this.resumeFunction = null; // if provided, will be called when pause key is hit again
     this.canvasScreenWidth = 800; // the dimensions of the canvas element as it appears on the screen - may be smaller than the actual size for high-DPI displays
     this.canvasScreenHeight = 600;
-    this.useHighDPIRendering = true; // if true, scale the canvas for high-DPI displays (default is true)
+    this.useHighDPIRendering = false; // if true, scale the canvas for high-DPI displays (default is true)
 
     // High-DPI monitors, such as Retina displays, can have 2 or 3 times the pixel density 
     // of standard displays. To ensure our canvas looks crisp on these displays, we can 
@@ -16,6 +16,8 @@ export default class Page {
     // See notes in RenderSimple.js for more details on scaling the rendering context.
     this.dpiRatio = window.devicePixelRatio || 1;
     console.log('window.devicePixelRatio:', this.dpiRatio);
+
+    this.getPageParams();
   }
 
   /**
@@ -200,7 +202,7 @@ export default class Page {
    * Set the essential keypress events for the artwork.
    * ctrl S: save screen to PNG
    * ctrl P: pause the animation
-   * @param {*} canvas 
+   * @param {HTMLCanvasElement} canvas 
    * @param {*} animationLoop 
    * @param {*} filename 
    */
@@ -241,7 +243,40 @@ export default class Page {
     });
   }
 
+  /**
+   * If true, canvases will be created with higher internal pixel dimensions on
+   * high-density displays, such as Retina displays. 
+   * @param {Boolean} yesOrNo 
+   */
   static setHighDPIRendering(yesOrNo) {
     this.useHighDPIRendering = yesOrNo ?? false;
+  }
+
+static parseUrlParams(urlString) {
+  // Use the native URL API to handle full URLs or just query strings safely
+  const url = new URL(urlString, window.location.origin);
+  const params = new URLSearchParams(url.search);
+  const result = {};
+
+  for (const [key, value] of params.entries()) {
+    const k = key.toLowerCase();
+    const v = value.toLowerCase();
+    if (['true', 'yes', 'on'].includes(v)) {
+      result[k] = true;
+    } else if (['false', 'no', 'off'].includes(v)) {
+      result[k] = false;
+    } else {
+      result[k] = value; // Keeps original string for other values
+    }
+  }
+
+  return result;
+}
+
+  static getPageParams() {
+    const params = this.parseUrlParams(window.location.href);
+    if (params.highdpi !== undefined) {
+      this.setHighDPIRendering(params.highdpi);
+    }
   }
 }

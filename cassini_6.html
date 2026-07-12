@@ -12,7 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cassini 6</title>
   <link rel="stylesheet" href="./styles/full_viewport_canvas.css">
-  <style>
+  <!-- <style>
     /* for debugging layout issues */
     body {
       transform: none;
@@ -23,7 +23,7 @@
       transform: none;
       position: relative;
     }
-  </style>
+  </style> -->
 </head>
 
 <body>
@@ -65,7 +65,7 @@
         "initialPositionY": 100,
         "initialVelocityX": 0.0,
         "initialVelocityY": 0.0,
-        "radius": 26.0,
+        "radius": 6.0,
         "mass": 25.0,
         "charge": 0.0,
         "fixedXPosition": false,
@@ -80,7 +80,7 @@
         "initialPositionY": 180,
         "initialVelocityX": 0.0,
         "initialVelocityY": 0.0,
-        "radius": 6.0,
+        "radius": 2.0,
         "mass": 30.0,
         "charge": 0.0,
         "fixedXPosition": false,
@@ -95,8 +95,8 @@
         "initialPositionY": 220,
         "initialVelocityX": 0.0,
         "initialVelocityY": 0.0,
-        "radius": 8.0,
-        "mass": 20.0,
+        "radius": 2.0,
+        "mass": 200.0,
         "charge": 0.0,
         "fixedXPosition": false,
         "fixedYPosition": false,
@@ -110,7 +110,7 @@
         "initialPositionY": 230,
         "initialVelocityX": 0.0,
         "initialVelocityY": 0.0,
-        "radius": 20.0,
+        "radius": 5.0,
         "mass": 50.0,
         "charge": 0.0,
         "fixedXPosition": false,
@@ -125,39 +125,15 @@
         "initialPositionY": 10,
         "initialVelocityX": 0.0,
         "initialVelocityY": 0.0,
-        "radius": 10.0,
-        "mass": 500.0,
+        "radius": 2.0,
+        "mass": 200.0,
         "charge": 0.0,
         "fixedXPosition": false,
         "fixedYPosition": false,
         "trace": true
       },
-      {
-        "particleNumber": 5,
-        "label": "tiny",
-        "color": "yellow",
-        "initialPositionX": 620,
-        "initialPositionY": 10,
-        "initialVelocityX": 0.0,
-        "initialVelocityY": 0.0,
-        "radius": 4.0,
-        "mass": 2.0,
-        "charge": 0.0,
-        "fixedXPosition": false,
-        "fixedYPosition": false,
-        "trace": true
-      }
     ],
     "springs": [
-      // {
-      //   "label": "spring1",
-      //   "color": "white",
-      //   "particle1": 0,
-      //   "particle2": 1,
-      //   "springConstant": 0.5,
-      //   "damping": 0.8,
-      //   "relaxedLength": 0
-      // },
       {
         "label": "spring2",
         "color": "white",
@@ -173,15 +149,6 @@
         "particle1": 2,
         "particle2": 3,
         "springConstant": 0.5,
-        "damping": 0.8,
-        "relaxedLength": 0
-      },
-      {
-        "label": "spring4",
-        "color": "white",
-        "particle1": 4,
-        "particle2": 5,
-        "springConstant": 5.5,
         "damping": 0.8,
         "relaxedLength": 0
       },
@@ -247,7 +214,7 @@
       const p2 = particles[2]; // blue
       const p3 = particles[3]; // magenta
       const p4 = particles[4]; // agitator - black
-      const p5 = particles[5]; // tiny - yellow
+      // const p5 = particles[5]; // tiny - yellow
 
       const radius1 = Particle.distance(p0, p1);
       const radius2 = Particle.distance(p1, p2);
@@ -258,20 +225,19 @@
       // Draw a circle for each particle pair, using the distance between particles as the radius.
       // ------------------------------------------------------------------------------------------------
 
-      // Dark violet circle p0 - p1
-      // Make a 0-1 value that represents the radius length relative to the canvas height
+      // Red circle p0 - p1
+      // Make a 0.1-1.0 value that represents the radius length relative to the canvas height
       const radiusPercent = Math.max(Math.min(radius1 / this.height, 1), 0.1);
       ctx.save();
       {
+        const p0Velocity = Math.min(p0.vel.length() / 10, 1.0);
         ctx.globalAlpha = 0.2;
-        ctx.strokeStyle = "red" ; //this.violetColors[(radiusPercent * 3) | 0];
+        // ctx.strokeStyle = "rgb(255, 0, 0)" ; // bright red
+        ctx.strokeStyle = `rgb(255, 0, ${150 * p0Velocity})` ; // less-bright red
         ctx.lineWidth = 5 * radiusPercent;
-        ctx.globalCompositeOperation = 'overlay';
+        // ctx.globalCompositeOperation = 'overlay';
         this.drawArcPath(ctx, p0, p1);
         this.drawLineV(p0.getX(), p0.getY());
-        // ctx.strokeStyle = "rgb(16, 12, 23)";
-        // ctx.lineWidth = 4;
-        // this.drawLineV(p1.getX(), p1.getY());
       }
       ctx.restore();
 
@@ -281,33 +247,33 @@
       const fleshColor = this.fleshtonesPalette.getNextColor();
       ctx.save();
       {
-        ctx.globalAlpha = 0.1; // was .5
+        ctx.globalAlpha = 0.1;
         ctx.strokeStyle = fleshColor;
-        ctx.lineWidth = 8; // was 5
+        ctx.lineWidth = 8;
         ctx.globalCompositeOperation = 'color-burn';
         this.drawArcPath(ctx, p1, p2);
         // bluegreen vertical line
-        ctx.globalAlpha = 0.3; // was .3
+        ctx.globalAlpha = 0.3;
         ctx.strokeStyle = "rgb(60, 90, 100)";
         ctx.lineWidth = 8;
         this.drawLineV(p2.getX(), p2.getY());
       }
       ctx.restore();
 
-      // draw a ??? circle whose edges pass through p2 and p3
+      // draw a magenta circle whose edges pass through p2 and p3
       ctx.save();
       {
         ctx.globalAlpha = 0.2;
-        ctx.strokeStyle = p3.getColor();
+        ctx.strokeStyle = 'rgb(255, 0, 255)';
         ctx.lineWidth = 2;
         this.drawArcPath(ctx, p2, p3);
-        // greenish vertical
+        // greenish vertical at p3
         ctx.strokeStyle = "rgb(144, 200, 151)";
         this.drawLineV(p3.getX(), p3.getY());
       }
       ctx.restore();
 
-      // draw a ??? circle whose edges pass through p2 and p3
+      // draw a red-violet circle whose edges pass through p2 and p3
       ctx.save();
       {
         ctx.globalAlpha = 0.2;
@@ -317,7 +283,7 @@
       }
       ctx.restore();
 
-      // light blue circle with thick border at p2
+      // light blue-green circle with thick border at p2
       const gradientPercent = Math.max(Math.min(radius3 / this.height, 1), 0.1);
       ctx.save();
       {
@@ -330,11 +296,13 @@
       }
       ctx.restore();
 
-      // Orange circle around p3, and vertical line through p2
+      // Orange vertical line at p3, and circle from p2 to p3
       ctx.save();
       {
-        ctx.globalAlpha = 0.05;
-        ctx.strokeStyle = this.orangeColors[Math.random() * this.orangeColors.length | 0];
+        const p3Velocity = Math.min(p3.vel.length() / 15, 1.0);
+        ctx.globalAlpha = 0.25;
+        // ctx.strokeStyle = this.orangeColors[Math.random() * this.orangeColors.length | 0];
+        ctx.strokeStyle = `rgb(255, ${90 + (p3Velocity * 150)}, 0)`;
         ctx.lineWidth = 8;
         this.drawLineV(p3.getX(), p3.getY());
         ctx.globalAlpha = 0.2;
@@ -357,25 +325,25 @@
       }
       ctx.restore();
 
-      // draw a ??? circle whose edges pass through p2 and p3
-      ctx.save();
-      {
-        ctx.globalAlpha = 0.2;
-        ctx.strokeStyle = "rgb(120, 200, 40)";
-        ctx.lineWidth = 1;
-        this.drawArcPath(ctx, p4, p5);
-      }
-      ctx.restore();
+      // draw a green circle whose edges pass through p2 and p3
+      // ctx.save();
+      // {
+      //   ctx.globalAlpha = 0.2;
+      //   ctx.strokeStyle = "rgb(120, 200, 40)";
+      //   ctx.lineWidth = 1;
+      //   this.drawArcPath(ctx, p4, p5);
+      // }
+      // ctx.restore();
 
       // draw circles at each particle
       ctx.save();
       {
         ctx.globalAlpha = 1.0;
-        for (let i = 0; i < particles.length - 1; i++) { // excludes 'tiny' particle which is the last one
+        for (let i = 0; i < particles.length; i++) {
           const p = particles[i];
           ctx.fillStyle = p.getColor();
           ctx.beginPath();
-          ctx.ellipse(p.getX(), p.getY(), p.getRadius(), p.getRadius(), 0, 0, Math.PI * 2);
+          ctx.ellipse(p.getX(), p.getY(), p.getRadius() * 4, p.getRadius() * 4, 0, 0, Math.PI * 2);
           ctx.fill();
         }
       }

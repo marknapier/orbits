@@ -145,7 +145,7 @@
   //   ]
   // };
 
-  const modelJSON = {
+  const modelJSON_BLAH = {
     "environment": {
       "wallType": "Reflecting",
       "wallFriction": 0.5,
@@ -290,6 +290,296 @@
     ]
   };
 
+  // cassini_6
+  const modelJSON_cass6 = {
+    "environment": {
+      "wallType": "Reflecting",
+      "wallFriction": 0.5,
+      "gravityConstant": 15.0,
+      "electricConstant": 0.0,
+      "gravityFieldX": 0.0,
+      "gravityFieldY": 0.0,
+      "electricFieldX": 0.0,
+      "electricFieldY": 0.0,
+      "magneticFieldZ": 0.0,
+      "airResistance": 0.05,
+    },
+    "particles": [
+      {
+        "particleNumber": 0,
+        "label": "one",
+        "color": "red",
+        "initialPositionX": 1,
+        "initialPositionY": 100,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 6.0,
+        "mass": 25.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": true,
+        "trace": false
+      },
+      {
+        "particleNumber": 1,
+        "label": "two",
+        "color": "green",
+        "initialPositionX": 380,
+        "initialPositionY": 180,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 6.0,
+        "mass": 30.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 2,
+        "label": "three",
+        "color": "blue",
+        "initialPositionX": 600,
+        "initialPositionY": 220,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 8.0,
+        "mass": 20.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 3,
+        "label": "four",
+        "color": "magenta",
+        "initialPositionX": 700,
+        "initialPositionY": 230,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 4.0,
+        "mass": 50.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 4,
+        "label": "agitator",
+        "color": "black",
+        "initialPositionX": 600,
+        "initialPositionY": 10,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 5.0,
+        "mass": 500.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      // {
+      //   "particleNumber": 5,
+      //   "label": "tiny",
+      //   "color": "yellow",
+      //   "initialPositionX": 620,
+      //   "initialPositionY": 10,
+      //   "initialVelocityX": 0.0,
+      //   "initialVelocityY": 0.0,
+      //   "radius": 4.0,
+      //   "mass": 2.0,
+      //   "charge": 0.0,
+      //   "fixedXPosition": false,
+      //   "fixedYPosition": false,
+      //   "trace": true
+      // }
+    ],
+    "springs": [
+      {
+        "label": "spring2",
+        "color": "white",
+        "particle1": 1,
+        "particle2": 2,
+        "springConstant": 0.5,
+        "damping": 0.8,
+        "relaxedLength": 0,
+        "harmonicAmplitude": 50,
+        "harmonicFrequency": 3,
+        "harmonicPhase": 90,
+      },
+      {
+        "label": "spring3",
+        "color": "white",
+        "particle1": 2,
+        "particle2": 3,
+        "springConstant": 0.5,
+        "damping": 0.8,
+        "relaxedLength": 0
+      },
+      // {
+      //   "label": "spring4",
+      //   "color": "white",
+      //   "particle1": 4,
+      //   "particle2": 5,
+      //   "springConstant": 5.5,
+      //   "damping": 0.8,
+      //   "relaxedLength": 0
+      // },
+    ]
+  };
+
+  // conjure
+  const modelJSON = {
+    "environment": {
+      "wallType": "Reflecting",
+      "wallFriction": 0.5,
+      "gravityConstant": 15.0,
+      "electricConstant": 0.0,
+      "gravityFieldX": 0.0,
+      "gravityFieldY": 0.0,
+      "electricFieldX": 0.0,
+      "electricFieldY": 0.0,
+      "magneticFieldZ": 0.0,
+      "airResistance": 0.05,
+    },
+    "particles": [
+      {
+        "particleNumber": 0,
+        "label": "one",
+        "color": "red",
+        "initialPositionX": 1,
+        "initialPositionY": 100,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 26.0,
+        "mass": 25.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 1,
+        "label": "two",
+        "color": "green",
+        "initialPositionX": 380,
+        "initialPositionY": 180,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 6.0,
+        "mass": 30.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 2,
+        "label": "three",
+        "color": "blue",
+        "initialPositionX": 600,
+        "initialPositionY": 220,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 8.0,
+        "mass": 20.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 3,
+        "label": "four",
+        "color": "magenta",
+        "initialPositionX": 700,
+        "initialPositionY": 230,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 5.0,
+        "mass": 50.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 4,
+        "label": "agitator",
+        "color": "black",
+        "initialPositionX": 600,
+        "initialPositionY": 10,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 10.0,
+        "mass": 500.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 5,
+        "label": "tiny",
+        "color": "yellow",
+        "initialPositionX": 620,
+        "initialPositionY": 10,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 4.0,
+        "mass": 2.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      }
+    ],
+    "springs": [
+      // {
+      //   "label": "spring1",
+      //   "color": "white",
+      //   "particle1": 0,
+      //   "particle2": 1,
+      //   "springConstant": 0.5,
+      //   "damping": 0.8,
+      //   "relaxedLength": 0
+      // },
+      {
+        "label": "spring2",
+        "color": "white",
+        "particle1": 1,
+        "particle2": 2,
+        "springConstant": 0.5,
+        "damping": 0.8,
+        "relaxedLength": 0,
+        "harmonicAmplitude": 50,
+        "harmonicFrequency": 3,
+        "harmonicPhase": 90,
+      },
+      {
+        "label": "spring3",
+        "color": "white",
+        "particle1": 2,
+        "particle2": 3,
+        "springConstant": 0.5,
+        "damping": 0.8,
+        "relaxedLength": 0
+      },
+      {
+        "label": "spring4",
+        "color": "white",
+        "particle1": 4,
+        "particle2": 5,
+        "springConstant": 5.5,
+        "damping": 0.8,
+        "relaxedLength": 0
+      },
+    ]
+  };
+
+  
   function createCanvas(width, height) {
     const canvas = document.createElement('canvas');
     canvas.id = 'sim';
@@ -301,12 +591,12 @@
 
   async function loadAndRunSimulation() {
     try {
-      const canvas = createCanvas(1200, 800);
+      const canvas = createCanvas(1600, 900);
 
       const engine = new PhysicsEngine();
       engine.setDimensions(canvas.width, canvas.height);
       engine.detectCollisions = false;
-      engine.timeStep = 0.23;
+      engine.timeStep = 0.18;
 
       const model = new Model();
       model.parseConfig(modelJSON);

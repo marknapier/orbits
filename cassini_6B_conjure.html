@@ -9,19 +9,8 @@ canvas. Blurred neutral aqua tones and dark red-violet.
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cassini 6B</title>
-  <link rel="stylesheet" href="./styles/full_viewport_canvas.css">
-  <!-- <style>
-    /* for debugging layout issues */
-    body {
-      transform: none;
-      overflow: scroll;
-    }
-
-    body canvas {
-      transform: none;
-      position: relative;
-    }
-  </style> -->
+  <!-- <link rel="stylesheet" href="./styles/full_viewport_canvas.css"> -->
+  <link rel="stylesheet" href="./styles/main.css">
 </head>
 
 <body>
@@ -147,15 +136,6 @@ canvas. Blurred neutral aqua tones and dark red-violet.
       }
     ],
     "springs": [
-      // {
-      //   "label": "spring1",
-      //   "color": "white",
-      //   "particle1": 0,
-      //   "particle2": 1,
-      //   "springConstant": 0.5,
-      //   "damping": 0.8,
-      //   "relaxedLength": 0
-      // },
       {
         "label": "spring2",
         "color": "white",
@@ -163,7 +143,7 @@ canvas. Blurred neutral aqua tones and dark red-violet.
         "particle2": 2,
         "springConstant": 0.5,
         "damping": 0.8,
-        "relaxedLength": 0
+        "relaxedLength": 0,
       },
       {
         "label": "spring3",
@@ -200,6 +180,7 @@ canvas. Blurred neutral aqua tones and dark red-violet.
 
       // Make an offscreen canvas for drawing - will be copied to display canvas in parts
       this.offscreenCanvas = Page.createOffscreenCanvasDPI(this.canvasScreenSize.width, this.canvasScreenSize.height, 'offscreen');
+      document.body.appendChild(this.offscreenCanvas);
 
       // this.ctx will draw to the offscreen canvas.
       this.ctxDisplay = this.ctx; // save the on-screen context
@@ -296,26 +277,27 @@ canvas. Blurred neutral aqua tones and dark red-violet.
         this.drawArcPath(ctx, p1, p2);
         // bluegreen vertical line
         ctx.globalAlpha = 0.3; // was .3
-        ctx.strokeStyle = "rgb(60, 90, 100)";
+        ctx.strokeStyle = "rgb(60, 90, 150)";  // was 100
         ctx.lineWidth = 8;
         this.drawLineV(p2.getX(), p2.getY());
       }
       ctx.restore();
 
-      // draw a ??? circle whose edges pass through p2 and p3
+      // draw a magenta circle whose edges pass through p2 and p3
       ctx.save();
       {
         ctx.globalAlpha = 0.2;
-        ctx.strokeStyle = p3.getColor();
+        ctx.strokeStyle = "magenta";
         ctx.lineWidth = 2;
         this.drawArcPath(ctx, p2, p3);
         // greenish vertical
-        ctx.strokeStyle = "rgb(144, 200, 151)";
+        // ctx.strokeStyle = "rgb(144, 200, 151)"; // nice gray/green but could use more contrast
+        ctx.strokeStyle = "rgb(155, 220, 170)";
         this.drawLineV(p3.getX(), p3.getY());
       }
       ctx.restore();
 
-      // draw a ??? circle whose edges pass through p2 and p3
+      // draw a greenish circle whose edges pass through p2 and p3
       ctx.save();
       {
         ctx.globalAlpha = 0.2;
@@ -383,7 +365,7 @@ canvas. Blurred neutral aqua tones and dark red-violet.
           const p = particles[i];
           ctx.fillStyle = p.getColor();
           ctx.beginPath();
-          ctx.ellipse(p.getX(), p.getY(), p.getRadius(), p.getRadius(), 0, 0, Math.PI * 2);
+          ctx.ellipse(p.getX(), p.getY(), p.getRadius() * radiusPercent, p.getRadius() * radiusPercent, 0, 0, Math.PI * 2);
           ctx.fill();
         }
       }
