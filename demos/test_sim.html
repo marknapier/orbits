@@ -33,117 +33,117 @@
   import Model from '../js/app/Model.js';
 
   // Quark 3 masses attached to a central mass
-  // const modelJSON = {
-  //   "environment": {
-  //     "wallType": "Absorbing",
-  //     "wallFriction": 0.5,
-  //     "gravityConstant": 10.0,
-  //     "electricConstant": 0.0,
-  //     "gravityFieldX": 0.0,
-  //     "gravityFieldY": 0.0,
-  //     "electricFieldX": 0.0,
-  //     "electricFieldY": 0.0,
-  //     "magneticFieldZ": 0.0,
-  //     "airResistance": 0.0
-  //   },
-  //   "particles": [
-  //     {
-  //       "particleNumber": 0,
-  //       "label": "Red",
-  //       "color": "red",
-  //       "initialPositionX": 245.0,
-  //       "initialPositionY": 102.0,
-  //       "initialVelocityX": 0.0,
-  //       "initialVelocityY": 0.0,
-  //       "radius": 1.5,
-  //       "mass": 100.0,
-  //       "charge": 0.0,
-  //       "fixedXPosition": false,
-  //       "fixedYPosition": false,
-  //       "trace": true
-  //     },
-  //     {
-  //       "particleNumber": 1,
-  //       "label": "Green",
-  //       "color": "green",
-  //       "initialPositionX": 411.0,
-  //       "initialPositionY": 324.0,
-  //       "initialVelocityX": 0.0,
-  //       "initialVelocityY": 0.0,
-  //       "radius": 1.0,
-  //       "mass": 100.0,
-  //       "charge": 0.0,
-  //       "fixedXPosition": false,
-  //       "fixedYPosition": false,
-  //       "trace": true
-  //     },
-  //     {
-  //       "particleNumber": 2,
-  //       "label": "Blue",
-  //       "color": "blue",
-  //       "initialPositionX": 136.0,
-  //       "initialPositionY": 326.0,
-  //       "initialVelocityX": 0.0,
-  //       "initialVelocityY": 0.0,
-  //       "radius": 1.0,
-  //       "mass": 1000.0,
-  //       "charge": 0.0,
-  //       "fixedXPosition": false,
-  //       "fixedYPosition": false,
-  //       "trace": true
-  //     },
-  //     {
-  //       "particleNumber": 3,
-  //       "label": "Center",
-  //       "color": "black",
-  //       "initialPositionX": 241.0,
-  //       "initialPositionY": 233.0,
-  //       "initialVelocityX": 0.0,
-  //       "initialVelocityY": 0.0,
-  //       "radius": 1.0,
-  //       "mass": 1000.0,
-  //       "charge": 0.0,
-  //       "fixedXPosition": false,
-  //       "fixedYPosition": false,
-  //       "trace": true
-  //     }
-  //   ],
-  //   "springs": [
-  //     {
-  //       "springNumber": 0,
-  //       "particle1": 0,
-  //       "particle2": 3,
-  //       "damping": 1.0,
-  //       "springConstant": 5.0,
-  //       "relaxedLength": 131.06105,
-  //       "amplitude": 0.0,
-  //       "frequency": 0.0,
-  //       "phase": 0.0
-  //     },
-  //     {
-  //       "springNumber": 1,
-  //       "particle1": 1,
-  //       "particle2": 3,
-  //       "damping": 1.0,
-  //       "springConstant": 5.0,
-  //       "relaxedLength": 192.82375,
-  //       "amplitude": 0.0,
-  //       "frequency": 0.0,
-  //       "phase": 0.0
-  //     },
-  //     {
-  //       "springNumber": 2,
-  //       "particle1": 2,
-  //       "particle2": 3,
-  //       "damping": 1.0,
-  //       "springConstant": 5.0,
-  //       "relaxedLength": 140.26403,
-  //       "amplitude": 0.0,
-  //       "frequency": 0.0,
-  //       "phase": 0.0
-  //     }
-  //   ]
-  // };
+  const modelJSON_Quark = {
+    "environment": {
+      "wallType": "Absorbing",
+      "wallFriction": 0.5,
+      "gravityConstant": 10.0,
+      "electricConstant": 0.0,
+      "gravityFieldX": 0.0,
+      "gravityFieldY": 0.0,
+      "electricFieldX": 0.0,
+      "electricFieldY": 0.0,
+      "magneticFieldZ": 0.0,
+      "airResistance": 0.0
+    },
+    "particles": [
+      {
+        "particleNumber": 0,
+        "label": "Red",
+        "color": "red",
+        "initialPositionX": 245.0,
+        "initialPositionY": 102.0,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.5,
+        "mass": 100.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 1,
+        "label": "Green",
+        "color": "green",
+        "initialPositionX": 411.0,
+        "initialPositionY": 324.0,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 100.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 2,
+        "label": "Blue",
+        "color": "blue",
+        "initialPositionX": 136.0,
+        "initialPositionY": 326.0,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1000.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      },
+      {
+        "particleNumber": 3,
+        "label": "Center",
+        "color": "black",
+        "initialPositionX": 241.0,
+        "initialPositionY": 233.0,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1000.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": true
+      }
+    ],
+    "springs": [
+      {
+        "springNumber": 0,
+        "particle1": 0,
+        "particle2": 3,
+        "damping": 1.0,
+        "springConstant": 5.0,
+        "relaxedLength": 131.06105,
+        "amplitude": 0.0,
+        "frequency": 0.0,
+        "phase": 0.0
+      },
+      {
+        "springNumber": 1,
+        "particle1": 1,
+        "particle2": 3,
+        "damping": 1.0,
+        "springConstant": 5.0,
+        "relaxedLength": 192.82375,
+        "amplitude": 0.0,
+        "frequency": 0.0,
+        "phase": 0.0
+      },
+      {
+        "springNumber": 2,
+        "particle1": 2,
+        "particle2": 3,
+        "damping": 1.0,
+        "springConstant": 5.0,
+        "relaxedLength": 140.26403,
+        "amplitude": 0.0,
+        "frequency": 0.0,
+        "phase": 0.0
+      }
+    ]
+  };
 
   const modelJSON_BLAH = {
     "environment": {
@@ -431,7 +431,7 @@
   };
 
   // conjure
-  const modelJSON = {
+  const modelJSON_conjure = {
     "environment": {
       "wallType": "Reflecting",
       "wallFriction": 0.5,
@@ -579,6 +579,869 @@
     ]
   };
 
+  const modelJSON_chain = {
+    "environment": {
+      "wallType": "Reflecting",
+      "wallFriction": 0.5,
+      "gravityConstant": 9.0, // was 12.0
+      "electricConstant": 0.0,
+      "gravityFieldX": 0.0,
+      "gravityFieldY": 0.0,
+      "electricFieldX": 0.0,
+      "electricFieldY": 0.0,
+      "magneticFieldZ": 0.0,
+      "airResistance": 0.001,
+    },
+    "particles": [
+      {
+        "particleNumber": 0,
+        "label": "one",
+        "color": "blue",
+        "initialPositionX": 1,
+        "initialPositionY": 100,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 2.0, // was 26.0
+        "mass": 50.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false, // change to false for more chaotic motion
+        "trace": false
+      },
+      {
+        "particleNumber": 1,
+        "label": "two",
+        "color": "orange",
+        "initialPositionX": 380,
+        "initialPositionY": 180,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 6.0,
+        "mass": 30.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 2,
+        "label": "three",
+        "color": "green",
+        "initialPositionX": 600,
+        "initialPositionY": 220,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 8.0,
+        "mass": 20.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 3,
+        "label": "four",
+        "color": "magenta",
+        "initialPositionX": 900,
+        "initialPositionY": 230,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 2.0,
+        "mass": 50.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 4,
+        "label": "agitator",
+        "color": "yellow",
+        "initialPositionX": 600,
+        "initialPositionY": 10,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 10.0,
+        "mass": 500.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 5,
+        "label": "chain1",
+        "color": "cyan",
+        "initialPositionX": 43.8,
+        "initialPositionY": 106.2,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 6,
+        "label": "chain2",
+        "color": "cyan",
+        "initialPositionX": 86.6,
+        "initialPositionY": 112.4,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 7,
+        "label": "chain3",
+        "color": "cyan",
+        "initialPositionX": 129.4,
+        "initialPositionY": 118.6,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 8,
+        "label": "chain4",
+        "color": "cyan",
+        "initialPositionX": 172.2,
+        "initialPositionY": 124.8,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 9,
+        "label": "chain5",
+        "color": "cyan",
+        "initialPositionX": 215.0,
+        "initialPositionY": 131.0,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 10,
+        "label": "chain6",
+        "color": "cyan",
+        "initialPositionX": 257.9,
+        "initialPositionY": 137.1,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 11,
+        "label": "chain7",
+        "color": "cyan",
+        "initialPositionX": 300.7,
+        "initialPositionY": 143.3,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 12,
+        "label": "chain8",
+        "color": "cyan",
+        "initialPositionX": 343.5,
+        "initialPositionY": 149.5,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 13,
+        "label": "chain9",
+        "color": "cyan",
+        "initialPositionX": 386.3,
+        "initialPositionY": 155.7,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 14,
+        "label": "chain10",
+        "color": "cyan",
+        "initialPositionX": 429.1,
+        "initialPositionY": 161.9,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 15,
+        "label": "chain11",
+        "color": "cyan",
+        "initialPositionX": 471.9,
+        "initialPositionY": 168.1,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 16,
+        "label": "chain12",
+        "color": "cyan",
+        "initialPositionX": 514.7,
+        "initialPositionY": 174.3,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 17,
+        "label": "chain13",
+        "color": "cyan",
+        "initialPositionX": 557.5,
+        "initialPositionY": 180.5,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 18,
+        "label": "chain14",
+        "color": "cyan",
+        "initialPositionX": 600.3,
+        "initialPositionY": 186.7,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 19,
+        "label": "chain15",
+        "color": "cyan",
+        "initialPositionX": 643.1,
+        "initialPositionY": 192.9,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 20,
+        "label": "chain16",
+        "color": "cyan",
+        "initialPositionX": 686.0,
+        "initialPositionY": 199.0,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 21,
+        "label": "chain17",
+        "color": "cyan",
+        "initialPositionX": 728.8,
+        "initialPositionY": 205.2,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 22,
+        "label": "chain18",
+        "color": "cyan",
+        "initialPositionX": 771.6,
+        "initialPositionY": 211.4,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 23,
+        "label": "chain19",
+        "color": "cyan",
+        "initialPositionX": 814.4,
+        "initialPositionY": 217.6,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 24,
+        "label": "chain20",
+        "color": "cyan",
+        "initialPositionX": 857.2,
+        "initialPositionY": 223.8,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 1.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+    ],
+    "springs": [
+      {
+        "label": "spring2",
+        "color": "white",
+        "particle1": 1,
+        "particle2": 2,
+        "springConstant": 0.5,
+        "damping": 0.8,
+        "relaxedLength": 0
+      },
+      // {
+      //   "label": "spring3",
+      //   "color": "white",
+      //   "particle1": 2,
+      //   "particle2": 3,
+      //   "springConstant": 0.5,
+      //   "damping": 0.8,
+      //   "relaxedLength": 0
+      // },
+      // {
+      //   "label": "spring4",
+      //   "color": "white",
+      //   "particle1": 0,
+      //   "particle2": 3,
+      //   "springConstant": 5.5,
+      //   "damping": 0.8,
+      //   "relaxedLength": 0
+      // },
+      {
+        "label": "spring4", // connects agitator to first particle in chain
+        "color": "white",
+        "particle1": 4,
+        "particle2": 1,
+        "springConstant": 5.5,
+        "damping": 0.8,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring0",
+        "color": "cyan",
+        "particle1": 0,
+        "particle2": 5,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring1",
+        "color": "cyan",
+        "particle1": 5,
+        "particle2": 6,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring2",
+        "color": "cyan",
+        "particle1": 6,
+        "particle2": 7,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring3",
+        "color": "cyan",
+        "particle1": 7,
+        "particle2": 8,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring4",
+        "color": "cyan",
+        "particle1": 8,
+        "particle2": 9,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring5",
+        "color": "cyan",
+        "particle1": 9,
+        "particle2": 10,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring6",
+        "color": "cyan",
+        "particle1": 10,
+        "particle2": 11,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring7",
+        "color": "cyan",
+        "particle1": 11,
+        "particle2": 12,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring8",
+        "color": "cyan",
+        "particle1": 12,
+        "particle2": 13,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring9",
+        "color": "cyan",
+        "particle1": 13,
+        "particle2": 14,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring10",
+        "color": "cyan",
+        "particle1": 14,
+        "particle2": 15,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring11",
+        "color": "cyan",
+        "particle1": 15,
+        "particle2": 16,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring12",
+        "color": "cyan",
+        "particle1": 16,
+        "particle2": 17,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring13",
+        "color": "cyan",
+        "particle1": 17,
+        "particle2": 18,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring14",
+        "color": "cyan",
+        "particle1": 18,
+        "particle2": 19,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring15",
+        "color": "cyan",
+        "particle1": 19,
+        "particle2": 20,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring16",
+        "color": "cyan",
+        "particle1": 20,
+        "particle2": 21,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring17",
+        "color": "cyan",
+        "particle1": 21,
+        "particle2": 22,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring18",
+        "color": "cyan",
+        "particle1": 22,
+        "particle2": 23,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring19",
+        "color": "cyan",
+        "particle1": 23,
+        "particle2": 24,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+      {
+        "label": "chainSpring20",
+        "color": "cyan",
+        "particle1": 24,
+        "particle2": 3,
+        "springConstant": 5,
+        "damping": 1.0,
+        "relaxedLength": 0
+      },
+    ]
+  };
+
+  const modelJSON_hoop = {
+    "environment": {
+      "wallType": "Reflecting",
+      "wallFriction": 0.5,
+      "gravityConstant": 5.0,
+      "electricConstant": 0.0,
+      "gravityFieldX": 0.0,
+      "gravityFieldY": 0.0,
+      "electricFieldX": 0.0,
+      "electricFieldY": 0.0,
+      "magneticFieldZ": 0.0,
+      "airResistance": 0.0
+    },
+    "particles": [
+      {
+        "particleNumber": 0,
+        "label": "New particle",
+        "color": "blue",
+        "initialPositionX": 305.0,
+        "initialPositionY": 210.0,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 5.0,
+        "mass": 100.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 1,
+        "label": "New particle",
+        "color": "blue",
+        "initialPositionX": 410.0,
+        "initialPositionY": 173.0,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 5.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 2,
+        "label": "New particle",
+        "color": "blue",
+        "initialPositionX": 508.0,
+        "initialPositionY": 230.0,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 5.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 3,
+        "label": "New particle",
+        "color": "blue",
+        "initialPositionX": 542.0,
+        "initialPositionY": 350.0,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 5.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 4,
+        "label": "himass",
+        "color": "blue",
+        "initialPositionX": 471.0,
+        "initialPositionY": 458.0,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 5.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 5,
+        "label": "New particle",
+        "color": "blue",
+        "initialPositionX": 308.0,
+        "initialPositionY": 476.0,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 5.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 6,
+        "label": "New particle",
+        "color": "blue",
+        "initialPositionX": 196.0,
+        "initialPositionY": 386.0,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 5.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 7,
+        "label": "New particle",
+        "color": "blue",
+        "initialPositionX": 224.0,
+        "initialPositionY": 269.0,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 5.0,
+        "mass": 1.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      },
+      {
+        "particleNumber": 8,
+        "label": "New particle",
+        "color": "blue",
+        "initialPositionX": 300.0,
+        "initialPositionY": 220.0,
+        "initialVelocityX": 0.0,
+        "initialVelocityY": 0.0,
+        "radius": 5.0,
+        "mass": 50.0,
+        "charge": 0.0,
+        "fixedXPosition": false,
+        "fixedYPosition": false,
+        "trace": false
+      }
+    ],
+    "springs": [
+      {
+        "springNumber": 0,
+        "particle1": 7,
+        "particle2": 8,
+        "damping": 1.0,
+        "springConstant": 5.0,
+        "relaxedLength": 91.80,
+        "amplitude": 0.0,
+        "frequency": 0.0,
+        "phase": 0.0
+      },
+      {
+        "springNumber": 1,
+        "particle1": 0,
+        "particle2": 1,
+        "damping": 1.0,
+        "springConstant": 5.0,
+        "relaxedLength": 103.07764064044152,
+        "amplitude": 0.0,
+        "frequency": 0.0,
+        "phase": 0.0
+      },
+      {
+        "springNumber": 2,
+        "particle1": 1,
+        "particle2": 2,
+        "damping": 1.0,
+        "springConstant": 5.0,
+        "relaxedLength": 123.00406497347964,
+        "amplitude": 0.0,
+        "frequency": 0.0,
+        "phase": 0.0
+      },
+      {
+        "springNumber": 3,
+        "particle1": 2,
+        "particle2": 3,
+        "damping": 1.0,
+        "springConstant": 5.0,
+        "relaxedLength": 124.72369462135092,
+        "amplitude": 0.0,
+        "frequency": 0.0,
+        "phase": 0.0
+      },
+      {
+        "springNumber": 4,
+        "particle1": 3,
+        "particle2": 4,
+        "damping": 1.0,
+        "springConstant": 5.0,
+        "relaxedLength": 129.24782396620841,
+        "amplitude": 0.0,
+        "frequency": 0.0,
+        "phase": 0.0
+      },
+      {
+        "springNumber": 5,
+        "particle1": 4,
+        "particle2": 5,
+        "damping": 1.0,
+        "springConstant": 5.0,
+        "relaxedLength": 163.99085340347492,
+        "amplitude": 0.0,
+        "frequency": 0.0,
+        "phase": 0.0
+      },
+      {
+        "springNumber": 6,
+        "particle1": 5,
+        "particle2": 6,
+        "damping": 1.0,
+        "springConstant": 5.0,
+        "relaxedLength": 143.68020044529447,
+        "amplitude": 0.0,
+        "frequency": 0.0,
+        "phase": 0.0
+      },
+      {
+        "springNumber": 7,
+        "particle1": 6,
+        "particle2": 7,
+        "damping": 1.0,
+        "springConstant": 5.0,
+        "relaxedLength": 120.30378215168466,
+        "amplitude": 0.0,
+        "frequency": 0.0,
+        "phase": 0.0
+      }
+    ]
+  }
+
+  // run this model:
+  const modelJSON = modelJSON_chain;
   
   function createCanvas(width, height) {
     const canvas = document.createElement('canvas');
@@ -603,6 +1466,7 @@
       model.centerAt(engine.getWidth() / 2.2, engine.getHeight() / 2); //!!! center in the physics space, not DPI or screen
 
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
+      engine.optimize(); // removes low-mass particles from gravitational attraction
 
       const renderer = new Renderer(engine, canvas);
       const mouseHandler = new MouseHandler(canvas, engine, renderer);

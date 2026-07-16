@@ -34,7 +34,7 @@
     "environment": {
       "wallType": "Reflecting",
       "wallFriction": 0.5,
-      "gravityConstant": 9.0, // was 12.0
+      "gravityConstant": 6.0, // was 12.0, then 9
       "electricConstant": 0.0,
       "gravityFieldX": 0.0,
       "gravityFieldY": 0.0,
@@ -294,10 +294,15 @@
       ctx.save();
       {
         ctx.globalAlpha = 0.15;
-        ctx.strokeStyle = this.titanBlurPalette.getNextColor();
-        // ctx.strokeStyle = this.yellowOrangePalette.getNextColor();
+        // ctx.strokeStyle = this.titanBlurPalette.getNextColor();
         ctx.lineWidth = 1;
-        this.drawArcPath(ctx, p0, p4);
+        // ctx.strokeStyle = 'rgba(0,0,0,0)';
+        // this.drawArcPath(ctx, p0, p4);
+        this.clearArcPath(ctx, p0, p4);
+        ctx.strokeStyle = 'rgba(255, 200, 120, 0.6)';
+        ctx.stroke();
+
+        // warm white circle
         ctx.strokeStyle = 'rgb(255, 250, 240)';
         this.drawArcPath(ctx, p2, p3);
         // ctx.strokeStyle = "rgb(16, 12, 23)"; // violet black line through p2
@@ -362,6 +367,22 @@
 
     }
 
+    // Build the same circular path as drawArcPath, but clip to it and clear
+    // the pixels underneath instead of stroking - punches a "slipping" hole
+    // through the motion trail so the background shows through.
+    clearArcPath(ctx, p1, p2) {
+      const x1 = p1.getX(), y1 = p1.getY();
+      const x2 = p2.getX(), y2 = p2.getY();
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+      const radius = Math.hypot(x2 - x1, y2 - y1) / 2;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(mx, my, radius, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.clearRect(0, 0, this.simWidth, this.simHeight);
+      ctx.restore();
+    }
+
     drawEllipseAroundPoints(x1, y1, x2, y2, minorRatio = 0.6, padding = 20) {
       const centerX = (x1 + x2) / 2;
       const centerY = (y1 + y2) / 2;
@@ -412,7 +433,7 @@
       const engine = new PhysicsEngine();
       engine.setDimensions(1651, 929); //!!!  16x9 but smaller size than 1990, 1119
       engine.detectCollisions = false;
-      engine.timeStep = 0.23;
+      engine.timeStep = 0.15;
 
       const model = new Model();
       model.parseConfig(modelJSON);

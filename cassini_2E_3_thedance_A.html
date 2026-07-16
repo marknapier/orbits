@@ -1,15 +1,15 @@
 <!doctype html>
 <html>
-<!-- 
-Draws straight to the display. Doesn't slice up the offscreen canvas and rearrange (I 
-liked the under-drawing enough to make this one a piece on it's own). 
-Blurred neutral aqua tones and dark red-violet.
+<!--
+ Draws black and white circles, and a pink ellipse directly to the screen, without
+ collaging image slices. I liked the shapes created by the ellipses so decided to 
+ make this a final piece, not an "under-painting".
 -->
 
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cassini 6B Low Tide</title>
+  <title>Cassini 2E 3 The Dance</title>
   <link rel="stylesheet" href="./styles/full_viewport_canvas.css">
 </head>
 
@@ -34,35 +34,35 @@ Blurred neutral aqua tones and dark red-violet.
     "environment": {
       "wallType": "Reflecting",
       "wallFriction": 0.5,
-      "gravityConstant": 15.0,
+      "gravityConstant": 9.0, // was 12.0
       "electricConstant": 0.0,
       "gravityFieldX": 0.0,
       "gravityFieldY": 0.0,
       "electricFieldX": 0.0,
       "electricFieldY": 0.0,
       "magneticFieldZ": 0.0,
-      "airResistance": 0.05,
+      "airResistance": 0.10,
     },
     "particles": [
       {
         "particleNumber": 0,
         "label": "one",
-        "color": "red",
+        "color": "blue",
         "initialPositionX": 1,
         "initialPositionY": 100,
         "initialVelocityX": 0.0,
         "initialVelocityY": 0.0,
-        "radius": 26.0,
-        "mass": 25.0,
+        "radius": 2.0, // was 26.0
+        "mass": 50.0,
         "charge": 0.0,
         "fixedXPosition": false,
-        "fixedYPosition": false,
+        "fixedYPosition": false, // change to false for more chaotic motion
         "trace": false
       },
       {
         "particleNumber": 1,
         "label": "two",
-        "color": "green",
+        "color": "orange",
         "initialPositionX": 380,
         "initialPositionY": 180,
         "initialVelocityX": 0.0,
@@ -77,7 +77,7 @@ Blurred neutral aqua tones and dark red-violet.
       {
         "particleNumber": 2,
         "label": "three",
-        "color": "blue",
+        "color": "green",
         "initialPositionX": 600,
         "initialPositionY": 220,
         "initialVelocityX": 0.0,
@@ -97,7 +97,7 @@ Blurred neutral aqua tones and dark red-violet.
         "initialPositionY": 230,
         "initialVelocityX": 0.0,
         "initialVelocityY": 0.0,
-        "radius": 5.0,
+        "radius": 2.0,
         "mass": 50.0,
         "charge": 0.0,
         "fixedXPosition": false,
@@ -107,7 +107,7 @@ Blurred neutral aqua tones and dark red-violet.
       {
         "particleNumber": 4,
         "label": "agitator",
-        "color": "black",
+        "color": "yellow",
         "initialPositionX": 600,
         "initialPositionY": 10,
         "initialVelocityX": 0.0,
@@ -119,21 +119,6 @@ Blurred neutral aqua tones and dark red-violet.
         "fixedYPosition": false,
         "trace": true
       },
-      {
-        "particleNumber": 5,
-        "label": "tiny",
-        "color": "yellow",
-        "initialPositionX": 620,
-        "initialPositionY": 10,
-        "initialVelocityX": 0.0,
-        "initialVelocityY": 0.0,
-        "radius": 4.0,
-        "mass": 2.0,
-        "charge": 0.0,
-        "fixedXPosition": false,
-        "fixedYPosition": false,
-        "trace": true
-      }
     ],
     "springs": [
       {
@@ -143,22 +128,31 @@ Blurred neutral aqua tones and dark red-violet.
         "particle2": 2,
         "springConstant": 0.5,
         "damping": 0.8,
-        "relaxedLength": 0,
-      },
-      {
-        "label": "spring3",
-        "color": "white",
-        "particle1": 2,
-        "particle2": 3,
-        "springConstant": 0.5,
-        "damping": 0.8,
         "relaxedLength": 0
       },
+      // {
+      //   "label": "spring3",
+      //   "color": "white",
+      //   "particle1": 2,
+      //   "particle2": 3,
+      //   "springConstant": 0.5,
+      //   "damping": 0.8,
+      //   "relaxedLength": 0
+      // },
+      // {
+      //   "label": "spring4",
+      //   "color": "white",
+      //   "particle1": 0,
+      //   "particle2": 3,
+      //   "springConstant": 5.5,
+      //   "damping": 0.8,
+      //   "relaxedLength": 0
+      // },
       {
-        "label": "spring4",
+        "label": "spring4", // connects agitator to first particle in chain
         "color": "white",
         "particle1": 4,
-        "particle2": 5,
+        "particle2": 1,
         "springConstant": 5.5,
         "damping": 0.8,
         "relaxedLength": 0
@@ -168,23 +162,26 @@ Blurred neutral aqua tones and dark red-violet.
 
   export default class RenderVerticals extends RenderSimple {
     // Configurable options
-    bgColor = "rgb(60,0,0)";          // background color
+    bgColor = "rgb(250,0,0)";          // background color
     opacity = 0.2;                      // alpha for all paint operations
-    clearBG = true;                     // if false, leaves motion trails
-    violetColors = ["rgb(6, 2, 10)", "rgb(25, 10, 30)", "rgb(20, 5, 25)", "rgb(12, 0, 10)"];
-    orangeColors = ["rgb(250, 110, 0)", "rgb(245, 115, 0)", "rgb(255, 110, 10)", "rgb(240, 108, 8)", "rgb(230, 100, 10)", "rgb(240, 100, 5)", "rgb(235, 85, 0)", "rgb(255, 105, 80)",];
+    clearBG = false;                     // if false, leaves motion trails
+    violetColors = ["rgb(2, 2, 10)", "rgb(10, 3, 20)", "rgb(15, 5, 15)", "rgb(5, 0, 9)"];
 
     constructor(sim, canvas) {
       super(sim, canvas);
-      this.yellowGreenPalette = null; // colors will be loaded in init()
+      this.titanBlurPalette = null; // colors will be loaded in init()
+      this.yellowGreenPalette = null;
+      this.yellowOrangePalette = null;
+      this.halfPI = Math.PI / 2;
+      this.quarterPI = Math.PI / 4;
 
       // Make an offscreen canvas for drawing - will be copied to display canvas in parts
-      this.offscreenCanvas = Page.createOffscreenCanvasDPI(this.canvasScreenSize.width, this.canvasScreenSize.height, 'offscreen');
-      document.body.appendChild(this.offscreenCanvas);
+      // this.offscreenCanvas = Page.createOffscreenCanvasDPI(this.canvasScreenSize.width, this.canvasScreenSize.height, 'offscreen');
+      this.offscreenCanvas = this.canvas;
 
       // this.ctx will draw to the offscreen canvas.
-      this.ctxDisplay = this.ctx; // save the on-screen context
-      this.ctx = this.offscreenCanvas.getContext('2d'); // off screen context
+      this.ctxDisplay = this.ctx; // only using one canvas for this piece
+      // this.ctx = this.offscreenCanvas.getContext('2d'); // off screen context
 
       // Scale the offscreen context to fit the high pixel density and the screen-to-physics ratio.
       this.ctx.scale(this.totalScale, this.totalScale);
@@ -194,10 +191,6 @@ Blurred neutral aqua tones and dark red-violet.
       this.simHeight = sim.getHeight();
       this.canvasH = this.offscreenCanvas.height;    // actual pixels, no need to scale when using these
       this.canvasW = this.offscreenCanvas.width;
-
-      console.log('Canvas DPI ratio:', this.dpiRatio);
-      console.log('Screen to physics ratio:', this.canvasScreenToSimRatioH, this.canvasScreenToSimRatioW);
-      console.log('TOTAL scale:', this.totalScale);
     }
 
     setParticles(particles) {
@@ -205,8 +198,9 @@ Blurred neutral aqua tones and dark red-violet.
     }
 
     async init() {
-      this.fleshtonesPalette = await ColorPalette.createFromImage('./images/flesh_tones.png');
-      this.yellowGreenPalette = await ColorPalette.createFromImage('./images/titan_blur.jpg');
+      this.titanBlurPalette = await ColorPalette.createFromImage('./images/titan_blur_gray.jpg');
+      this.yellowGreenPalette = await ColorPalette.createFromImage('./images/yellow_green_gradient_hc.png');
+      this.yellowOrangePalette = await ColorPalette.createFromImage('./images/yellow_orange_gradient.png');
     }
 
     // ============================================================
@@ -221,7 +215,7 @@ Blurred neutral aqua tones and dark red-violet.
         ctx.save();
         ctx.globalAlpha = 0.1;
         ctx.fillStyle = this.bgColor;
-        ctx.fillRect(0, 0, w, this.canvasScreenSize.height);
+        ctx.fillRect(0, 0, this.simWidth, this.simHeight);
         ctx.restore();
       }
 
@@ -231,12 +225,12 @@ Blurred neutral aqua tones and dark red-violet.
 
       const particles = this.particles;
 
-      const p0 = particles[0]; // red
-      const p1 = particles[1]; // green
-      const p2 = particles[2]; // blue
-      const p3 = particles[3]; // magenta
-      const p4 = particles[4]; // agitator - black
-      const p5 = particles[5]; // tiny - yellow
+      const p0 = particles[0]; // violet 0 - 1, 0 is fixed
+      const p1 = particles[1]; // spring to 2
+      const p2 = particles[2]; // spring to 3
+      const p3 = particles[3];
+      const p4 = particles[4]; // agitator
+      // const p5 = particles[5]; // tiny
 
       const radius1 = Particle.distance(p0, p1);
       const radius2 = Particle.distance(p1, p2);
@@ -249,134 +243,106 @@ Blurred neutral aqua tones and dark red-violet.
 
       // Dark violet circle p0 - p1
       // Make a 0-1 value that represents the radius length relative to the canvas height
-      const radiusPercent = Math.max(Math.min(radius1 / this.simHeight, 1), 0.1);
+      const radiusPercent = Math.max(Math.min(radius1 / this.canvas.height, 1), 0.1);
       ctx.save();
       {
-        ctx.globalAlpha = 0.2;
-        ctx.strokeStyle = "red"; //this.violetColors[(radiusPercent * 3) | 0];
-        ctx.lineWidth = 5 * radiusPercent;
-        ctx.globalCompositeOperation = 'color-burn';
-        this.drawArcPath(ctx, p0, p1);
-        this.drawLineV(p0.getX(), p0.getY());
-        // ctx.strokeStyle = "rgb(16, 12, 23)";
-        // ctx.lineWidth = 4;
-        // this.drawLineV(p1.getX(), p1.getY());
-      }
-      ctx.restore();
+        ctx.globalAlpha = 0.3;
+        ctx.strokeStyle = "yellow";//this.violetColors[(radiusPercent * 3) | 0];
+        ctx.lineWidth = 1; // * radiusPercent;
+        // this.drawArcPath(ctx, p0, p3);
+        this.drawEllipseAroundPoints(
+          p0.getX(), p0.getY(),
+          p3.getX(), p3.getY(),
+          radius4 / this.height, 20);
 
-      // draw a flesh-colored circle whose edges pass through p1 and p2
-      // and blue/green vertical line
-      // const yellowColor = this.yellowGreenPalette.getNextColor();
-      const fleshColor = this.fleshtonesPalette.getNextColor();
-      ctx.save();
-      {
-        ctx.globalAlpha = 0.5; // was .5
-        ctx.strokeStyle = fleshColor;
-        ctx.lineWidth = 8; // was 5
-        ctx.globalCompositeOperation = 'color-burn';
-        this.drawArcPath(ctx, p1, p2);
-        // bluegreen vertical line
-        ctx.globalAlpha = 0.3; // was .3
-        ctx.strokeStyle = "rgb(60, 90, 150)";  // was 100
-        ctx.lineWidth = 8;
-        this.drawLineV(p2.getX(), p2.getY());
-      }
-      ctx.restore();
-
-      // draw a magenta circle whose edges pass through p2 and p3
-      ctx.save();
-      {
         ctx.globalAlpha = 0.2;
-        ctx.strokeStyle = "magenta";
-        ctx.lineWidth = 2;
-        this.drawArcPath(ctx, p2, p3);
-        // greenish vertical
-        // ctx.strokeStyle = "rgb(144, 200, 151)"; // nice gray/green but could use more contrast
-        ctx.strokeStyle = "rgb(155, 220, 170)";
-        this.drawLineV(p3.getX(), p3.getY());
-      }
-      ctx.restore();
-
-      // draw a greenish circle whose edges pass through p2 and p3
-      ctx.save();
-      {
-        ctx.globalAlpha = 0.2;
-        ctx.strokeStyle = "rgb(60, 200, 160)";
-        ctx.lineWidth = 2;
-        this.drawArcPath(ctx, p1, p3);
-      }
-      ctx.restore();
-
-      // light blue circle with thick border at p2
-      const gradientPercent = Math.max(Math.min(radius3 / this.simHeight, 1), 0.1);
-      ctx.save();
-      {
-        ctx.globalAlpha = 0.2;
-        ctx.beginPath();
-        ctx.arc(p2.getX(), p2.getY(), Math.max((radius3 / 2) - 20, 0), 0, Math.PI * 2);
-        ctx.strokeStyle = `rgb(1, 200, 250)`;
+        ctx.strokeStyle = "rgb(16, 12, 23)"; // violet black line through p0
         ctx.lineWidth = 4;
-        ctx.stroke();
+        // this.drawLineV(p0.getX(), p0.getY());
       }
       ctx.restore();
 
-      // Orange circle around p3, and vertical line through p2
+
       ctx.save();
       {
-        ctx.globalAlpha = 0.005;
-        ctx.strokeStyle = this.orangeColors[Math.random() * this.orangeColors.length | 0];
-        ctx.lineWidth = 8;
-        this.drawLineV(p3.getX(), p3.getY());
-        ctx.globalAlpha = 0.2;
-        ctx.strokeStyle = 'rgb(200, 110, 0)';
+        ctx.globalAlpha = 0.05;
+        ctx.strokeStyle = "pink";//this.violetColors[(radiusPercent * 3) | 0];
+        ctx.lineWidth = 2; // * radiusPercent;
+        this.drawEllipseAroundPoints(
+          p1.getX(), p1.getY(),
+          p4.getX(), p4.getY(),
+          radius2 / this.height, 30);
+      }
+      ctx.restore();
+
+
+      // draw a whitish grayish circle whose edges pass through p1 and p2
+      ctx.save();
+      {
+        ctx.globalAlpha = 0.15;
+        ctx.strokeStyle = this.titanBlurPalette.getNextColor();
+        // ctx.strokeStyle = this.yellowOrangePalette.getNextColor();
         ctx.lineWidth = 1;
-        this.drawArcPath(ctx, p2, p3);
-      }
-      ctx.restore();
-
-      // Green line at agitator
-      ctx.save();
-      {
-        ctx.globalAlpha = 0.2;
-        // ctx.strokeStyle = 'rgb(100, 200, 60)';  // light green
-        ctx.strokeStyle = 'rgb(110, 155, 140)';
-        ctx.lineWidth = 3;
-        ctx.setLineDash([250, 1]);
-        this.drawLineV(p4.getX(), p4.getY());
+        ctx.setLineDash([Math.floor(Math.random() * 20), 1]);
+        // this.drawArcPath(ctx, p0, p4);
+        // this.clearArcPath(ctx, p0, p4);
+        this.makeArcPath(ctx, p0, p3);
+        ctx.fillStyle = "black";
+        ctx.fill();
         ctx.setLineDash([]);
+
+        ctx.strokeStyle = 'rgb(255, 250, 240)';
+        this.drawArcPath(ctx, p2, p3);
+        // ctx.strokeStyle = "rgb(16, 12, 23)"; // violet black line through p2
+        // ctx.lineWidth = 4;
+        // this.drawLineV(p2.getX(), p2.getY());
       }
       ctx.restore();
 
-      // draw a ??? circle whose edges pass through p2 and p3
+      // draw green circles at each particle
       ctx.save();
       {
-        ctx.globalAlpha = 0.2;
-        ctx.strokeStyle = "rgb(120, 200, 40)";
-        ctx.lineWidth = 1;
-        this.drawArcPath(ctx, p4, p5);
-      }
-      ctx.restore();
-
-      // draw circles at each particle
-      ctx.save();
-      {
-        ctx.globalAlpha = 1.0;
+        ctx.globalAlpha = 0.9;
         for (let i = 0; i < particles.length - 1; i++) { // excludes 'tiny' particle which is the last one
           const p = particles[i];
-          ctx.fillStyle = p.getColor();
+          ctx.fillStyle = "rgb(0, 128, 60)";
           ctx.beginPath();
-          ctx.ellipse(p.getX(), p.getY(), p.getRadius() * radiusPercent, p.getRadius() * radiusPercent, 0, 0, Math.PI * 2);
+          ctx.ellipse(p.getX(), p.getY(), 3, 2, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "rgb(200, 250, 200)";
+          ctx.beginPath();
+          ctx.ellipse(p.getX(), p.getY(), 2, 1, 0, 0, Math.PI * 2);
           ctx.fill();
         }
       }
       ctx.restore();
 
+      // DEBUG: draw particle number at each particle
+      if (false) {
+        ctx.save();
+        {
+          ctx.globalAlpha = 0.3;
+          for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            ctx.fillStyle = p.getColor();
+            ctx.font = "18px monospace";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            // ctx.beginPath();
+            // ctx.ellipse(p.getX(), p.getY(), 2, 1, 0, 0, Math.PI * 2);
+            // ctx.fill();
+            ctx.fillText('' + i, p.getX(), p.getY() - 10);
+          }
+        }
+        ctx.restore();
+      }
+
       // ================================================================================================
       // Draw the full offscreen canvas onto the display canvas as-is.
 
-      this.ctxDisplay.globalAlpha = 1.0; // draw the offscreen canvas at full opacity
-      this.ctxDisplay.globalCompositeOperation = 'source-over'; // normal rendering
-      this.ctxDisplay.drawImage(this.offscreenCanvas, 0, 0);
+      // this.ctxDisplay.globalAlpha = 1.0; // draw the offscreen canvas at full opacity
+      // this.ctxDisplay.globalCompositeOperation = 'source-over'; // normal rendering
+      // this.ctxDisplay.drawImage(this.offscreenCanvas, 0, 0);
 
       ctx.restore();
     }
@@ -390,7 +356,52 @@ Blurred neutral aqua tones and dark red-violet.
       ctx.beginPath();
       ctx.arc(mx, my, radius, 0, Math.PI * 2);
       ctx.stroke();
+    }
 
+    makeArcPath(ctx, p1, p2) {
+      // compute midpoint and radius from p1 and p2
+      const x1 = p1.getX(), y1 = p1.getY();
+      const x2 = p2.getX(), y2 = p2.getY();
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+      const radius = Math.hypot(x2 - x1, y2 - y1) / 2;
+      ctx.beginPath();
+      ctx.arc(mx, my, radius, 0, Math.PI * 2);
+    }
+
+    // Build the same circular path as drawArcPath, but clip to it and clear
+    // the pixels underneath instead of stroking - punches a "slipping" hole
+    // through the motion trail so the background shows through.
+    clearArcPath(ctx, p1, p2) {
+      const x1 = p1.getX(), y1 = p1.getY();
+      const x2 = p2.getX(), y2 = p2.getY();
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+      const radius = Math.hypot(x2 - x1, y2 - y1) / 2;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(mx, my, radius, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.clearRect(0, 0, this.simWidth, this.simHeight);
+      ctx.restore();
+    }
+
+    drawEllipseAroundPoints(x1, y1, x2, y2, minorRatio = 0.6, padding = 20) {
+      const centerX = (x1 + x2) / 2;
+      const centerY = (y1 + y2) / 2;
+
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      const a = distance / 2 + padding;
+      const b = a * minorRatio;
+      const rotation = Math.atan2(dy, dx);
+
+      const ctx = this.ctx;
+
+      // Draw ellipse
+      ctx.beginPath();
+      ctx.ellipse(centerX, centerY, a, b, rotation, 0, Math.PI * 2);
+      ctx.stroke();
     }
 
     // ============================================================
@@ -398,21 +409,21 @@ Blurred neutral aqua tones and dark red-violet.
     drawLineV(x, y) {
       this.ctx.beginPath();
       this.ctx.moveTo(x, 0);
-      this.ctx.lineTo(x, this.simHeight); // drawing operations are scaled up, so we use the simulation dimensions here
+      this.ctx.lineTo(x, this.simHeight);
       this.ctx.stroke();
     }
 
     drawLineH(x, y) {
       this.ctx.beginPath();
       this.ctx.moveTo(0, y);
-      this.ctx.lineTo(this.simWidth, y); // drawing operations are scaled up, so we use the simulation dimensions here
+      this.ctx.lineTo(this.simWidth, y);
       this.ctx.stroke();
     }
 
     clear() {
       // Draw a filled rectangle that covers the entire canvas
       this.ctx.fillStyle = "black";
-      this.ctx.fillRect(0, 0, this.simWidth, this.simHeight); // drawing operations are scaled up, so we use the simulation dimensions here
+      this.ctx.fillRect(0, 0, this.simWidth, this.simHeight);  // will scale to fill the high-DPI canvas
     }
   }
 
@@ -421,18 +432,19 @@ Blurred neutral aqua tones and dark red-violet.
       const canvas = Page.createCanvas16x9(window.innerWidth, window.innerHeight);
 
       const engine = new PhysicsEngine();
-      engine.setDimensions(1920, 1080); //!!!  fixed size with ratio 16x9
+      engine.setDimensions(1651, 929); //!!!  16x9 but smaller size than 1990, 1119
       engine.detectCollisions = false;
+      engine.timeStep = 0.1;
 
       const model = new Model();
       model.parseConfig(modelJSON);
-      model.centerAt(engine.getWidth() / 2.2, engine.getHeight() / 2);
+      model.centerAt(engine.getWidth() / 2.2, engine.getHeight() / 2); //!!! center in the physics space, not DPI or screen
 
       engine.addModel(model.getParticles(), model.getSprings(), model.getEnvironment());
 
       const renderer = new RenderVerticals(engine, canvas);
       await renderer.init(); // load images for colors, textures, etc.
-      renderer.bgColor = 'rgb(20, 0, 20)';
+      renderer.bgColor = 'rgb(220, 0, 20)';
       renderer.opacity = 0.05;
       renderer.clearBG = false;
       renderer.clear();
@@ -450,7 +462,7 @@ Blurred neutral aqua tones and dark red-violet.
       });
       animationLoop.start();
 
-      Page.setupKeyEvents(canvas, animationLoop, 'cassini_6B_low_tide');
+      Page.setupKeyEvents(canvas, animationLoop, 'cassini_2E_3_thedance');
 
       console.log('Simulation started successfully!');
     } catch (error) {

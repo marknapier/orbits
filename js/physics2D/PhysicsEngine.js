@@ -24,7 +24,7 @@ export default class PhysicsEngine {
     // Below this mass, particles are considered massless and will not attract.
     // This optimizes code, otherwise in systems with many particles the calculations
     // for gravity attraction between particles is very slow.
-    this.MIN_MASS_FOR_GRAVITY = 20.0;
+    this.MIN_MASS_FOR_GRAVITY = 2.0;
 
     this.gravConst = 0;
     this.elecConst = 0;
@@ -125,7 +125,6 @@ export default class PhysicsEngine {
       for (let p of this.particles) {
         if (p.getCharge() !== 0 || p.getMass() > this.MIN_MASS_FOR_GRAVITY) this.attractiveParticles.push(p);
       }
-      console.log('Sim.optimize(): total particles: ' + this.particles.length + '. ' + this.attractiveParticles.length + ' are charged or hi-mass.');
     }
   }
 
@@ -177,24 +176,21 @@ export default class PhysicsEngine {
 
   // Calculate forces on all particles in World
   calcAllForces() {
+    // Recompute attractiveParticles each step so it reflects the current
+    // particles/gravConst/elecConst regardless of when they were set.
+    // this.optimize();
+
     // zero out forces on all particles
     for (let p of this.particles) p.force.setXY(0, 0);
 
-    // For each particle in world, add up all forces from other particles, 
+    // Gravitational/electric attraction between particles.
+    // Don't bother if gravity and electric field are off
+    if (this.gravConst !== 0 || this.elecConst !== 0) this.applyAttractiveForces();
+
+    // For each particle in world, add up all forces from
     // gravity, electric field, magnetic field, air resistance, and wall friction
     for (let j = 0; j < this.particles.length; j++) {
       const particle = this.particles[j];
-      // Don't bother if gravity and electric field are off
-      if (this.gravConst !== 0 || this.elecConst !== 0) {
-        for (let k = j + 1; k < this.attractiveParticles.length; k++) {
-          const particle1 = this.attractiveParticles[k];
-          const vf = this.calcParticleForce(particle, particle1);
-          const f1 = vf.getX();
-          const f2 = vf.getY();
-          particle.force.addX(f1); particle.force.addY(f2);
-          particle1.force.addX(-f1); particle1.force.addY(-f2);
-        }
-      }
       // add environment gravity field
       if (this.gravX !== 0) particle.force.addX(particle.getMass() * this.gravX);
       if (this.gravY !== 0) particle.force.addY(particle.getMass() * this.gravY);
@@ -244,6 +240,27 @@ export default class PhysicsEngine {
       }
       if (f1 > this.maxAcc) this.maxAcc = f1;
     }
+  }
+
+  // Apply gravitational/electric attraction between particles.
+  // Particles below MIN_MASS_FOR_GRAVITY (and uncharged) are excluded entirely:
+  // they neither attract nor are attracted by any other particle.
+  // Each unordered pair among attractiveParticles is computed exactly once.
+  applyAttractiveForces() {
+    for (let i = 0; i < this.attractiveParticles.length; i++) {
+      const particle = this.attractiveParticles[i];
+      for (let k = i + 1; k < this.attractiveParticles.length; k++) {
+        this.applyPairForce(particle, this.attractiveParticles[k]);
+      }
+    }
+  }
+
+  applyPairForce(particle, particle1) {
+    const vf = this.calcParticleForce(particle, particle1);
+    const f1 = vf.getX();
+    const f2 = vf.getY();
+    particle.force.addX(f1); particle.force.addY(f2);
+    particle1.force.addX(-f1); particle1.force.addY(-f2);
   }
 
   updateVelocities() {

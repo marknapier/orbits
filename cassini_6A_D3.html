@@ -13,7 +13,8 @@ when working with an offscreen canvas. See comments in constructor(), init(), an
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cassini 6A</title>
-  <link rel="stylesheet" href="./styles/full_viewport_canvas.css">
+  <!-- <link rel="stylesheet" href="./styles/full_viewport_canvas.css"> -->
+  <link rel="stylesheet" href="./styles/main.css">
   <style>
     /* for debugging layout issues */
     body {
@@ -209,6 +210,7 @@ when working with an offscreen canvas. See comments in constructor(), init(), an
 
       // Make an offscreen canvas for drawing - will be copied to display canvas in parts
       this.offscreenCanvas = Page.createOffscreenCanvasDPI(this.canvasScreenSize.width, this.canvasScreenSize.height, 'offscreen');
+      document.body.appendChild(this.offscreenCanvas);
 
       // this.ctx will draw to the offscreen canvas.
       this.ctxDisplay = this.ctx; // save the on-screen context

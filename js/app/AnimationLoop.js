@@ -72,9 +72,9 @@ export default class AnimationLoop {
     else {
       // Update physics simulation
       this.sim.step();
-      
+
       // Render the current state
-      this.renderer.render();      
+      this.renderer.render();
     }
     
     // Request next frame
