@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Random stripes effect</title>
+  <style>
+    body {
+      margin: 100px;
+      padding: 0;
+      height: 100vh;
+      /* display: flex; */
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      display: block;
+      border: 1px solid black;
+      margin: 50px;
+    }
+  </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+  import AnimationLoop from '../js/app/AnimationLoop.js';
+  import MovingImageStripesRandom from '../js/app/MovingImageStripesRandom.js';
+
+  function createCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'sim';
+    canvas.width = width;
+    canvas.height = height;
+    document.body.appendChild(canvas);
+    return canvas;
+  }
+
+  class RenderStripes {
+    constructor(canvas) {
+      this.canvas = canvas;
+      this.ctx = canvas.getContext('2d');
+      this.width = canvas.width;
+      this.height = canvas.height;
+
+      this.movingImageStripes = new MovingImageStripesRandom(this.width, this.height);
+    }
+
+    render() {
+      this.movingImageStripes.step();
+
+      this.ctx.globalAlpha = 1.0;
+      this.ctx.fillStyle = 'white';
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.drawImage(this.movingImageStripes.canvas, 0, 0, this.canvas.width, this.canvas.height);
+    }
+  }
+
+  function refreshFillCanvas(sourceImage, ctxToFill, width, height) {
+    const pattern = ctxToFill.createPattern(sourceImage, 'repeat');
+    ctxToFill.fillStyle = pattern;
+    ctxToFill.fillRect(0, 0, width, height);
+  }
+
+  async function loadAndRunSimulation() {
+    try {
+      const canvas = createCanvas(480, 480);
+
+      // Create off-screen canvas to show the pattern tiled
+      const fillCanvas = document.createElement('canvas');
+      const ctxFillCanvas = fillCanvas.getContext('2d');
+      fillCanvas.width = 1800;
+      fillCanvas.height = 900;
+      document.body.appendChild(fillCanvas); // debug
+
+      const renderer = new RenderStripes(canvas);
+      const animationLoop = new AnimationLoop(() => {
+        renderer.render();
+        refreshFillCanvas(canvas, ctxFillCanvas, fillCanvas.width, fillCanvas.height);
+      });
+      animationLoop.start();
+
+      console.log('Simulation started successfully!');
+    } catch (error) {
+      console.error('Failed to initialize simulation:', error);
+    }
+  }
+
+  loadAndRunSimulation();
+</script>
+
+</html>

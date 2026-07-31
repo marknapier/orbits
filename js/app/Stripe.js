@@ -17,11 +17,12 @@
  * @property {OscillatorLike|null} [oscWidth=null] - Oscillator controlling width; null means fixed width
  * @property {OscillatorLike} oscColor - Oscillator controlling color interpolation
  * @property {number} [alpha=1.0] - Alpha value for the stripe
+ * @property {number[]} [dashPattern] - Optional canvas line-dash pattern
  */
 
 export default class Stripe {
   /** @param {StripeOptions} options */
-  constructor({ widthBase, widthDelta = 0, position = 0, darkColor, lightColor, oscWidth = null, oscColor, alpha = 1.0 }) {
+  constructor({ widthBase, widthDelta = 0, position = 0, darkColor, lightColor, oscWidth = null, oscColor, alpha = 1.0, dashPattern }) {
     /** @type {number} */ this.widthBase = widthBase;
     /** @type {number} */ this.widthDelta = widthDelta;
     /** @type {number} */ this.position = position;
@@ -35,6 +36,7 @@ export default class Stripe {
     /** @type {RGB} */    this.rgb = [...darkColor];
     /** @type {string} */ this.cssColor = this._toCSS(this.rgb);
     /** @type {number} */ this.alpha = alpha;
+    /** @type {number[]|undefined} */ this.dashPattern = dashPattern;
   }
 
   step() {

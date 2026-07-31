@@ -20,6 +20,7 @@
   import MouseHandler from '../js/app/MouseHandler.js';
   import AnimationLoop from '../js/app/AnimationLoop.js';
   import Page from '../js/app/Page.js';
+  import MovingImageStripesRandom from '../js/app/MovingImageStripesRandom.js';
 
   class Wheel {
     constructor(engine, centerX, centerY, radius = 100, numParticles = 12) {
@@ -30,6 +31,7 @@
       this.numParticles = numParticles;
       this.centerParticle = null;
       this.outerParticles = [];
+      this.rotation = 0; // last good rotation, held when the ring collapses
 
       this.build();
     }
@@ -51,6 +53,7 @@
         );
         particle.setColor('rgb(0, 100, 255)'); // Blue for outer particles
         particle.horiFriction = true; // Enable horizontal friction
+        particle.initialAngle = angle; // remember rest angle to measure rotation later
         this.engine.addParticle(particle);
         this.outerParticles.push(particle);
       }
@@ -88,6 +91,61 @@
       return { x: cx, y: cy };
     }
 
+    /**
+     * Estimate how far the cell has rotated from its rest orientation.
+     * Each particle remembers the angle it started at; we compare that to its
+     * current angle around the centroid and take the circular mean of the
+     * differences (robust to the blob deforming, and to angle wrap-around).
+     *
+     * Particles are weighted by their distance from the centroid: ones that
+     * have collapsed toward the center have noisy angles, so they count less.
+     * The resultant length is returned as `coherence` (0..1): ~1 when the ring
+     * rotates rigidly, ~0 when it has inverted/collapsed and the angle is junk.
+     *
+     * @returns {{ angle: number, coherence: number }} rotation in radians and confidence
+     */
+    computeRotation() {
+      const centroid = this.computeCentroid();
+      if (!centroid) return { angle: 0, coherence: 0 };
+
+      let sumSin = 0;
+      let sumCos = 0;
+      let sumWeight = 0;
+      for (const p of this.outerParticles) {
+        const dx = p.pos.x - centroid.x;
+        const dy = p.pos.y - centroid.y;
+        const r = Math.hypot(dx, dy); // weight by radius; near-center = unreliable angle
+        const delta = Math.atan2(dy, dx) - p.initialAngle;
+        sumSin += r * Math.sin(delta);
+        sumCos += r * Math.cos(delta);
+        sumWeight += r;
+      }
+      const angle = Math.atan2(sumSin, sumCos);
+      const coherence = sumWeight > 0 ? Math.hypot(sumSin, sumCos) / sumWeight : 0;
+      return { angle, coherence };
+    }
+
+    /**
+     * Update and return the cell's tracked rotation. When the ring is rotating
+     * coherently we ease toward the measured angle; when it has collapsed or
+     * inverted (low coherence) we hold the last good angle instead of snapping
+     * to a meaningless value.
+     * @param {number} [minCoherence=0.5] - below this, freeze the rotation
+     * @param {number} [ease=0.3] - easing factor toward the target angle
+     * @returns {number} rotation in radians
+     */
+    updateRotation(minCoherence = 0.5, ease = 0.3) {
+      const { angle, coherence } = this.computeRotation();
+      if (coherence >= minCoherence) {
+        // Ease along the shortest arc so wrap-around doesn't cause a jump.
+        let diff = angle - this.rotation;
+        diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+        this.rotation += diff * ease;
+      }
+      // else: ring is collapsed/inverted — hold the last good rotation.
+      return this.rotation;
+    }
+
     applyGlobalForces() {
       const centroid = this.computeCentroid();
       if (!centroid) return;
@@ -96,7 +154,7 @@
         // Apply a force away from the centroid
         const toCentroid = new Vector2D(centroid.x - p.pos.x, centroid.y - p.pos.y);
         toCentroid.normalize();
-        toCentroid.multiply(-3); // Adjust strength of the force -10=soft -40=stiff
+        toCentroid.multiply(-10); // Adjust strength of the force -10=soft -40=stiff
         p.force.x += toCentroid.x;
         p.force.y += toCentroid.y;
       }
@@ -104,24 +162,77 @@
   }
 
   class RenderCell extends Renderer {
-    constructor(sim, canvas, wheel1) {
+    constructor(sim, canvas, wheels) {
       super(sim, canvas);
-      this.wheel1 = wheel1;
+      this.wheels = wheels;
+      this.clearBG = false;
+      // One animated stripe pattern per wheel, sized to the wheel's diameter.
+      this.wheelPatterns = wheels.map(w => new MovingImageStripesRandom(2 * w.radius, 2 * w.radius));
     }
 
     render() {
-      super.render();
+      // super.render();
 
-      this.ctx.strokeStyle = 'rgba(255, 100, 0, 0.5)';
-      this.ctx.lineWidth = 30;
-      drawQuadraticBezierCircle(this.ctx, this.wheel1.outerParticles.map(p => ({ x: p.pos.x, y: p.pos.y })));
+      for (let i = 0; i < this.wheels.length; i++) {
+        const wheel = this.wheels[i];
+        const pattern = this.wheelPatterns[i];
+        pattern.step(); // advance this wheel's stripe animation
 
-      this.ctx.strokeStyle = 'rgba(0, 150, 190, 1)';
-      this.ctx.lineWidth = 6;
-      drawQuadraticBezierCircle(this.ctx, this.wheel1.outerParticles.map(p => ({ x: p.pos.x, y: p.pos.y })));
+        const pts = wheel.outerParticles.map(p => ({ x: p.pos.x, y: p.pos.y }));
+        const centroid = wheel.computeCentroid();
+        const angle = wheel.updateRotation();
 
-      drawParticles(this.ctx, this.wheel1.outerParticles);
+        // Cover radius: farthest particle from centroid, so the (rotated)
+        // pattern always fills the whole clipped shape.
+        let maxDist = 0;
+        for (const p of pts) {
+          const d = Math.hypot(p.x - centroid.x, p.y - centroid.y);
+          if (d > maxDist) maxDist = d;
+        }
+        const size = 2 * maxDist;
 
+        // Soft halo behind the shape
+        this.ctx.save();
+        {
+          this.ctx.shadowColor = "rgba(200, 0, 0, 0.5)";
+          this.ctx.shadowBlur = 10;
+          this.ctx.shadowOffsetX = 0;
+          this.ctx.shadowOffsetY = 0;
+
+          this.ctx.strokeStyle = 'rgba(60, 60, 60, 0.1)';
+          this.ctx.lineWidth = 3;
+          drawQuadraticBezierCircle(this.ctx, pts);
+        }
+        this.ctx.restore();
+
+        // Fill the wheel shape with its stripe pattern (clipped to the blob
+        // outline, and rotated about the centroid to match the cell's spin).
+        // this.ctx.save();
+        traceQuadraticBezierCircle(this.ctx, pts);
+        this.ctx.save();
+        {
+          this.ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+          this.ctx.fill();
+        }
+        this.ctx.restore();
+
+        this.ctx.save();
+        {
+          this.ctx.clip();
+          this.ctx.globalAlpha = 0.4;
+          this.ctx.translate(centroid.x, centroid.y);
+          this.ctx.rotate(angle);
+          this.ctx.drawImage(pattern.canvas, -size / 2, -size / 2, size, size);
+        }
+        this.ctx.restore();
+
+        // // Teal outline on top
+        // this.ctx.strokeStyle = 'rgba(0, 150, 190, 1)';
+        // this.ctx.lineWidth = 6;
+        // drawQuadraticBezierCircle(this.ctx, pts);
+
+        // drawParticles(this.ctx, wheel.outerParticles);
+      }
     }
   }
 
@@ -131,7 +242,7 @@
    * @param {CanvasRenderingContext2D} ctx - The canvas rendering context to draw on.
    * @param {Array<{x:number,y:number}>} points - An array of points to draw the curve through.
    */
-  function drawQuadraticBezierCircle(ctx, points) {
+  function traceQuadraticBezierCircle(ctx, points) {
     if (points.length < 2) return;
 
     const firstPoint = points[0];
@@ -151,6 +262,11 @@
 
     // Curve ends at the initial midpoint
     ctx.quadraticCurveTo(lastPoint.x, lastPoint.y, startx, starty);
+  }
+
+  function drawQuadraticBezierCircle(ctx, points) {
+    if (points.length < 2) return;
+    traceQuadraticBezierCircle(ctx, points);
     ctx.stroke();
   }
 
@@ -188,14 +304,16 @@
 
       // Create wheel
       const wheel1 = new Wheel(engine, 200, 150, 200, 24);
+      const wheel2 = new Wheel(engine, 300, 250, 100, 12);
 
-      const renderer = new RenderCell(engine, canvas, wheel1);
+      const renderer = new RenderCell(engine, canvas, [wheel1, wheel2]);
 
       const mouseHandler = new MouseHandler(canvas, engine, renderer);
 
       const animationLoop = new AnimationLoop(() => {
         engine.step(() => {
           wheel1.applyGlobalForces();
+          wheel2.applyGlobalForces();
         });
         renderer.render();
       });
