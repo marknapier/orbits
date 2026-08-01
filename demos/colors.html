@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Plaid effect</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      display: block;
+      border: 1px solid black
+    }
+  </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+  import AnimationLoop from '../js/app/AnimationLoop.js';
+  import Colors from '../js/app/Colors.js';
+  import Stripe from '../js/app/Stripe.js';
+  import Oscillator from '../js/app/Oscillator.js';
+
+  function createCanvas(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'sim';
+    canvas.width = width;
+    canvas.height = height;
+    document.body.appendChild(canvas);
+    return canvas;
+  }
+
+  // Random stripe widths that sum to exactly totalWidth
+  function randomStripeWidths(totalWidth, minWidth, maxWidth) {
+    const widths = [];
+    let remaining = totalWidth;
+    while (remaining > minWidth) {
+      const w = Math.min(remaining, minWidth + Math.random() * (maxWidth - minWidth));
+      widths.push(w);
+      remaining -= w;
+    }
+    if (remaining > 0) widths.push(remaining);
+    return widths;
+  }
+
+  function createStripes(totalWidth) {
+    // Tetradic scheme: two complementary color pairs
+    const tetradicPalette = Colors.generateDoubleComplementaryPalette();
+    const tetradicRGB = tetradicPalette.map((cssHSL) => Colors.cssHslToRgbArray(cssHSL));
+    const colorPairs = [
+      [tetradicRGB[0], tetradicRGB[1]],
+      [tetradicRGB[2], tetradicRGB[3]],
+      [tetradicRGB[0], tetradicRGB[2]],
+      [tetradicRGB[2], tetradicRGB[1]],
+    ];
+
+    // for debugging
+    Colors.appendColorSquares(tetradicPalette);
+
+    const widths = randomStripeWidths(totalWidth, 20, 80);
+    let x = 0;
+    return widths.map((widthBase) => {
+      const position = x + widthBase / 2;
+      x += widthBase;
+      const [darkColor, lightColor] = colorPairs[Math.floor(Math.random() * colorPairs.length)];
+      // Same starting phase (0) keeps every stripe in sync at t=0; a slightly
+      // different frequency per stripe makes their phase drift apart over time
+      const frequency = 0.1 + (Math.random() - 0.5) * 0.04;
+      const oscColor = new Oscillator(frequency, 'sin', 0);
+      return new Stripe({ widthBase, position, darkColor, lightColor, oscColor });
+    });
+  }
+
+  async function loadAndRunSimulation() {
+    try {
+      const width = 800;
+      const height = 600;
+      const canvas = createCanvas(width, height);
+      const ctx = canvas.getContext('2d');
+      const stripes = createStripes(width);
+
+      const animationLoop = new AnimationLoop(() => {
+        ctx.clearRect(0, 0, width, height);
+        for (const stripe of stripes) {
+          stripe.step();
+          ctx.fillStyle = stripe.cssColor;
+          ctx.fillRect(stripe.x, 0, stripe.w, height);
+        }
+      });
+
+      animationLoop.start();
+
+    } catch (error) {
+      console.error('Failed to initialize:', error);
+    }
+  }
+
+  loadAndRunSimulation();
+</script>
+
+</html>
