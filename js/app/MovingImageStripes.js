@@ -29,9 +29,9 @@ export default class MovingImageStripes extends MovingImageDots {
     const stripeConfigs = config ?? MovingImageStripes.defaultConfig(width);
     this.stripes = stripeConfigs.map(cfg => new Stripe({
       ...cfg,
-      oscColor: new Oscillator(cfg.oscColor.frequency, cfg.oscColor.type, cfg.oscColor.phase),
+      oscColor: new Oscillator(cfg.oscColor.frequency, cfg.oscColor.type, cfg.oscColor.phase, cfg.oscColor.cycleDuration),
       oscWidth: cfg.oscWidth
-        ? new Oscillator(cfg.oscWidth.frequency, cfg.oscWidth.type, cfg.oscWidth.phase)
+        ? new Oscillator(cfg.oscWidth.frequency, cfg.oscWidth.type, cfg.oscWidth.phase, cfg.oscColor.cycleDuration)
         : null,
     }));
   }

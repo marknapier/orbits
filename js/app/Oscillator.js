@@ -8,8 +8,14 @@
 export default class Oscillator {
     static instances = [];
 
-    constructor(frequency = 1, type = 'sin', phase = 0) {
-        this.frequency = frequency;  // Controls orbit speed (Hz = cycles per second) 1.0 = 1 second per orbit, 0.5 = 2 secs per, 0.1 = 10 secs per
+    /**
+     * @param {number} [frequency=1] - Cycles per second (Hz). Ignored if cycleDuration is given.
+     * @param {'sin'|'cos'} [type='sin'] - Waveform type; use 'cos' for x, 'sin' for y in a standard circular orbit.
+     * @param {number} [phase=0] - Starting angle offset, in radians.
+     * @param {number} [cycleDuration] - Seconds for one full cycle. Takes priority over frequency when provided.
+     */
+    constructor(frequency = 1, type = 'sin', phase = 0, cycleDuration = undefined) {
+        this.frequency = cycleDuration !== undefined ? 1 / cycleDuration : frequency;  // Controls orbit speed (Hz = cycles per second) 1.0 = 1 second per orbit, 0.5 = 2 secs per, 0.1 = 10 secs per
         this.type = type;    // 'sin' or 'cos', use cos for x, sin for y for standard circular orbit
         this.phase = phase;  // Optional starting angle offset (in radians)
         this.startTime = performance.now();
