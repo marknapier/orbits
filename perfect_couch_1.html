@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
-<!-- Composite couch with moving patterns.
+<!-- 
+Composited couch with moving plaid pattern, on a wooden floor against changing striped wallpaper.
  -->
 
 <head>
@@ -25,10 +26,10 @@
   import Particle from './js/physics2D/Particle.js';
   import ColorPalette from './js/app/ColorPalette.js';
   import RenderSimple from './js/app/RenderSimple.js'
-  import MovingImagePlaid from '../js/app/MovingImagePlaid.js';
   import MovingImagePlaid2 from '../js/app/MovingImagePlaid2.js';
   import MovingImageStripes from '../js/app/MovingImageStripes.js';
   import ImageLoader from '../js/app/ImageLoader.js';
+  import Oscillator from '../js/app/Oscillator.js';
 
   function makePlaidConfig(width) {
     return [
@@ -37,7 +38,7 @@
         position: width / 2,
         darkColor: [25, 45, 22],
         lightColor: [220, 250, 250],
-        oscColor: { frequency: 0.0, type: 'sin', phase: Math.PI * 0.2, cycleDuration: 300 },
+        oscColor: { cycleDuration: 300, type: 'sin', phase: Math.PI * 0.2 },
       },
       {
         widthBase: width * 0.25,
@@ -45,8 +46,8 @@
         position: width * 0.25,
         darkColor: [70, 128, 132],
         lightColor: [192, 226, 228],
-        oscWidth: { frequency: 0.003, type: 'sin', phase: 0 },
-        oscColor: { frequency: 0.003, type: 'sin', phase: Math.PI * 0.7 },
+        oscWidth: { cycleDuration: 325, type: 'sin', phase: 0 },
+        oscColor: { cycleDuration: 225, type: 'sin', phase: Math.PI * 0.7 },
         alpha: 0.65,
       },
       {
@@ -55,8 +56,8 @@
         position: width * 0.25,
         darkColor: [255, 128, 132],
         lightColor: [255, 121, 13],
-        oscWidth: { frequency: 0.0025, type: 'sin', phase: 0 },
-        oscColor: { frequency: 0.0035, type: 'sin', phase: Math.PI * 0.8 },
+        oscWidth: { cycleDuration: 400, type: 'sin', phase: 0 },
+        oscColor: { cycleDuration: 260, type: 'sin', phase: Math.PI * 0.8 },
         alpha: 0.65,
         alpha: 0.6,
       },
@@ -66,8 +67,8 @@
         position: width * 0.70,
         darkColor: [218, 188, 88],
         lightColor: [208, 200, 184],
-        oscWidth: { frequency: 0.0075, type: 'cos', phase: 0 },
-        oscColor: { frequency: 0.02, type: 'sin', phase: Math.PI * 1.3 },
+        oscWidth: { cycleDuration: 120, type: 'cos', phase: 0 },
+        oscColor: { cycleDuration: 50, type: 'sin', phase: Math.PI * 1.3 },
         alpha: 0.65,
       },
       {
@@ -76,8 +77,8 @@
         position: width * 0.80,
         darkColor: [218, 188, 88],
         lightColor: [208, 200, 184],
-        oscWidth: { frequency: 0.0075, type: 'cos', phase: 0 },
-        oscColor: { frequency: 0.02, type: 'sin', phase: Math.PI * 1.3 },
+        oscWidth: { cycleDuration: 130, type: 'cos', phase: 0 },
+        oscColor: { cycleDuration: 60, type: 'sin', phase: Math.PI * 1.3 },
         alpha: 0.65,
       },
     ];
@@ -90,7 +91,7 @@
         position: width / 2,
         darkColor: [25, 45, 22],
         lightColor: [220, 250, 250],
-        oscColor: { frequency: 0.0, type: 'sin', phase: Math.PI * 0.2, cycleDuration: 360  },
+        oscColor: { cycleDuration: 360, type: 'sin', phase: Math.PI * 0.2 },
       },
       {
         widthBase: width * 0.25,
@@ -98,8 +99,8 @@
         position: width * 0.25,
         darkColor: [70, 128, 132],
         lightColor: [192, 226, 228],
-        oscWidth: { frequency: 0.0031, type: 'sin', phase: 0 },
-        oscColor: { frequency: 0.0032, type: 'sin', phase: Math.PI * 0.7 },
+        oscWidth: { cycleDuration: 320, type: 'sin', phase: 0 },
+        oscColor: { cycleDuration: 300, type: 'sin', phase: Math.PI * 0.7 },
         alpha: 0.65,
       },
       {
@@ -108,8 +109,8 @@
         position: width * 0.25,
         darkColor: [255, 128, 132],
         lightColor: [255, 121, 13],
-        oscWidth: { frequency: 0.0026, type: 'sin', phase: 0 },
-        oscColor: { frequency: 0.0036, type: 'sin', phase: Math.PI * 0.8 },
+        oscWidth: { cycleDuration: 390, type: 'sin', phase: 0 },
+        oscColor: { cycleDuration: 240, type: 'sin', phase: Math.PI * 0.8 },
         alpha: 0.65,
         alpha: 0.6,
       },
@@ -119,8 +120,8 @@
         position: width * 0.70,
         darkColor: [218, 188, 88],
         lightColor: [208, 200, 184],
-        oscWidth: { frequency: 0.0077, type: 'cos', phase: 0 },
-        oscColor: { frequency: 0.025, type: 'sin', phase: Math.PI * 1.3 },
+        oscWidth: { cycleDuration: 100, type: 'cos', phase: 0 },
+        oscColor: { cycleDuration: 40, type: 'sin', phase: Math.PI * 1.3 },
         alpha: 0.65,
       },
       {
@@ -129,8 +130,8 @@
         position: width * 0.80,
         darkColor: [218, 188, 88],
         lightColor: [208, 200, 184],
-        oscWidth: { frequency: 0.0078, type: 'cos', phase: 0 },
-        oscColor: { frequency: 0.027, type: 'sin', phase: Math.PI * 1.3 },
+        oscWidth: { cycleDuration: 130, type: 'cos', phase: 0 },
+        oscColor: { cycleDuration: 30, type: 'sin', phase: Math.PI * 1.3 },
         alpha: 0.65,
       },
     ];
@@ -142,15 +143,15 @@
       this.bgColor = 'rgb(250, 250, 250)';
       this.about700pixels = Math.round(this.canvas.width * 0.365);
       this.about200pixels = Math.round(this.canvas.width * 0.104);
-      this.movingImagePlaid = new MovingImagePlaid(this.about700pixels, this.about700pixels);
       this.movingImagePlaid2 = new MovingImagePlaid2(this.about200pixels, this.about200pixels, makePlaidConfig(this.about200pixels));
       this.movingImageStripes = new MovingImageStripes(this.about200pixels, this.about200pixels, makeStripeConfig(this.about200pixels));
+      // Oscillates the stripe and plaid pattern's scale: 1.0 (full size) down to 0.5 (half size) and back
+      this.plaidScaleOsc = new Oscillator(0, 'cos', 0, 1800);
+      this.stripeScaleOsc = new Oscillator(0, 'sin', 0, 4800);
       this.floorTop = Math.floor((this.height * 0.80) * this.totalScale);
       this.floorH = Math.floor((this.height * 0.21) * this.totalScale);
       this.baseboardH = Math.floor((this.height * 0.08) * this.totalScale);
-      this.yellowColor = [255, 255, 0];
 
-      // Scale the context to match physics sim dimensions, and high-DPI displays.
       // In this artwork, the physics sim is a no-op (there is no physics interaction happening here), 
       // so the scale is just to match potential high-DPI displays. 
       this.ctx.scale(this.totalScale, this.totalScale);
@@ -189,6 +190,7 @@
       // this.couchImage = await ImageLoader.loadImage('../images/brown_leather_couch.png');
       this.couchImage = await ImageLoader.loadImage('../images/mid_century_modern_sofa_t.png');
       this.couchShadow = await ImageLoader.loadImage('../images/mid_century_modern_sofa_shadow.png');
+      this.couchShadowRight = await ImageLoader.loadImage('../images/couch_wall_shadow_right.png');
       this.wallShadow = await ImageLoader.loadImage('../images/couch_wall_shadow.png');
       this.floorImage = await ImageLoader.loadImage('../images/wood_floor_light_large_p.jpg');
       this.baseboardImage = await ImageLoader.loadImage('../images/baseboard_white.png');
@@ -203,12 +205,11 @@
       this.canvasBorderTinted.height = this.canvas.height;
       this.ctxBorderTinted = this.canvasBorderTinted.getContext('2d');
 
-      // Create off-screen canvas for couch with pattern
+      // Create off-screen canvas for couch with pattern - couch image acts as mask for the plaid pattern.
       this.canvasCouch = document.createElement('canvas');
       this.canvasCouch.width = this.canvas.width;
       this.canvasCouch.height = this.canvas.height;
       this.ctxCouch = this.canvasCouch.getContext('2d');
-      // Draw the couch image as the background
       this.ctxCouch.drawImage(this.couchImage, this.canvas.width * 0.1, this.canvas.height * 0.2, this.canvas.width * 0.8, this.canvas.height * 0.75);
 
       // Create off-screen canvas for background
@@ -220,32 +221,41 @@
 
     render() {
       // Update the moving images
-      this.movingImagePlaid.step();  // used to tint the border
-      this.movingImagePlaid2.step();  // overlay plaid on the couch
+      this.movingImagePlaid2.step();   // overlay plaid on the couch
       this.movingImageStripes.step();  // background wallpaper
 
-      if (true) {
-        // Background layer: wallpaper
-        this.ctxBackground.globalAlpha = 1.0;
-        this.ctxBackground.globalCompositeOperation = 'source-over';
-        this.ctxBackground.fillStyle = this.ctxBackground.createPattern(this.movingImageStripes.getCanvas(), 'repeat');
-        this.ctxBackground.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      // Background layer: wallpaper pattern
+      const stripePattern = this.ctxBackground.createPattern(this.movingImageStripes.canvas, 'repeat');
+      const stripeScale = 0.65 + 0.35 * this.stripeScaleOsc.getValue();  // range from 0.3 to 1.0
+      stripePattern.setTransform(new DOMMatrix().scale(stripeScale, stripeScale));
+      this.ctxBackground.globalAlpha = 1.0;
+      this.ctxBackground.globalCompositeOperation = 'source-over';
+      this.ctxBackground.fillStyle = stripePattern;
+      this.ctxBackground.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Background layer: floor
-        this.ctxBackground.drawImage(this.floorImage, 0, this.floorTop, this.canvas.width, this.floorH);
-        this.ctxBackground.drawImage(this.baseboardImage, 0, this.floorTop - this.baseboardH, this.canvas.width, this.baseboardH);
+      // Background layer: floor and baseboard
+      this.ctxBackground.drawImage(this.floorImage, 0, this.floorTop, this.canvas.width, this.floorH);
+      this.ctxBackground.drawImage(this.baseboardImage, 0, this.floorTop - this.baseboardH, this.canvas.width, this.baseboardH);
 
-        // lighting effect on wall and floor
-        this.ctxBackground.globalAlpha = 0.95;
-        this.ctxBackground.globalCompositeOperation = 'soft-light';
-        this.ctxBackground.drawImage(this.wallShadow, 0, 0, this.canvas.width, this.canvas.height);
+      // Background layer: light and shadow on wall
+      // this.ctxBackground.globalAlpha = 0.95;
+      // this.ctxBackground.globalCompositeOperation = 'soft-light';
+      // this.ctxBackground.drawImage(this.wallShadow, 0, 0, this.canvas.width, this.canvas.height);
 
-        // Couch layer: plaid in couch
-        this.ctxCouch.globalAlpha = 0.1;
-        this.ctxCouch.globalCompositeOperation = 'source-atop';
-        this.ctxCouch.fillStyle = this.ctxCouch.createPattern(this.movingImagePlaid2.canvas, 'repeat');
-        this.ctxCouch.fillRect(0, 0, this.canvas.width, this.canvas.height);
-      }
+      // Background layer: shadow to right of couch, on wall and floor
+      this.ctxBackground.globalAlpha = 0.25;
+      this.ctxBackground.globalCompositeOperation = 'source-over';
+      this.ctxBackground.drawImage(this.couchShadowRight, this.canvas.width * 0.77, this.canvas.height * 0.23, this.canvas.width * 0.25, this.canvas.height * 0.75);
+
+      // Draw plaid pattern onto couch
+      // Smoothly scale the pattern down to half size and back over a long cycle, to create a finer plaid over time.
+      const plaidPattern = this.ctxCouch.createPattern(this.movingImagePlaid2.canvas, 'repeat');
+      const plaidScale = 0.75 + 0.25 * this.plaidScaleOsc.getValue();  // range from 0.5 to 1.0
+      plaidPattern.setTransform(new DOMMatrix().scale(plaidScale, plaidScale));
+      this.ctxCouch.globalAlpha = 0.1;
+      this.ctxCouch.globalCompositeOperation = 'source-atop';
+      this.ctxCouch.fillStyle = plaidPattern;
+      this.ctxCouch.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
       // Main layer: background + couch with pattern overlayed
       // clear
@@ -266,29 +276,21 @@
       this.ctx.globalCompositeOperation = 'source-over';
       this.ctx.drawImage(this.throwPillowImage, this.width * this.totalScale * 0.64, this.height * this.totalScale * 0.28, this.width * this.totalScale * 0.18, this.width * this.totalScale * 0.16);
 
-      if (false) {
-        // BORDER - draw border over couch
-        // clear the border canvas
-        this.ctxBorderTinted.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        // draw the border normally
-        this.ctxBorderTinted.globalCompositeOperation = 'source-over';
-        this.ctxBorderTinted.globalAlpha = 1.0;
-        this.ctxBorderTinted.drawImage(this.canvasBorder, 0, 0);
-        // fill in the border image with color
-        this.ctxBorderTinted.globalCompositeOperation = 'source-atop';
-        this.ctxBorderTinted.globalAlpha = 1.0;
-        this.ctxBorderTinted.fillStyle = 'green';
-        // this.ctxBorderTinted.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctxBorderTinted.drawImage(this.movingImagePlaid.getCanvas(), 0, 0, this.canvas.width, this.canvas.height);
-        this.ctxBorderTinted.globalAlpha = 1.0;
-        // draw the tinted border onto the main canvas
-        this.ctx.globalCompositeOperation = 'source-over';
-        this.ctx.drawImage(this.canvasBorderTinted, 0, 0, this.width * this.totalScale, this.height * this.totalScale);
-      }
+      // light effect over entire scene
+      this.ctx.globalAlpha = 0.7;
+      this.ctx.globalCompositeOperation = 'soft-light';
+      this.ctx.drawImage(this.wallShadow, 0, 0, this.canvas.width, this.canvas.height);
 
       // reset
       this.ctx.globalCompositeOperation = 'source-over';
     }
+  }
+
+  function pauseOscillators() {
+    Oscillator.pauseAll();
+  }
+  function resumeOscillators() {
+    Oscillator.resumeAll();
   }
 
   async function loadAndRunSimulation() {
@@ -313,6 +315,8 @@
       animationLoop.start();
 
       Page.setupKeyEvents(canvas, animationLoop, 'perfect_couch');
+      Page.onPause(() => pauseOscillators());
+      Page.onResume(() => resumeOscillators());
 
       console.log('Simulation started successfully!');
     } catch (error) {

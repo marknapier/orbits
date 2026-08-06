@@ -96,11 +96,13 @@ export default class MovingImageStripes extends MovingImageDots {
       this.ctx.fillRect(stripe.x, 0, stripe.w, this.height);
     }
     // debug: add border line
-    this.ctx.strokeStyle = 'rgb(0, 0, 0)';
-    this.ctx.lineWidth = 1;
-    this.ctx.beginPath();
-    this.ctx.moveTo(0, 0);
-    this.ctx.lineTo(0, this.height);
-    this.ctx.stroke();
+    if (false) {
+      this.ctx.strokeStyle = 'rgb(0, 0, 0)';
+      this.ctx.lineWidth = 1;
+      this.ctx.beginPath();
+      this.ctx.moveTo(0, 0);
+      this.ctx.lineTo(0, this.height);
+      this.ctx.stroke();
+    }
   }
 }
